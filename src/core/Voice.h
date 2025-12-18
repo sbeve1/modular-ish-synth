@@ -1,6 +1,5 @@
 #pragma once
 
-class Synth;  // forward declaration only
 #include <vector>
 #include <cmath>
 
@@ -13,8 +12,6 @@ class Synth;  // forward declaration only
 #include "core/Sample.h"
 
 struct Voice {
-    Synth* parentSynth = nullptr;
-
     Oscillator osc;
     Envelope   env;
     VCA        vca;
