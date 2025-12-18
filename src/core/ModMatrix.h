@@ -11,6 +11,8 @@
 // - process(...) is audio-thread safe as long as addRoute/removeRoutes are not
 //   called concurrently. If you need dynamic changes during audio, use double-buffering.
 
+// CONTROLModMatrix might be a better name. no audio patching here
+
 enum class ModType {
     Add,
     Multiply,
@@ -44,34 +46,34 @@ public:
         if (!src || !target) return;
 
         // get or create modulator index
-        int mIdx = -1;
-        auto iterMod = modIndexMap.find(src);
-        if (iterMod == modIndexMap.end()) {
-            mIdx = static_cast<int>(modulators.size());
+        int modIndex = -1;
+        auto keyM = modIndexMap.find(src);
+        if (keyM == modIndexMap.end()) {
+            modIndex = static_cast<int>(modulators.size());
             modulators.push_back(src);
-            modIndexMap[src] = mIdx;
+            modIndexMap[src] = modIndex;
         } else {
-            mIdx = iterMod->second;
+            modIndex = keyM->second;
         }
 
         // get or create target index
-        int tIdx = -1;
-        auto iterTarget = targetIndexMap.find(target);
-        if (iterTarget == targetIndexMap.end()) {
-            tIdx = static_cast<int>(targets.size());
+        int targetIndex = -1;
+        auto keyT = targetIndexMap.find(target);
+        if (keyT == targetIndexMap.end()) {
+            targetIndex = static_cast<int>(targets.size());
             TargetSlot ts;
             ts.ptr = target;
             ts.base = *target; // capture base at registration time
             targets.push_back(ts);
-            targetIndexMap[target] = tIdx;
+            targetIndexMap[target] = targetIndex;
         } else {
-            tIdx = iterTarget->second;
+            targetIndex = keyT->second;
         }
 
         // push route
         ModRoute r;
-        r.modIndex = mIdx;
-        r.targetIndex = tIdx;
+        r.modIndex = modIndex;
+        r.targetIndex = targetIndex;
         r.amount = amount;
         r.type = type;
         routes.push_back(r);
@@ -180,16 +182,14 @@ public:
     }
 
 private:
-    // the maps is literally just to act as a faster-to-search vector
-
     // at the same index i, these all refer to the same module. same with the target ones
     std::vector<ControlModule*> modulators;
-    std::unordered_map<ControlModule*, int> modIndexMap; // used only on add/remove (not in process)
+    std::unordered_map<ControlModule*, int> modIndexMap; // used only when add/removing a modulator (not in process)
     std::vector<float> modValues; // sized at process() time, read-only during process
 
     // targets
     std::vector<TargetSlot> targets;
-    std::unordered_map<float*, int> targetIndexMap; // used only on add/remove (not in process)
+    std::unordered_map<float*, int> targetIndexMap; // used only when add/remove a target (not in process)
 
     // routes can use the same module. MAX: 1 route = 1 module -> 1 target
     std::vector<ModRoute> routes;
