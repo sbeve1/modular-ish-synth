@@ -2,19 +2,19 @@
 #include <array>
 #include <vector>
 #include "Voice.h"
-#include "ModTargets.h"
+#include "ModTargetResolver.h"
 
 struct GlobalRoute {
     ControlModule* src;
-    float* (*resolveTarget)(Voice& v);
+    ModTargetID targetID;
     float amount;
     ModType type;
 
     GlobalRoute(ControlModule* s,
-                float* (*rt)(Voice&),
+                ModTargetID id,
                 float amt,
                 ModType t)
-        : src(s), resolveTarget(rt), amount(amt), type(t) {}
+        : src(s), targetID(id), amount(amt), type(t) {}
 };
 
 class Synth {

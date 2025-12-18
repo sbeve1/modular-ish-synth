@@ -5,31 +5,23 @@ Synth::Synth() {
     for (auto& v : voices)
         v.parentSynth = this;
 
-    // ------- DEFAULT ROUTES -------
+        // ------- DEFAULT ROUTES -------
 
-    // ENV → AMP
-    globalRoutes.emplace_back(
-        nullptr,
-        resolveVcaGain,
-        1.0f,
-        ModType::Replace
-    );
+        globalRoutes.emplace_back(nullptr,
+                            ModTargetID::VCA_GAIN,
+                            1.0f,
+                            ModType::Replace);
 
-    // ENV → Filter cutoff
-    globalRoutes.emplace_back(
-        nullptr,
-        resolveFilterCutoff,
-        500.0f,
-        ModType::Add
-    );
+        globalRoutes.emplace_back(nullptr,
+                            ModTargetID::FILTER_CUTOFF,
+                            500.0f,
+                            ModType::Add);
 
-    // LFO → Pitch
-    globalRoutes.emplace_back(
-        nullptr,
-        resolveOscFrequency,
-        5.0f,
-        ModType::Add
-    );
+        globalRoutes.emplace_back(nullptr,
+                            ModTargetID::OSC_FREQUENCY,
+                            5.0f,
+                            ModType::Add);
+
 }
 
 void Synth::noteOn(int midiNote) {
@@ -54,26 +46,28 @@ void Synth::noteOn(int midiNote) {
     // -------------------------------
     // APPLY GLOBAL MODULATION ROUTES
     // -------------------------------
-    for (auto& gr : globalRoutes)
-    {
+    for (auto& gr : globalRoutes) {
         ControlModule* src = nullptr;
 
-        // auto-resolve typical modulation sources
+        // default mod sources
         if (gr.src == nullptr) {
-            if (gr.resolveTarget == resolveVcaGain ||
-                gr.resolveTarget == resolveFilterCutoff)
+            if (gr.targetID == ModTargetID::VCA_GAIN || gr.targetID == ModTargetID::FILTER_CUTOFF) {
                 src = &v->env;
-
-            else if (gr.resolveTarget == resolveOscFrequency)
+            }
+            else if (gr.targetID == ModTargetID::OSC_FREQUENCY) {
                 src = &v->lfo;
-        }
+            }
+        } 
         else {
             src = gr.src;
         }
 
-        float* tgt = gr.resolveTarget(*v);
-        v->mod.addRoute(src, tgt, gr.amount, gr.type);
+        float* tgt = resolveTarget(*v, gr.targetID);
+
+        if (tgt)
+            v->mod.addRoute(src, tgt, gr.amount, gr.type);
     }
+
 }
 
 void Synth::noteOff(int midiNote) {

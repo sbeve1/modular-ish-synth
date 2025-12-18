@@ -51,6 +51,7 @@ public:
     void setCutoff(float c) { cutoff = c; }
     void setFilterType(DeviceMode f) { type = f; }
     float* getCutoffPtr() { return &cutoff; }
+    float* getResonancePtr() { return &resonance; }
 
 private: 
     DeviceMode type = DeviceMode::BYPASS;
