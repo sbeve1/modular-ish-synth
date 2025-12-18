@@ -161,7 +161,7 @@ public:
                     slot.multAcc *= (1.0f + srcVal * r.amount);
                     break;
                 case ModType::Replace:
-                    slot.replaceAcc += srcVal * r.amount;
+                    slot.replaceAcc = srcVal * r.amount;
                     slot.hasReplace = true;
                     break;
             }

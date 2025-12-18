@@ -30,19 +30,42 @@ CMakeFiles/Synth.dir/src/core/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bit \
  C:/msys64/mingw64/include/c++/14.2.0/concepts \
  C:/msys64/mingw64/include/c++/14.2.0/bits/range_access.h \
- C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\core\Voice.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Module.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
- C:/msys64/mingw64/include/c++/14.2.0/cmath \
+ C:/msys64/mingw64/include/c++/14.2.0/vector \
  C:/msys64/mingw64/include/c++/14.2.0/bits/requires_hosted.h \
- C:/msys64/mingw64/include/math.h C:/msys64/mingw64/include/crtdefs.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/allocator.h \
+ C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++allocator.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/new_allocator.h \
+ C:/msys64/mingw64/include/c++/14.2.0/new \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/memoryfwd.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_construct.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_uninitialized.h \
+ C:/msys64/mingw64/include/c++/14.2.0/ext/alloc_traits.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_vector.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/functional_hash.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/hash_bytes.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/refwrap.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/invoke.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_function.h \
+ C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/memory_resource.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cstddef \
+ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
+ C:/msys64/mingw64/include/stddef.h C:/msys64/mingw64/include/crtdefs.h \
  C:/msys64/mingw64/include/corecrt.h C:/msys64/mingw64/include/_mingw.h \
  C:/msys64/mingw64/include/_mingw_mac.h \
  C:/msys64/mingw64/include/_mingw_secapi.h \
  C:/msys64/mingw64/include/vadefs.h \
  C:/msys64/mingw64/include/sdks/_mingw_ddk.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h \
+ C:/msys64/mingw64/include/c++/14.2.0/tuple \
+ C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\core\Voice.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cmath \
+ C:/msys64/mingw64/include/math.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/std_abs.h \
  C:/msys64/mingw64/include/stdlib.h \
  C:/msys64/mingw64/include/corecrt_wstdlib.h \
@@ -68,6 +91,10 @@ CMakeFiles/Synth.dir/src/core/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_hermite.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Module.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Envelope.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/ControlModule.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstdio \
@@ -80,33 +107,6 @@ CMakeFiles/Synth.dir/src/core/Synth.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/LFO.h \
  C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\core\ModMatrix.h \
- C:/msys64/mingw64/include/c++/14.2.0/vector \
- C:/msys64/mingw64/include/c++/14.2.0/bits/allocator.h \
- C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++allocator.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/new_allocator.h \
- C:/msys64/mingw64/include/c++/14.2.0/new \
- C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/memoryfwd.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/stl_construct.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/stl_uninitialized.h \
- C:/msys64/mingw64/include/c++/14.2.0/ext/alloc_traits.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/stl_vector.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/functional_hash.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/hash_bytes.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/refwrap.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/invoke.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/stl_function.h \
- C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
- C:/msys64/mingw64/include/c++/14.2.0/bits/memory_resource.h \
- C:/msys64/mingw64/include/c++/14.2.0/cstddef \
- C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
- C:/msys64/mingw64/include/stddef.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h \
- C:/msys64/mingw64/include/c++/14.2.0/tuple \
  C:/msys64/mingw64/include/c++/14.2.0/unordered_map \
  C:/msys64/mingw64/include/c++/14.2.0/bits/unordered_map.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/hashtable.h \
@@ -123,4 +123,5 @@ CMakeFiles/Synth.dir/src/core/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstdlib \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
- C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h
+ C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
+ C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\core\ModTargets.h

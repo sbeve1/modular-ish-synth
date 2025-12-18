@@ -531,6 +531,7 @@ CMakeFiles/Synth.dir/src/core/Synth.cpp.obj: C:/Users/tevin/Desktop/Developer/CR
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModMatrix.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargets.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Synth.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Voice.h
 
@@ -989,6 +990,7 @@ CMakeFiles/Synth.dir/src/core/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRA
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xsavesintrin.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xtestintrin.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModMatrix.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargets.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Synth.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Voice.h
 
@@ -1147,6 +1149,8 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
 
 
 C:/msys64/mingw64/include/io.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargets.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModMatrix.h:
 
