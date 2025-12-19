@@ -6,41 +6,52 @@
 
 class VCA : public Module {
 public:
-    Sample process(float sampleRate, const Sample& in) override
-    {
-        (void)sampleRate;
+    VCA() {
+        gainBase = 0.0f;
+        panBase  = 0.0f;
+        gainMod = gainBase;
+        panMod  = panBase;
+    }
 
-        // 1. Clamp gain
-        float g = std::clamp(gain, 0.0f, SAT_CLIP_K);
+    Sample process(float sr, const Sample& in) override {
+        (void)sr;
 
-        // 2. Apply gain
-        float l = in.left  * g;
-        float r = in.right * g;
+        float g = std::clamp(gainMod, 0.0f, SAT_CLIP_K);
+        float p = std::clamp(panMod,  -1.0f, 1.0f);
 
-        // 3. Equal-power panning (-1 = left, +1 = right)
-        float p = std::clamp(pan, -1.0f, 1.0f);
-        float angle = (p * 0.5f + 0.5f) * (PI * 0.5f); // 0..pi/2
+        float angle = (p * 0.5f + 0.5f) * (PI * 0.5f);
 
         float leftGain  = cosf(angle);
         float rightGain = sinf(angle);
 
-        l *= leftGain;
-        r *= rightGain;
+        float l = in.left  * g * leftGain;
+        float r = in.right * g * rightGain;
 
-        // 4. Soft saturation safety
+        // soft saturate
         l = l / (1.0f + fabsf(l));
         r = r / (1.0f + fabsf(r));
 
         return { l, r };
     }
 
-    void setGain(float g) { gain = g; }
-    float* getGainPtr()   { return &gain; }
+    // ModMatrix registration
+    float* getGainModPtr() { return &gainMod; }
+    float  getGainBase() const { return gainBase; }
 
-    void setPan(float p)  { pan = p; }
-    float* getPanPtr()    { return &pan; }
+    float* getPanModPtr() { return &panMod; }
+    float  getPanBase() const { return panBase; }
+
+    // UI setters update base + modShadow
+    void setGain(float g) { gainBase = g; gainMod = g; }
+    void setPan(float p)  { panBase  = p; panMod  = p; }
 
 private:
-    float gain = 0.0f;  // 0..1
-    float pan  = 0.0f;  // -1..1
+    // permanent UI knob values
+    float gainBase;
+    float panBase;
+
+    // modulated shadow values
+    float gainMod;
+    float panMod;
 };
+

@@ -7,13 +7,13 @@
 #include "ModTargetID.h"
 
 // ------------------------------------------------------------
-// Serum-style modulation operations
+// Serum-style modulation operations (kept from your original)
 // ------------------------------------------------------------
 enum class ModType {
     ADD,          // linear add
     MULTIPLY,     // linear multiply
-    REPLACE,      // sets base
-    EXP_CURVE,    // pow(src, amt) — Serum velocity curve
+    REPLACE,      // sets base (replace)
+    EXP_CURVE,    // pow(src, amt)
     SOFT_CURVE,   // sqrt(src)
     HARD_CURVE    // src^2
 };
@@ -28,17 +28,18 @@ struct Route {
 
 // Stores accumulation for each target
 struct TargetSlot {
+    // pointer to *modulated shadow value* (ModMatrix writes here each process)
+    float* modPtr = nullptr;
 
-    float* ptr = nullptr;
+    // permanent base (knob) value captured at registration
     float base = 0.0f;
 
+    // runtime accumulators (reset every process())
     float addAcc  = 0.0f;
     float multAcc = 1.0f;
-
     float replaceAcc = 0.0f;
     bool hasReplace = false;
-
-    float curveAcc = 1.0f;  // exponential / soft / hard curves
+    float curveAcc = 1.0f;
 };
 
 class ModMatrix {
@@ -46,8 +47,7 @@ public:
     static constexpr int MAX_ROUTES = 128;
 
     ControlModule* sources[(int)ModSourceID::COUNT];
-    float*         targets[(int)ModTargetID::COUNT];
-
+    // note: we don't need 'targets' array of base pointers any more
     float modValues[(int)ModSourceID::COUNT];
     TargetSlot targetSlots[(int)ModTargetID::COUNT];
 
@@ -66,11 +66,15 @@ public:
         }
 
         for (int i = 0; i < (int)ModTargetID::COUNT; i++) {
-            targets[i] = nullptr;
+            auto &slot = targetSlots[i];
+            slot.modPtr = nullptr;
+            slot.base   = 0.0f;
 
-            auto& slot = targetSlots[i];
-            slot.ptr  = nullptr;
-            slot.base = 0.0f;
+            slot.addAcc = 0.0f;
+            slot.multAcc = 1.0f;
+            slot.replaceAcc = 0.0f;
+            slot.hasReplace = false;
+            slot.curveAcc = 1.0f;
         }
     }
 
@@ -80,14 +84,14 @@ public:
         sources[(int)id] = src;
     }
 
-    // Register a target parameter pointer
-    void registerTarget(ModTargetID id, float* p)
+    // Register a target parameter pointer.
+    // IMPORTANT: pass pointer-to-mod-shadow (where modded runtime value should be written)
+    // and pass the knob/base value separately (so ModMatrix never overwrites the real knob).
+    void registerTarget(ModTargetID id, float* modValuePtr, float baseValue)
     {
         auto& slot = targetSlots[(int)id];
-        targets[(int)id] = p;
-
-        slot.ptr  = p;
-        slot.base = *p;
+        slot.modPtr = modValuePtr;
+        slot.base   = baseValue;
     }
 
     // Add a modulation route to the matrix
@@ -97,7 +101,7 @@ public:
         routes[numRoutes++] = { (int)s, (int)t, amt, type };
     }
 
-    // Process modulation every sample
+    // Process modulation every sample (or control tick)
     void process(float sr)
     {
         // 1. Read each source modulator
@@ -119,7 +123,7 @@ public:
             slot.curveAcc   = 1.0f;
         }
 
-        // 3. Apply all modulation routes
+        // 3. Apply all modulation routes into accumulators
         for (int r = 0; r < numRoutes; r++)
         {
             const Route& rt = routes[r];
@@ -140,10 +144,6 @@ public:
                     slot.replaceAcc = srcVal * rt.amount;
                     slot.hasReplace = true;
                     break;
-
-                // -------------------------------
-                // SERUM-STYLE CURVES
-                // -------------------------------
 
                 case ModType::EXP_CURVE:
                 {
@@ -171,20 +171,27 @@ public:
             }
         }
 
-        // 4. Write final parameter values
+        // 4. Write final runtime-modulated values to the mod-shadows
         for (int i = 0; i < (int)ModTargetID::COUNT; i++)
         {
             auto& slot = targetSlots[i];
-            if (!slot.ptr) continue;
+            if (!slot.modPtr) continue;
 
-            float baseVal = slot.hasReplace ? slot.replaceAcc : slot.base;
+            // start from the permanent base (knob) value
+            float baseVal = slot.base;
 
             // Serum order: REPLACE → ADD → MULTIPLY → CURVE
-            float out = (baseVal + slot.addAcc) * slot.multAcc;
+            float out;
+            if (slot.hasReplace)
+                out = slot.replaceAcc;
+            else
+                out = baseVal + slot.addAcc;
 
+            out *= slot.multAcc;
             out *= slot.curveAcc;
 
-            *slot.ptr = out;
+            *slot.modPtr = out; // write only to the mod-shadow!
         }
     }
 };
+

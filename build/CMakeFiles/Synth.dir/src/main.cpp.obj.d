@@ -394,6 +394,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Module.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/VCA.h \
  C:/msys64/mingw64/include/c++/14.2.0/algorithm \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \
@@ -402,7 +403,6 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/VCA.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModMatrix.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstdint \

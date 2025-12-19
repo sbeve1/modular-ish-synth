@@ -64,7 +64,7 @@ struct Voice
         osc.setFrequency(baseFreq);
 
         // Apply phase offset (IMPORTANT!)
-        osc.phase = osc.phaseOffset * TWO_PI;
+        osc.phase = osc.phaseOffsetBase * TWO_PI;
 
         // Set filter keytracking reference
         filter.currentNote = note;
@@ -80,7 +80,7 @@ struct Voice
         lfo3.retrigger();
         lfo4.retrigger();
 
-        // reset mod matrix
+        // reset mod matrix (clears routes and sources)
         mod.clearAll();
 
         // ============================
@@ -123,79 +123,78 @@ struct Voice
         // ============================
         // REGISTER TARGETS
         // ============================
+        // NOTE: registerTarget now takes (modShadowPtr, baseValue).
+        // Modules must expose a mod shadow pointer and base knob values.
 
         // VCA
-        mod.registerTarget(ModTargetID::VCA_GAIN, vca.getGainPtr());
-        mod.registerTarget(ModTargetID::VCA_PAN,  vca.getPanPtr());
+        mod.registerTarget(ModTargetID::VCA_GAIN, vca.getGainModPtr(), vca.getGainBase());
+        mod.registerTarget(ModTargetID::VCA_PAN,  vca.getPanModPtr(),  vca.getPanBase());
 
         // Filter
-        mod.registerTarget(ModTargetID::FILTER_CUTOFF,     filter.getCutoffPtr());
-        mod.registerTarget(ModTargetID::FILTER_RESONANCE,  filter.getResonancePtr());
-        mod.registerTarget(ModTargetID::FILTER_DRIVE,      filter.getDrivePtr());
-        mod.registerTarget(ModTargetID::FILTER_POST_DRIVE, filter.getPostDrivePtr());
-        mod.registerTarget(ModTargetID::FILTER_MIX,         filter.getMixPtr());
-        mod.registerTarget(ModTargetID::FILTER_KEYTRACK,    filter.getKeytrackPtr());
+        mod.registerTarget(ModTargetID::FILTER_CUTOFF,     filter.getCutoffModPtr(),     filter.getCutoffBase());
+        mod.registerTarget(ModTargetID::FILTER_RESONANCE,  filter.getResonanceModPtr(),  filter.getResonanceBase());
+        mod.registerTarget(ModTargetID::FILTER_DRIVE,      filter.getDriveModPtr(),      filter.getDriveBase());
+        mod.registerTarget(ModTargetID::FILTER_POST_DRIVE, filter.getPostDriveModPtr(),  filter.getPostDriveBase());
+        mod.registerTarget(ModTargetID::FILTER_MIX,        filter.getMixModPtr(),        filter.getMixBase());
+        mod.registerTarget(ModTargetID::FILTER_KEYTRACK,   filter.getKeytrackModPtr(),   filter.getKeytrackBase());
 
         // Oscillator
-        mod.registerTarget(ModTargetID::OSC_FREQUENCY, osc.getFreqPtr());
-        mod.registerTarget(ModTargetID::OSC_FINE,      osc.getFinePtr());
-        mod.registerTarget(ModTargetID::OSC_LEVEL,     osc.getLevelPtr());
-        mod.registerTarget(ModTargetID::OSC_PHASE_OFF, osc.getPhaseOffsetPtr());
-        mod.registerTarget(ModTargetID::OSC_PAN,       osc.getPanPtr());
+        mod.registerTarget(ModTargetID::OSC_FREQUENCY, osc.getFreqModPtr(),       osc.getFreqBase());
+        mod.registerTarget(ModTargetID::OSC_FINE,      osc.getFineModPtr(),       osc.getFineBase());
+        mod.registerTarget(ModTargetID::OSC_LEVEL,     osc.getLevelModPtr(),      osc.getLevelBase());
+        mod.registerTarget(ModTargetID::OSC_PHASE_OFF, osc.getPhaseOffsetModPtr(),osc.getPhaseOffsetBase());
+        mod.registerTarget(ModTargetID::OSC_PAN,       osc.getPanModPtr(),        osc.getPanBase());
 
-        // Envelopes
-        // env1
-        mod.registerTarget(ModTargetID::ENV1_ATTACK,  &env1.attack);
-        mod.registerTarget(ModTargetID::ENV1_HOLD,    &env1.hold);
-        mod.registerTarget(ModTargetID::ENV1_DECAY,   &env1.decay);
-        mod.registerTarget(ModTargetID::ENV1_SUSTAIN, &env1.sustain);
-        mod.registerTarget(ModTargetID::ENV1_RELEASE, &env1.release);
-        mod.registerTarget(ModTargetID::ENV1_AMOUNT,  &env1.amount);
+        // Envelopes (we modulate the parameter values directly)
+        mod.registerTarget(ModTargetID::ENV1_ATTACK,  &env1.attack,  env1.attack);
+        mod.registerTarget(ModTargetID::ENV1_HOLD,    &env1.hold,    env1.hold);
+        mod.registerTarget(ModTargetID::ENV1_DECAY,   &env1.decay,   env1.decay);
+        mod.registerTarget(ModTargetID::ENV1_SUSTAIN, &env1.sustain, env1.sustain);
+        mod.registerTarget(ModTargetID::ENV1_RELEASE, &env1.release, env1.release);
+        mod.registerTarget(ModTargetID::ENV1_AMOUNT,  &env1.amount,  env1.amount);
 
-        // env2
-        mod.registerTarget(ModTargetID::ENV2_ATTACK,  &env2.attack);
-        mod.registerTarget(ModTargetID::ENV2_HOLD,    &env2.hold);
-        mod.registerTarget(ModTargetID::ENV2_DECAY,   &env2.decay);
-        mod.registerTarget(ModTargetID::ENV2_SUSTAIN, &env2.sustain);
-        mod.registerTarget(ModTargetID::ENV2_RELEASE, &env2.release);
-        mod.registerTarget(ModTargetID::ENV2_AMOUNT,  &env2.amount);
+        mod.registerTarget(ModTargetID::ENV2_ATTACK,  &env2.attack,  env2.attack);
+        mod.registerTarget(ModTargetID::ENV2_HOLD,    &env2.hold,    env2.hold);
+        mod.registerTarget(ModTargetID::ENV2_DECAY,   &env2.decay,   env2.decay);
+        mod.registerTarget(ModTargetID::ENV2_SUSTAIN, &env2.sustain, env2.sustain);
+        mod.registerTarget(ModTargetID::ENV2_RELEASE, &env2.release, env2.release);
+        mod.registerTarget(ModTargetID::ENV2_AMOUNT,  &env2.amount,  env2.amount);
 
-        // env3
-        mod.registerTarget(ModTargetID::ENV3_ATTACK,  &env3.attack);
-        mod.registerTarget(ModTargetID::ENV3_HOLD,    &env3.hold);
-        mod.registerTarget(ModTargetID::ENV3_DECAY,   &env3.decay);
-        mod.registerTarget(ModTargetID::ENV3_SUSTAIN, &env3.sustain);
-        mod.registerTarget(ModTargetID::ENV3_RELEASE, &env3.release);
-        mod.registerTarget(ModTargetID::ENV3_AMOUNT,  &env3.amount);
+        mod.registerTarget(ModTargetID::ENV3_ATTACK,  &env3.attack,  env3.attack);
+        mod.registerTarget(ModTargetID::ENV3_HOLD,    &env3.hold,    env3.hold);
+        mod.registerTarget(ModTargetID::ENV3_DECAY,   &env3.decay,   env3.decay);
+        mod.registerTarget(ModTargetID::ENV3_SUSTAIN, &env3.sustain, env3.sustain);
+        mod.registerTarget(ModTargetID::ENV3_RELEASE, &env3.release, env3.release);
+        mod.registerTarget(ModTargetID::ENV3_AMOUNT,  &env3.amount,  env3.amount);
 
         // LFOs
-        mod.registerTarget(ModTargetID::LFO1_RATE,     lfo1.getFrequencyPtr());
-        mod.registerTarget(ModTargetID::LFO1_BPM,      lfo1.getBPMPtr());
-        mod.registerTarget(ModTargetID::LFO1_SYNC_DIV, lfo1.getSyncDivisionPtr());
-        mod.registerTarget(ModTargetID::LFO1_DELAY,    lfo1.getDelayPtr());
-        mod.registerTarget(ModTargetID::LFO1_RISE,     lfo1.getRisePtr());
-        mod.registerTarget(ModTargetID::LFO1_AMOUNT,   lfo1.getAmountPtr());
+        mod.registerTarget(ModTargetID::LFO1_RATE,     lfo1.getFrequencyPtr(),    lfo1.freq);
+        mod.registerTarget(ModTargetID::LFO1_BPM,      lfo1.getBPMPtr(),          lfo1.bpm);
+        mod.registerTarget(ModTargetID::LFO1_SYNC_DIV, lfo1.getSyncDivisionPtr(), lfo1.syncDivision);
+        mod.registerTarget(ModTargetID::LFO1_DELAY,    lfo1.getDelayPtr(),        lfo1.delay);
+        mod.registerTarget(ModTargetID::LFO1_RISE,     lfo1.getRisePtr(),         lfo1.rise);
+        mod.registerTarget(ModTargetID::LFO1_AMOUNT,   lfo1.getAmountPtr(),       lfo1.amount);
 
-        mod.registerTarget(ModTargetID::LFO2_RATE,     lfo2.getFrequencyPtr());
-        mod.registerTarget(ModTargetID::LFO2_BPM,      lfo2.getBPMPtr());
-        mod.registerTarget(ModTargetID::LFO2_SYNC_DIV, lfo2.getSyncDivisionPtr());
-        mod.registerTarget(ModTargetID::LFO2_DELAY,    lfo2.getDelayPtr());
-        mod.registerTarget(ModTargetID::LFO2_RISE,     lfo2.getRisePtr());
-        mod.registerTarget(ModTargetID::LFO2_AMOUNT,   lfo2.getAmountPtr());
+        mod.registerTarget(ModTargetID::LFO2_RATE,     lfo2.getFrequencyPtr(),    lfo2.freq);
+        mod.registerTarget(ModTargetID::LFO2_BPM,      lfo2.getBPMPtr(),          lfo2.bpm);
+        mod.registerTarget(ModTargetID::LFO2_SYNC_DIV, lfo2.getSyncDivisionPtr(), lfo2.syncDivision);
+        mod.registerTarget(ModTargetID::LFO2_DELAY,    lfo2.getDelayPtr(),        lfo2.delay);
+        mod.registerTarget(ModTargetID::LFO2_RISE,     lfo2.getRisePtr(),         lfo2.rise);
+        mod.registerTarget(ModTargetID::LFO2_AMOUNT,   lfo2.getAmountPtr(),       lfo2.amount);
 
-        mod.registerTarget(ModTargetID::LFO3_RATE,     lfo3.getFrequencyPtr());
-        mod.registerTarget(ModTargetID::LFO3_BPM,      lfo3.getBPMPtr());
-        mod.registerTarget(ModTargetID::LFO3_SYNC_DIV, lfo3.getSyncDivisionPtr());
-        mod.registerTarget(ModTargetID::LFO3_DELAY,    lfo3.getDelayPtr());
-        mod.registerTarget(ModTargetID::LFO3_RISE,     lfo3.getRisePtr());
-        mod.registerTarget(ModTargetID::LFO3_AMOUNT,   lfo3.getAmountPtr());
+        mod.registerTarget(ModTargetID::LFO3_RATE,     lfo3.getFrequencyPtr(),    lfo3.freq);
+        mod.registerTarget(ModTargetID::LFO3_BPM,      lfo3.getBPMPtr(),          lfo3.bpm);
+        mod.registerTarget(ModTargetID::LFO3_SYNC_DIV, lfo3.getSyncDivisionPtr(), lfo3.syncDivision);
+        mod.registerTarget(ModTargetID::LFO3_DELAY,    lfo3.getDelayPtr(),        lfo3.delay);
+        mod.registerTarget(ModTargetID::LFO3_RISE,     lfo3.getRisePtr(),         lfo3.rise);
+        mod.registerTarget(ModTargetID::LFO3_AMOUNT,   lfo3.getAmountPtr(),       lfo3.amount);
 
-        mod.registerTarget(ModTargetID::LFO4_RATE,     lfo4.getFrequencyPtr());
-        mod.registerTarget(ModTargetID::LFO4_BPM,      lfo4.getBPMPtr());
-        mod.registerTarget(ModTargetID::LFO4_SYNC_DIV, lfo4.getSyncDivisionPtr());
-        mod.registerTarget(ModTargetID::LFO4_DELAY,    lfo4.getDelayPtr());
-        mod.registerTarget(ModTargetID::LFO4_RISE,     lfo4.getRisePtr());
-        mod.registerTarget(ModTargetID::LFO4_AMOUNT,   lfo4.getAmountPtr());
+        mod.registerTarget(ModTargetID::LFO4_RATE,     lfo4.getFrequencyPtr(),    lfo4.freq);
+        mod.registerTarget(ModTargetID::LFO4_BPM,      lfo4.getBPMPtr(),          lfo4.bpm);
+        mod.registerTarget(ModTargetID::LFO4_SYNC_DIV, lfo4.getSyncDivisionPtr(), lfo4.syncDivision);
+        mod.registerTarget(ModTargetID::LFO4_DELAY,    lfo4.getDelayPtr(),        lfo4.delay);
+        mod.registerTarget(ModTargetID::LFO4_RISE,     lfo4.getRisePtr(),         lfo4.rise);
+        mod.registerTarget(ModTargetID::LFO4_AMOUNT,   lfo4.getAmountPtr(),       lfo4.amount);
 
         active = true;
     }
@@ -212,10 +211,10 @@ struct Voice
         if (!active)
             return { 0.f, 0.f };
 
-        // run modulation
+        // run modulation (writes into mod-shadows)
         mod.process(sr);
 
-        // audio chain
+        // audio chain uses the mod-shadows inside modules
         Sample signal = osc.process(sr, {0.f, 0.f});
         signal = filter.process(sr, signal);
         signal = vca.process(sr, signal);
