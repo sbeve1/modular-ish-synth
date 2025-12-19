@@ -23,6 +23,8 @@
 #include "control/macro/MacroModule.h"
 #include "control/macro/MacroStorage.h"
 
+#include <iostream>
+
 struct Voice
 {
     Oscillator osc;
@@ -57,6 +59,7 @@ struct Voice
         osc.setFrequency(baseFreq);
 
         velocityMod.value = vel;   // <-- APPLIED HERE
+        std::cout << "Velocity = " << vel << std::endl;
 
         env.noteOn();
 
