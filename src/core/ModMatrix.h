@@ -14,9 +14,9 @@
 // CONTROLModMatrix might be a better name. no audio patching here
 
 enum class ModType {
-    Add,
-    Multiply,
-    Replace
+    ADD,
+    MULTIPLY,
+    REPLACE
 };
 
 struct ModRoute {
@@ -42,7 +42,7 @@ public:
 
     // Add a modulation route.
     // Should be called off the audio thread (e.g. during voice start or UI).
-    void addRoute(ControlModule* src, float* target, float amount, ModType type = ModType::Add) {
+    void addRoute(ControlModule* src, float* target, float amount, ModType type = ModType::ADD) {
         if (!src || !target) return;
 
         // get or create modulator index
@@ -152,15 +152,15 @@ public:
             TargetSlot &slot = targets[r.targetIndex];
 
             switch (r.type) {
-                case ModType::Add:
+                case ModType::ADD:
                     slot.addAcc += srcVal * r.amount;
                     break;
-                case ModType::Multiply:
+                case ModType::MULTIPLY:
                     // multiplicative modulation applied as multiplier (1 + src*amt)
                     // so amount = how strongly the source influences multiplier
                     slot.multAcc *= (1.0f + srcVal * r.amount);
                     break;
-                case ModType::Replace:
+                case ModType::REPLACE:
                     slot.replaceAcc = srcVal * r.amount;
                     slot.hasReplace = true;
                     break;

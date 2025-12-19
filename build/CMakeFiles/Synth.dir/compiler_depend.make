@@ -531,7 +531,8 @@ CMakeFiles/Synth.dir/src/core/Synth.cpp.obj: C:/Users/tevin/Desktop/Developer/CR
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModMatrix.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargets.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargetID.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargetResolver.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Synth.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Voice.h
 
@@ -990,7 +991,8 @@ CMakeFiles/Synth.dir/src/core/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRA
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xsavesintrin.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xtestintrin.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModMatrix.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargets.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargetID.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargetResolver.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Synth.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Voice.h
 
@@ -1149,8 +1151,6 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
 
 
 C:/msys64/mingw64/include/io.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargets.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModMatrix.h:
 
@@ -1429,6 +1429,8 @@ C:/msys64/mingw64/include/strings.h:
 C:/msys64/mingw64/include/c++/14.2.0/bits/stringfwd.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/vector:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargetResolver.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/tuple:
 
@@ -2023,6 +2025,8 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc:
 C:/msys64/mingw64/include/sdks/_mingw_ddk.h:
 
 C:/msys64/mingw64/include/sec_api/stdlib_s.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/ModTargetID.h:
 
 C:/msys64/mingw64/include/sec_api/wchar_s.h:
 

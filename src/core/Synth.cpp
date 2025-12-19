@@ -1,26 +1,30 @@
 #include "Synth.h"
+#include "ModSourceResolver.h"
+#include "ModTargetResolver.h"
 
 Synth::Synth() {
-    // Give voices access to this synth
-    for (auto& v : voices)
-        v.parentSynth = this;
-
-        // ------- DEFAULT ROUTES -------
-
-        globalRoutes.emplace_back(nullptr,
+    // ------- DEFAULT ROUTES -------
+    globalRoutes.emplace_back(ModSourceID::ENV1,
                             ModTargetID::VCA_GAIN,
                             1.0f,
-                            ModType::Replace);
+                            ModType::REPLACE);
 
-        globalRoutes.emplace_back(nullptr,
+    globalRoutes.emplace_back(ModSourceID::ENV1,
                             ModTargetID::FILTER_CUTOFF,
                             500.0f,
-                            ModType::Add);
+                            ModType::ADD);
 
-        globalRoutes.emplace_back(nullptr,
+    globalRoutes.emplace_back(ModSourceID::ENV1,
+                            ModTargetID::FILTER_RESONANCE,
+                            0.5f,
+                            ModType::ADD);
+
+    globalRoutes.emplace_back(ModSourceID::LFO1,
                             ModTargetID::OSC_FREQUENCY,
                             5.0f,
-                            ModType::Add);
+                            ModType::ADD);
+
+
 
 }
 
@@ -43,28 +47,13 @@ void Synth::noteOn(int midiNote) {
 
     v->start(midiNote);
 
-    // -------------------------------
     // APPLY GLOBAL MODULATION ROUTES
-    // -------------------------------
     for (auto& gr : globalRoutes) {
-        ControlModule* src = nullptr;
 
-        // default mod sources
-        if (gr.src == nullptr) {
-            if (gr.targetID == ModTargetID::VCA_GAIN || gr.targetID == ModTargetID::FILTER_CUTOFF) {
-                src = &v->env;
-            }
-            else if (gr.targetID == ModTargetID::OSC_FREQUENCY) {
-                src = &v->lfo;
-            }
-        } 
-        else {
-            src = gr.src;
-        }
-
+        ControlModule* src = resolveSource(*v, gr.srcID);
         float* tgt = resolveTarget(*v, gr.targetID);
 
-        if (tgt)
+        if (src && tgt)
             v->mod.addRoute(src, tgt, gr.amount, gr.type);
     }
 

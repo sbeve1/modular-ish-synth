@@ -1,6 +1,5 @@
 #pragma once
 
-// Add targets as your synth grows
 enum class ModTargetID {
     VCA_GAIN,
     FILTER_CUTOFF,

@@ -2,24 +2,27 @@
 #include <array>
 #include <vector>
 #include "Voice.h"
-#include "ModTargetResolver.h"
+#include "ModSourceID.h"
+#include "ModTargetID.h"
+
 
 struct GlobalRoute {
-    ControlModule* src;
+    ModSourceID srcID;
     ModTargetID targetID;
     float amount;
     ModType type;
 
-    GlobalRoute(ControlModule* s,
-                ModTargetID id,
-                float amt,
-                ModType t)
-        : src(s), targetID(id), amount(amt), type(t) {}
+    GlobalRoute::GlobalRoute(ModSourceID s, ModTargetID t, float amt, ModType ty) {
+        srcID = s;
+        targetID = t;
+        amount = amt;
+        type = ty;
+    }
+
 };
 
 class Synth {
 public:
-
     static const int NUM_VOICES = 16;
     std::array<Voice, NUM_VOICES> voices;
 
