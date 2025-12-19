@@ -23,7 +23,6 @@
 #include "control/macro/MacroModule.h"
 #include "control/macro/MacroStorage.h"
 
-#include <iostream>
 
 struct Voice
 {
@@ -69,10 +68,6 @@ struct Voice
 
         // Set filter keytracking reference
         filter.currentNote = note;
-
-        // performance values
-        velocityMod.value = vel;
-        std::cout << "Velocity = " << vel << std::endl;
 
         // trigger envelopes
         env1.noteOn(note, vel);
