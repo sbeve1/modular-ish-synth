@@ -394,15 +394,25 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Module.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Envelope.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/ControlModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/VCA.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/LFO.h \
- C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\engine/ModMatrix.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModMatrix.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstdint \
  C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h \
  C:/msys64/mingw64/include/stdint.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstring \
- C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\engine/ModSourceID.h \
- C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\engine/ModTargetID.h
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModSourceID.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModTargetID.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/LFO.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/NoteModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/VelocityModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/ModWheelModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AftertouchModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/PitchBendModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AlternateModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerVoiceModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerNoteModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/macro/MacroModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/macro/MacroStorage.h

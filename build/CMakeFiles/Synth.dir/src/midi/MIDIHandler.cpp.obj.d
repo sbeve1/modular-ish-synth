@@ -144,4 +144,52 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_uninitialized.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_vector.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h \
- C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc
+ C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Synth.h \
+ C:/msys64/mingw64/include/c++/14.2.0/array \
+ C:/msys64/mingw64/include/c++/14.2.0/compare \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Voice.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Module.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cmath \
+ C:/msys64/mingw64/include/math.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/specfun.h \
+ C:/msys64/mingw64/include/c++/14.2.0/limits \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/gamma.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/special_function_util.h \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/bessel_function.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/beta_function.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/ell_integral.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/exp_integral.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/hypergeometric.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/legendre_function.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/modified_bessel_func.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_hermite.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/VCA.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModMatrix.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cstdint \
+ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h \
+ C:/msys64/mingw64/include/stdint.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cstring \
+ C:/msys64/mingw64/include/string.h \
+ C:/msys64/mingw64/include/sec_api/string_s.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModSourceID.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModTargetID.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/LFO.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/NoteModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/VelocityModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/ModWheelModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AftertouchModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/PitchBendModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AlternateModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerVoiceModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerNoteModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/macro/MacroModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/macro/MacroStorage.h

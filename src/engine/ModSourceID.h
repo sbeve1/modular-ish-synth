@@ -1,3 +1,5 @@
+#pragma once
+
 enum class ModSourceID : int {
     NONE = -1,
 
@@ -18,7 +20,7 @@ enum class ModSourceID : int {
     MOD_WHEEL = 9,
     AFTERTOUCH = 10,
     PITCH_BEND = 11,
-    ALTERNATE = 12,
+    ALTRNATE = 12,
 
     // --- RANDOM ---
     RANDOM_PER_VOICE = 13,

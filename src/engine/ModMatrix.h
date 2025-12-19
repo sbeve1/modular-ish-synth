@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
-#include "audio/ControlModule.h"
+#include "control/ControlModule.h"
 #include "ModSourceID.h"
 #include "ModTargetID.h"
 

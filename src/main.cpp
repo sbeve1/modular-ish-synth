@@ -44,7 +44,7 @@ int main() {
     while (true) {
         if (midi.poll(status, note, vel)) {
             if ((status & 0xF0) == 0x90 && vel > 0)
-                synth.noteOn(note);
+                synth.noteOn(note, vel / 127.0f);
             if ((status & 0xF0) == 0x80 || ((status & 0xF0) == 0x90 && vel == 0))
                 synth.noteOff(note);
         }

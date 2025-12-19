@@ -1,37 +1,15 @@
 #include "Synth.h"
+#include <iostream>
 
 Synth::Synth() {
-    // ------- DEFAULT ROUTES (Serum-style preset init) -------
-    globalRoutes.emplace_back(
-        ModSourceID::ENV1,
-        ModTargetID::VCA_GAIN,
-        1.0f,
-        ModType::REPLACE
-    );
-
-    globalRoutes.emplace_back(
-        ModSourceID::ENV1,
-        ModTargetID::FILTER_CUTOFF,
-        500.0f,
-        ModType::ADD
-    );
-
-    globalRoutes.emplace_back(
-        ModSourceID::ENV1,
-        ModTargetID::FILTER_RESONANCE,
-        0.5f,
-        ModType::ADD
-    );
-
-    globalRoutes.emplace_back(
-        ModSourceID::LFO1,
-        ModTargetID::OSC_FREQUENCY,
-        5.0f,
-        ModType::ADD
-    );
+    // Default mod routes
+    globalRoutes.emplace_back(ModSourceID::ENV1, ModTargetID::VCA_GAIN,         1.0f,   ModType::REPLACE);
+    globalRoutes.emplace_back(ModSourceID::ENV1, ModTargetID::FILTER_CUTOFF,    500.0f, ModType::ADD);
+    globalRoutes.emplace_back(ModSourceID::ENV1, ModTargetID::FILTER_RESONANCE, 0.5f,   ModType::ADD);
+    globalRoutes.emplace_back(ModSourceID::LFO1, ModTargetID::OSC_FREQUENCY,    5.0f,   ModType::ADD);
 }
 
-void Synth::noteOn(int midiNote)
+void Synth::noteOn(int midiNote, float velocity)
 {
     Voice* v = nullptr;
 
@@ -49,19 +27,16 @@ void Synth::noteOn(int midiNote)
         nextVoiceToSteal = (nextVoiceToSteal + 1) % NUM_VOICES;
     }
 
-    // Start voice (this registers modulators + targets inside mod)
-    v->start(midiNote);
+    v->start(midiNote, velocity);
 
     v->mod.numRoutes = 0;
-
-    for (auto& gr : globalRoutes) {
+    for (auto& gr : globalRoutes)
         v->mod.addRoute(gr.srcID, gr.targetID, gr.amount, gr.type);
-    }
 }
 
 void Synth::noteOff(int midiNote)
 {
-    for (auto& v: voices) {
+    for (auto& v : voices) {
         if (v.active && v.midiNote == midiNote)
             v.stop();
     }

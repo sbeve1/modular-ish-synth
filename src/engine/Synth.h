@@ -30,7 +30,7 @@ public:
 
     Synth();
 
-    void noteOn(int midiNote);
+    void noteOn(int midiNote, float velocity);     // FIXED
     void noteOff(int midiNote);
     Sample process(float sampleRate);
 
