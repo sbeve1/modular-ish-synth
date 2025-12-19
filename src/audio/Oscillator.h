@@ -3,7 +3,6 @@
 #include "core/CONSTANTS.h"
 #include <cmath>
 
-
 class Oscillator : public Module {
 public:
 
@@ -21,8 +20,18 @@ public:
         return 440.0f * powf(2.0f, (n - 69) / 12.0f);
     }
 
-    Sample process(float sr, const Sample& in) override { 
-        (void) in; // ignore warnings from Oscillator not using an input
+    inline float normalize(float s) const {
+        switch (waveform) {
+            case Waveform::Sine:     return s * 1.0f;
+            case Waveform::Triangle: return s * 1.22f;   // 1 / 0.577 RMS
+            case Waveform::Saw:      return s * 1.22f;
+            case Waveform::Square:   return s * 0.707f;  // RMS match to sine
+        }
+        return s;
+    }
+
+    Sample process(float sr, const Sample& in) override {
+        (void)in;
 
         float s = 0.0f;
 
@@ -32,24 +41,21 @@ public:
                 break;
 
             case Waveform::Saw:
-                // ranges from -1 to +1 as phase goes 0..TWO_PI
                 s = (2.0f * (phase / TWO_PI)) - 1.0f;
                 break;
 
             case Waveform::Square:
-                // 50% duty cycle square wave
                 s = (phase < PI ? 1.0f : -1.0f);
                 break;
 
             case Waveform::Triangle:
-                // triangle wave from -1 to +1
                 s = 2.0f * fabsf((phase / PI) - 1.0f) - 1.0f;
                 break;
         }
 
+        s = normalize(s);  // *** BAKED-IN NORMALIZATION ***
 
         phase += (TWO_PI * freq) / sr;
-
         if (phase >= TWO_PI)
             phase -= TWO_PI;
 
