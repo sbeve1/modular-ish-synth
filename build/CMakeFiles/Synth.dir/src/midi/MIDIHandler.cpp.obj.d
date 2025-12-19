@@ -1,7 +1,7 @@
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\midi\MIDIHandler.cpp \
  C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\midi\MIDIHandler.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/external/RtMidi.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/platform/RtMidi.h \
  C:/msys64/mingw64/include/c++/14.2.0/exception \
  C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++config.h \
  C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/os_defines.h \

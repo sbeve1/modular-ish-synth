@@ -128,77 +128,53 @@ Synth/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/build
 .PHONY : Synth/fast
 
-external/RtMidi.obj: external/RtMidi.cpp.obj
-.PHONY : external/RtMidi.obj
+src/engine/Synth.obj: src/engine/Synth.cpp.obj
+.PHONY : src/engine/Synth.obj
 
 # target to build an object file
-external/RtMidi.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/external/RtMidi.cpp.obj
-.PHONY : external/RtMidi.cpp.obj
+src/engine/Synth.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj
+.PHONY : src/engine/Synth.cpp.obj
 
-external/RtMidi.i: external/RtMidi.cpp.i
-.PHONY : external/RtMidi.i
+src/engine/Synth.i: src/engine/Synth.cpp.i
+.PHONY : src/engine/Synth.i
 
 # target to preprocess a source file
-external/RtMidi.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/external/RtMidi.cpp.i
-.PHONY : external/RtMidi.cpp.i
+src/engine/Synth.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/Synth.cpp.i
+.PHONY : src/engine/Synth.cpp.i
 
-external/RtMidi.s: external/RtMidi.cpp.s
-.PHONY : external/RtMidi.s
+src/engine/Synth.s: src/engine/Synth.cpp.s
+.PHONY : src/engine/Synth.s
 
 # target to generate assembly for a file
-external/RtMidi.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/external/RtMidi.cpp.s
-.PHONY : external/RtMidi.cpp.s
+src/engine/Synth.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/Synth.cpp.s
+.PHONY : src/engine/Synth.cpp.s
 
-src/core/Synth.obj: src/core/Synth.cpp.obj
-.PHONY : src/core/Synth.obj
+src/main.obj: src/main.cpp.obj
+.PHONY : src/main.obj
 
 # target to build an object file
-src/core/Synth.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/Synth.cpp.obj
-.PHONY : src/core/Synth.cpp.obj
+src/main.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/main.cpp.obj
+.PHONY : src/main.cpp.obj
 
-src/core/Synth.i: src/core/Synth.cpp.i
-.PHONY : src/core/Synth.i
-
-# target to preprocess a source file
-src/core/Synth.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/Synth.cpp.i
-.PHONY : src/core/Synth.cpp.i
-
-src/core/Synth.s: src/core/Synth.cpp.s
-.PHONY : src/core/Synth.s
-
-# target to generate assembly for a file
-src/core/Synth.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/Synth.cpp.s
-.PHONY : src/core/Synth.cpp.s
-
-src/core/main.obj: src/core/main.cpp.obj
-.PHONY : src/core/main.obj
-
-# target to build an object file
-src/core/main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/main.cpp.obj
-.PHONY : src/core/main.cpp.obj
-
-src/core/main.i: src/core/main.cpp.i
-.PHONY : src/core/main.i
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
 
 # target to preprocess a source file
-src/core/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/main.cpp.i
-.PHONY : src/core/main.cpp.i
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
 
-src/core/main.s: src/core/main.cpp.s
-.PHONY : src/core/main.s
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
 
 # target to generate assembly for a file
-src/core/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/main.cpp.s
-.PHONY : src/core/main.cpp.s
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
 src/midi/MIDIHandler.obj: src/midi/MIDIHandler.cpp.obj
 .PHONY : src/midi/MIDIHandler.obj
@@ -224,6 +200,30 @@ src/midi/MIDIHandler.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.s
 .PHONY : src/midi/MIDIHandler.cpp.s
 
+src/platform/RtMidi.obj: src/platform/RtMidi.cpp.obj
+.PHONY : src/platform/RtMidi.obj
+
+# target to build an object file
+src/platform/RtMidi.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj
+.PHONY : src/platform/RtMidi.cpp.obj
+
+src/platform/RtMidi.i: src/platform/RtMidi.cpp.i
+.PHONY : src/platform/RtMidi.i
+
+# target to preprocess a source file
+src/platform/RtMidi.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.i
+.PHONY : src/platform/RtMidi.cpp.i
+
+src/platform/RtMidi.s: src/platform/RtMidi.cpp.s
+.PHONY : src/platform/RtMidi.s
+
+# target to generate assembly for a file
+src/platform/RtMidi.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.s
+.PHONY : src/platform/RtMidi.cpp.s
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -233,18 +233,18 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... Synth
-	@echo ... external/RtMidi.obj
-	@echo ... external/RtMidi.i
-	@echo ... external/RtMidi.s
-	@echo ... src/core/Synth.obj
-	@echo ... src/core/Synth.i
-	@echo ... src/core/Synth.s
-	@echo ... src/core/main.obj
-	@echo ... src/core/main.i
-	@echo ... src/core/main.s
+	@echo ... src/engine/Synth.obj
+	@echo ... src/engine/Synth.i
+	@echo ... src/engine/Synth.s
+	@echo ... src/main.obj
+	@echo ... src/main.i
+	@echo ... src/main.s
 	@echo ... src/midi/MIDIHandler.obj
 	@echo ... src/midi/MIDIHandler.i
 	@echo ... src/midi/MIDIHandler.s
+	@echo ... src/platform/RtMidi.obj
+	@echo ... src/platform/RtMidi.i
+	@echo ... src/platform/RtMidi.s
 .PHONY : help
 
 

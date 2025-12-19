@@ -12,7 +12,7 @@ struct GlobalRoute {
     float amount;
     ModType type;
 
-    GlobalRoute::GlobalRoute(ModSourceID s, ModTargetID t, float amt, ModType ty) {
+    GlobalRoute(ModSourceID s, ModTargetID t, float amt, ModType ty) {
         srcID = s;
         targetID = t;
         amount = amt;

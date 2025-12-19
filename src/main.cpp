@@ -1,10 +1,10 @@
 #define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio.h"
+#include "platform/miniaudio.h"
 #include <iostream>
 #include <conio.h>
 
 #include "midi/MIDIHandler.h"
-#include "Synth.h"
+#include "engine/Synth.h"
 
 Synth synth;
 MIDIHandler midi;

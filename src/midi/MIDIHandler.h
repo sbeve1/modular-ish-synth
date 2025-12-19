@@ -1,5 +1,5 @@
 #pragma once
-#include "RtMidi.h"
+#include "platform/RtMidi.h"
 #include <vector>
 
 class MIDIHandler {

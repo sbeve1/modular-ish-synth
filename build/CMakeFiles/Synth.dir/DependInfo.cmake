@@ -8,10 +8,10 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/external/RtMidi.cpp" "CMakeFiles/Synth.dir/external/RtMidi.cpp.obj" "gcc" "CMakeFiles/Synth.dir/external/RtMidi.cpp.obj.d"
-  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/Synth.cpp" "CMakeFiles/Synth.dir/src/core/Synth.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/core/Synth.cpp.obj.d"
-  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/main.cpp" "CMakeFiles/Synth.dir/src/core/main.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/core/main.cpp.obj.d"
+  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Synth.cpp" "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj.d"
+  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/main.cpp" "CMakeFiles/Synth.dir/src/main.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/main.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/midi/MIDIHandler.cpp" "CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj.d"
+  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/platform/RtMidi.cpp" "CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
