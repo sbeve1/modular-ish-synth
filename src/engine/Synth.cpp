@@ -1,5 +1,6 @@
 #include "Synth.h"
 #include <cmath>
+#include "MasterLimiter.h"
 
 Synth::Synth() {
     // Serum-style velocity → amp
@@ -63,17 +64,11 @@ Sample Synth::process(float sr)
         out.right += s.right;
     }
 
-    // Serum-style loudness correction
-    float norm = (activeVoices > 0)
-        ? (1.0f / sqrtf((float)activeVoices))
-        : 1.0f;
+    out.left  *= MASTER_GAIN;
+    out.right *= MASTER_GAIN;
 
-    out.left  *= norm;
-    out.right *= norm;
-
-    // Keep some safe headroom
-    out.left  *= 0.9f;
-    out.right *= 0.9f;
-
+    static MasterLimiter lim;
+    out = lim.process(out);
+    
     return out;
 }

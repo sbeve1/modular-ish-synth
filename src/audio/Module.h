@@ -1,5 +1,6 @@
 #pragma once
 #include "core/Sample.h"
+#include "core/CONSTANTS.h"
 
 class Module {
 public:

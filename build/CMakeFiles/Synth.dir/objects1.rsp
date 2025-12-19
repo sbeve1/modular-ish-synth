@@ -1,1 +1,1 @@
-CMakeFiles/Synth.dir/src/main.cpp.obj CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj
+CMakeFiles/Synth.dir/src/main.cpp.obj CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj CMakeFiles/Synth.dir/src/control/LFO.cpp.obj

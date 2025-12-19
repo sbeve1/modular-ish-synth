@@ -128,6 +128,54 @@ Synth/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/build
 .PHONY : Synth/fast
 
+src/control/LFO.obj: src/control/LFO.cpp.obj
+.PHONY : src/control/LFO.obj
+
+# target to build an object file
+src/control/LFO.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/control/LFO.cpp.obj
+.PHONY : src/control/LFO.cpp.obj
+
+src/control/LFO.i: src/control/LFO.cpp.i
+.PHONY : src/control/LFO.i
+
+# target to preprocess a source file
+src/control/LFO.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/control/LFO.cpp.i
+.PHONY : src/control/LFO.cpp.i
+
+src/control/LFO.s: src/control/LFO.cpp.s
+.PHONY : src/control/LFO.s
+
+# target to generate assembly for a file
+src/control/LFO.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/control/LFO.cpp.s
+.PHONY : src/control/LFO.cpp.s
+
+src/core/CONSTANTS.obj: src/core/CONSTANTS.cpp.obj
+.PHONY : src/core/CONSTANTS.obj
+
+# target to build an object file
+src/core/CONSTANTS.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj
+.PHONY : src/core/CONSTANTS.cpp.obj
+
+src/core/CONSTANTS.i: src/core/CONSTANTS.cpp.i
+.PHONY : src/core/CONSTANTS.i
+
+# target to preprocess a source file
+src/core/CONSTANTS.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.i
+.PHONY : src/core/CONSTANTS.cpp.i
+
+src/core/CONSTANTS.s: src/core/CONSTANTS.cpp.s
+.PHONY : src/core/CONSTANTS.s
+
+# target to generate assembly for a file
+src/core/CONSTANTS.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.s
+.PHONY : src/core/CONSTANTS.cpp.s
+
 src/engine/Synth.obj: src/engine/Synth.cpp.obj
 .PHONY : src/engine/Synth.obj
 
@@ -233,6 +281,12 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... Synth
+	@echo ... src/control/LFO.obj
+	@echo ... src/control/LFO.i
+	@echo ... src/control/LFO.s
+	@echo ... src/core/CONSTANTS.obj
+	@echo ... src/core/CONSTANTS.i
+	@echo ... src/core/CONSTANTS.s
 	@echo ... src/engine/Synth.obj
 	@echo ... src/engine/Synth.i
 	@echo ... src/engine/Synth.s

@@ -84,12 +84,12 @@ clean: CMakeFiles/Synth.dir/clean
 CMakeFiles/Synth.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=1,2,3,4,5 "Built target Synth"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=1,2,3,4,5,6,7 "Built target Synth"
 .PHONY : CMakeFiles/Synth.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Synth.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" 5
+	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/Synth.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" 0
 .PHONY : CMakeFiles/Synth.dir/rule

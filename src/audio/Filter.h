@@ -2,160 +2,163 @@
 #include "audio/Module.h"
 #include "core/CONSTANTS.h"
 #include <cmath>
+#include <algorithm>
 
 class Filter : public Module {
 public:
     enum class Mode {
         BYPASS,
-        LP12,
-        LP24,
-        HP12,
-        BP12,
+        LP,
+        HP,
+        BP,
         NOTCH
     };
 
-    Filter()
-    {
-        setCutoff(1000.0f);
-        setResonance(0.0f);
-        setDrive(0.0f);
-        setMode(Mode::LP12);
-        setOversample(false);
+    Filter(){
+        cutoff = 1000.0f;
+        resonance = 0.0f;
+        drive = 0.0f;
+        postDrive = 0.0f;
+        mix = 1.0f;
+        keytrack = 0.0f;
+        mode = Mode::LP;
+        modeParam = 0.0f;
+        oversample2x = false;
     }
 
-    Sample process(float sampleRate, const Sample& in) override
-    {
+    Sample process(float sr, const Sample& in) override {
         if (mode == Mode::BYPASS)
             return in;
 
+        Sample filtered;
+
         if (oversample2x) {
-            Sample s1 = processSingle(sampleRate * 2.0f, in);
-            Sample s2 = processSingle(sampleRate * 2.0f, in);
-            return { (s1.left + s2.left) * 0.5f, (s1.right + s2.right) * 0.5f };
+            Sample a = processSingle(sr * OVERSAMPLE_2X, in);
+            Sample b = processSingle(sr * OVERSAMPLE_2X, in);
+            filtered = { (a.left + b.left) * 0.5f,
+                         (a.right + b.right) * 0.5f };
+        } else {
+            filtered = processSingle(sr, in);
         }
-        else {
-            return processSingle(sampleRate, in);
-        }
+
+        // --- Dry/Wet Mix ---
+        float l = filtered.left  * mix + in.left  * (1.0f - mix);
+        float r = filtered.right * mix + in.right * (1.0f - mix);
+
+        // --- Post-drive saturation ---
+        l *= (1.0f + postDrive);
+        r *= (1.0f + postDrive);
+
+        l = l / (1.0f + fabsf(l));
+        r = r / (1.0f + fabsf(r));
+
+        return { l, r };
     }
 
-    void setCutoff(float c) { cutoff = std::max(20.0f, std::min(c, 20000.0f)); }
-    void setResonance(float r) { resonance = std::max(0.0f, std::min(r, 1.0f)); }
-    void setDrive(float d) { drive = std::max(0.0f, d); }
-    void setMode(Mode m) { mode = m; }
-    void setOversample(bool v) { oversample2x = v; }
-
+    // -----------------------------
+    // Pointer getters for ModMatrix
+    // -----------------------------
     float* getCutoffPtr()    { return &cutoff; }
     float* getResonancePtr() { return &resonance; }
+    float* getDrivePtr()     { return &drive; }
+    float* getMixPtr()       { return &mix; }
+    float* getKeytrackPtr()  { return &keytrack; }
+    float* getPostDrivePtr() { return &postDrive; }
 
 private:
     struct State {
-        float lp = 0.0f;
-        float bp = 0.0f;
+        float ic1eq = 0.0f;
+        float ic2eq = 0.0f;
     };
 
-    State stL1, stR1;
-    State stL2, stR2;
+    State stL, stR;
 
-    Mode mode = Mode::LP12;
+    Mode  mode;
+    float cutoff;
+    float resonance;
+    float drive;
+    float postDrive;
+    float mix;
+    float keytrack;
+    float modeParam;
+    bool  oversample2x;
 
-    float cutoff = 1000.0f;
-    float resonance = 0.0f;
-    float drive = 0.0f;
-    bool oversample2x = false;
-
-    inline float softsat(float x) const
-    {
+    inline float sat(float x) const {
         return x / (1.0f + fabsf(x));
     }
 
-    inline void svfProcessSample(float in, float sr, State& st, float& out_lp, float& out_bp)
-    {
-        float fc = std::max(20.0f, std::min(cutoff, sr * 0.49f));
-        float f  = 2.0f * sinf(PI * fc / sr);
-        float d  = 1.0f - resonance * 0.98f;
-
-        float hp = in - st.lp - d * st.bp;
-        st.bp += f * hp;
-        st.lp += f * st.bp;
-
-        out_lp = st.lp;
-        out_bp = st.bp;
+    inline float mapRes(float r) const {
+        return FILTER_RESONANCE_MIN + r * FILTER_RESONANCE_RANGE;
     }
 
-    Sample processSingle(float sr, const Sample& in)
-    {
+    float processSample(float x, float sr, State& s) {
+        int im = (int)modeParam;
+        im = std::clamp(im, 0, 3);
+
+        switch (im) {
+            case 0: mode = Mode::LP;    break;
+            case 1: mode = Mode::HP;    break;
+            case 2: mode = Mode::BP;    break;
+            case 3: mode = Mode::NOTCH; break;
+        }
+
+        // Apply simple keytracking
+        float trackedCutoff = cutoff;
+
+        // 440 Hz reference MIDI 69
+        // Use 0..1 input keytrack meaning 0–100% following
+        trackedCutoff *= powf(2.0f, keytrack * ((currentNote - 60) / 12.0f));
+
+        float fc = std::clamp(trackedCutoff,
+                              MIN_FREQ,
+                              sr * NYQUIST_SCALE);
+
+        float g = tanf(PI * fc / sr);
+        float R = mapRes(resonance);
+
+        float a = 1.0f + 2.0f * R * g + g * g;
+        if (a < EPSILON) a = EPSILON;
+
+        float v3 = (x - 2.0f * R * g * s.ic1eq - g * g * s.ic2eq) / a;
+        float v1 = g * v3 + s.ic1eq;
+        float v2 = g * v1 + s.ic2eq;
+
+        s.ic1eq = 2.0f * v1 - s.ic1eq;
+        s.ic2eq = 2.0f * v2 - s.ic2eq;
+
+        float lp = v2;
+        float bp = v1;
+        float hp = x - 2.0f * R * g * v1 - g * g * v2;
+
+        float out = 0.0f;
+        switch (mode) {
+            case Mode::LP:    out = lp; break;
+            case Mode::HP:    out = hp; break;
+            case Mode::BP:    out = bp; break;
+            case Mode::NOTCH: out = x - bp * R; break;
+            default:          out = x;  break;
+        }
+
+        out *= 1.0f / (1.0f + resonance * FILTER_RESONANCE_K);
+        return sat(out);
+    }
+
+    Sample processSingle(float sr, const Sample& in) {
         float il = in.left  * (1.0f + drive);
         float ir = in.right * (1.0f + drive);
 
         if (drive > 0.0f) {
-            il = softsat(il);
-            ir = softsat(ir);
+            il = sat(il);
+            ir = sat(ir);
         }
 
-        float lp1_l, bp1_l;
-        float lp1_r, bp1_r;
-
-        svfProcessSample(il, sr, stL1, lp1_l, bp1_l);
-        svfProcessSample(ir, sr, stR1, lp1_r, bp1_r);
-
-        float lp2_l = 0.0f, bp2_l = 0.0f;
-        float lp2_r = 0.0f, bp2_r = 0.0f;
-
-        if (mode == Mode::LP24) {
-            svfProcessSample(lp1_l, sr, stL2, lp2_l, bp2_l);
-            svfProcessSample(lp1_r, sr, stR2, lp2_r, bp2_r);
-        }
-
-        float outL = 0.0f;
-        float outR = 0.0f;
-
-        const float normK = 4.0f;
-        float comp = 1.0f / (1.0f + resonance * normK);
-
-        switch (mode) {
-            case Mode::LP12:
-                outL = lp1_l * comp;
-                outR = lp1_r * comp;
-                break;
-
-            case Mode::LP24:
-                outL = lp2_l * comp;
-                outR = lp2_r * comp;
-                break;
-
-            case Mode::HP12: {
-                float fc = std::max(20.0f, std::min(cutoff, sr * 0.49f));
-                float f  = 2.0f * sinf(PI * fc / sr);
-                float d  = 1.0f - resonance * 0.98f;
-                float hpL = il - lp1_l - d * bp1_l;
-                float hpR = ir - lp1_r - d * bp1_r;
-                outL = hpL * comp;
-                outR = hpR * comp;
-                break;
-            }
-
-            case Mode::BP12:
-                outL = bp1_l * comp;
-                outR = bp1_r * comp;
-                break;
-
-            case Mode::NOTCH: {
-                float notchL = il - resonance * bp1_l;
-                float notchR = ir - resonance * bp1_r;
-                outL = notchL * comp;
-                outR = notchR * comp;
-                break;
-            }
-
-            default:
-                outL = in.left;
-                outR = in.right;
-                break;
-        }
-
-        outL = softsat(outL);
-        outR = softsat(outR);
-
-        return { outL, outR };
+        return {
+            processSample(il, sr, stL),
+            processSample(ir, sr, stR)
+        };
     }
+
+public:
+    // Voice sets this on note start
+    int currentNote = 60;
 };

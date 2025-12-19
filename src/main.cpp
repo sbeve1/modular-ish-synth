@@ -23,6 +23,9 @@ void audioCallback(ma_device* device, void* pOutput, const void*, ma_uint32 fram
 
 // ------------------ MAIN ------------------
 int main() {
+    initDSPTables();
+    initLFOShape();
+    
     // Audio setup
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_f32;

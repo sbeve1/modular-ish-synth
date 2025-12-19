@@ -1,4 +1,8 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj"
+  "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj.d"
+  "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj"
+  "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj.d"
   "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj"
   "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj.d"
   "CMakeFiles/Synth.dir/src/main.cpp.obj"

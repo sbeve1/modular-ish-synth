@@ -8,6 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/control/LFO.cpp" "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj.d"
+  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/CONSTANTS.cpp" "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Synth.cpp" "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/main.cpp" "CMakeFiles/Synth.dir/src/main.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/main.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/midi/MIDIHandler.cpp" "CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj.d"
