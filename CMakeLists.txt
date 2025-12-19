@@ -16,6 +16,10 @@ file(GLOB CORE_SRC
     "src/core/*.cpp"
 )
 
+file(GLOB CONTROL_SRC
+    "src/control/*.cpp"
+)
+
 file(GLOB ENGINE_SRC
     "src/engine/*.cpp"
 )
@@ -42,6 +46,7 @@ add_executable(Synth
     ${CORE_SRC}
     ${ENGINE_SRC}
     ${AUDIO_SRC}
+    ${CONTROL_SRC}
     ${MIDI_SRC}
     ${PLATFORM_SRC}
 )
@@ -53,6 +58,7 @@ add_executable(Synth
 target_include_directories(Synth PRIVATE
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/audio
+    ${PROJECT_SOURCE_DIR}/src/control
     ${PROJECT_SOURCE_DIR}/src/engine
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/src/midi

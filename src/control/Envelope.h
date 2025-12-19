@@ -1,9 +1,9 @@
 #pragma once
-#include "ControlModule.h"
-#include <cstdio>
+#include "audio/ControlModule.h"
+#include <cmath>
 
 class Envelope : public ControlModule {
-public: 
+public:
     void noteOn() {
         state = State::ATTACK;
     }
@@ -12,12 +12,14 @@ public:
         state = State::RELEASE;
     }
 
-    float process(float sampleRate) override{
+    float process(float sr) override {
         switch (state) {
             case State::ATTACK: {
-                float step = 1.0f / (attack * sampleRate);
-                value += step;
-                if (value >= 1.0f) {
+                // exponential attack curve
+                float coeff = expf(-1.0f / (attack * sr));
+                value = value * coeff + (1.0f - coeff);
+
+                if (value >= 0.999f) {
                     value = 1.0f;
                     state = State::DECAY;
                 }
@@ -25,9 +27,10 @@ public:
             }
 
             case State::DECAY: {
-                float step = (1.0f - sustain) / (decay * sampleRate);
-                value -= step;
-                if (value <= sustain) {
+                float coeff = expf(-1.0f / (decay * sr));
+                value = value * coeff + (sustain * (1.0f - coeff));
+
+                if (fabs(value - sustain) < 0.001f) {
                     value = sustain;
                     state = State::SUSTAIN;
                 }
@@ -35,22 +38,20 @@ public:
             }
 
             case State::SUSTAIN:
-                // value just stays at sustain level
+                // hold steady
+                value = sustain;
                 break;
 
-            // linear release
             case State::RELEASE: {
-                float step = 1.0f / (release * sampleRate);
-                value -= step;
-                if (value <= 0.0f) {
+                float coeff = expf(-1.0f / (release * sr));
+                value = value * coeff;    // decays toward 0
+
+                if (value < 0.0001f) {
                     value = 0.0f;
                     state = State::IDLE;
                 }
                 break;
             }
-
-
-
 
             case State::IDLE:
                 value = 0.0f;
@@ -65,19 +66,19 @@ public:
     }
 
     void setAttack(float a) { attack = a; }
-    void setDecay(float d) { decay = d; }
-    void setSustain(float s) { sustain = s; }
-    void setRelease(float r) { release = r; }
+    void setDecay(float d)  { decay = d; }
+    void setSustain(float s){ sustain = s; }
+    void setRelease(float r){ release = r; }
 
-private: 
+private:
     enum class State { IDLE, ATTACK, DECAY, SUSTAIN, RELEASE };
 
     State state = State::IDLE;
 
     float attack  = 0.01f;   // seconds
-    float decay   = 0.20f;   // seconds
-    float sustain = 0.7f;    // level from 0–1
-    float release = 1.0f;   // seconds
+    float decay   = 0.20f;
+    float sustain = 0.7f;
+    float release = 0.5f;
 
-    float value = 0.0f;      // current envelope output
+    float value = 0.0f;
 };

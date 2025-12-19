@@ -1,17 +1,16 @@
 #pragma once
 
-#include <vector>
-#include <cmath>
 #include "audio/Oscillator.h"
-#include "audio/Envelope.h"
 #include "audio/VCA.h"
 #include "audio/Filter.h"
-#include "audio/LFO.h"
+#include "control/Envelope.h"
+#include "control/LFO.h"
+
 #include "ModMatrix.h"
 #include "core/Sample.h"
 
-struct Voice {
-
+struct Voice
+{
     Oscillator osc;
     Envelope   env;
     VCA        vca;
@@ -19,42 +18,54 @@ struct Voice {
     LFO        lfo;
 
     ModMatrix mod;
-    std::vector<Module*> audioChain;
 
     bool active = false;
     int midiNote = -1;
     float baseFreq = 0.0f;
 
-    void start(int note) {
+    void start(int note)
+    {
         midiNote = note;
-        active = true;
-
         baseFreq = osc.midiNoteToFreq(note);
         osc.setFrequency(baseFreq);
 
         env.noteOn();
 
-        audioChain = { &osc, &filter, &vca };
+        // ---- SERUM STYLE SOURCE REGISTRATION ----
+        mod.clearAll();
+        mod.registerSource(ModSourceID::ENV1, &env);
+        mod.registerSource(ModSourceID::LFO1, &lfo);
 
-        mod.clear();   // synth will fill routes AFTER this
+        // ---- SERUM STYLE TARGET REGISTRATION ----
+        mod.registerTarget(ModTargetID::VCA_GAIN,         vca.getGainPtr());
+        mod.registerTarget(ModTargetID::FILTER_CUTOFF,    filter.getCutoffPtr());
+        mod.registerTarget(ModTargetID::FILTER_RESONANCE, filter.getResonancePtr());
+        mod.registerTarget(ModTargetID::OSC_FREQUENCY,    osc.getFreqPtr());
+
+        active = true;
     }
 
-    void stop() {
+
+    void stop()
+    {
         env.noteOff();
     }
 
-    Sample process(float sr) {
-        if (!active) return {0, 0};
+    Sample process(float sr)
+    {
+        if (!active)
+            return {0.f, 0.f};
 
         mod.process(sr);
 
-        Sample s = {0, 0};
-        for (Module* m : audioChain)
-            s = m->process(sr, s);
+        // FIXED AUDIO CHAIN (Serum-style)
+        Sample signal = osc.process(sr, {0.0f, 0.0f});
+        signal = filter.process(sr, signal);
+        signal = vca.process(sr, signal);
 
         if (!env.isActive())
             active = false;
 
-        return s;
+        return signal;
     }
 };

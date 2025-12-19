@@ -1,37 +1,41 @@
 #include "Synth.h"
-#include "ModSourceResolver.h"
-#include "ModTargetResolver.h"
 
 Synth::Synth() {
-    // ------- DEFAULT ROUTES -------
-    globalRoutes.emplace_back(ModSourceID::ENV1,
-                            ModTargetID::VCA_GAIN,
-                            1.0f,
-                            ModType::REPLACE);
+    // ------- DEFAULT ROUTES (Serum-style preset init) -------
+    globalRoutes.emplace_back(
+        ModSourceID::ENV1,
+        ModTargetID::VCA_GAIN,
+        1.0f,
+        ModType::REPLACE
+    );
 
-    globalRoutes.emplace_back(ModSourceID::ENV1,
-                            ModTargetID::FILTER_CUTOFF,
-                            500.0f,
-                            ModType::ADD);
+    globalRoutes.emplace_back(
+        ModSourceID::ENV1,
+        ModTargetID::FILTER_CUTOFF,
+        500.0f,
+        ModType::ADD
+    );
 
-    globalRoutes.emplace_back(ModSourceID::ENV1,
-                            ModTargetID::FILTER_RESONANCE,
-                            0.5f,
-                            ModType::ADD);
+    globalRoutes.emplace_back(
+        ModSourceID::ENV1,
+        ModTargetID::FILTER_RESONANCE,
+        0.5f,
+        ModType::ADD
+    );
 
-    globalRoutes.emplace_back(ModSourceID::LFO1,
-                            ModTargetID::OSC_FREQUENCY,
-                            5.0f,
-                            ModType::ADD);
-
-
-
+    globalRoutes.emplace_back(
+        ModSourceID::LFO1,
+        ModTargetID::OSC_FREQUENCY,
+        5.0f,
+        ModType::ADD
+    );
 }
 
-void Synth::noteOn(int midiNote) {
+void Synth::noteOn(int midiNote)
+{
     Voice* v = nullptr;
 
-    // Find a free voice
+    // find a free voice
     for (auto& voice : voices) {
         if (!voice.active) {
             v = &voice;
@@ -39,36 +43,33 @@ void Synth::noteOn(int midiNote) {
         }
     }
 
-    // Steal a voice if none free
+    // or steal one
     if (!v) {
         v = &voices[nextVoiceToSteal];
         nextVoiceToSteal = (nextVoiceToSteal + 1) % NUM_VOICES;
     }
 
+    // Start voice (this registers modulators + targets inside mod)
     v->start(midiNote);
 
-    // APPLY GLOBAL MODULATION ROUTES
+    v->mod.numRoutes = 0;
+
     for (auto& gr : globalRoutes) {
-
-        ControlModule* src = resolveSource(*v, gr.srcID);
-        float* tgt = resolveTarget(*v, gr.targetID);
-
-        if (src && tgt)
-            v->mod.addRoute(src, tgt, gr.amount, gr.type);
+        v->mod.addRoute(gr.srcID, gr.targetID, gr.amount, gr.type);
     }
-
 }
 
-void Synth::noteOff(int midiNote) {
-    for (auto& v : voices) {
-        if (v.active && v.midiNote == midiNote) {
+void Synth::noteOff(int midiNote)
+{
+    for (auto& v: voices) {
+        if (v.active && v.midiNote == midiNote)
             v.stop();
-        }
     }
 }
 
-Sample Synth::process(float sampleRate) {
-    Sample out = { 0, 0 };
+Sample Synth::process(float sampleRate)
+{
+    Sample out = {0.f, 0.f};
 
     for (auto& v : voices) {
         Sample s = v.process(sampleRate);
@@ -76,7 +77,6 @@ Sample Synth::process(float sampleRate) {
         out.right += s.right;
     }
 
-    // master gain
     out.left  *= 0.2f;
     out.right *= 0.2f;
 

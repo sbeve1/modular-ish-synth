@@ -1,17 +1,10 @@
 #pragma once
-#include <vector>
-#include <unordered_map>
-#include <algorithm>
+
+#include <cstdint>
+#include <cstring>
 #include "audio/ControlModule.h"
-
-// ModMatrix: Serum-style realtime-safe modulation matrix.
-// - No allocations in process()
-// - Supports Add, Multiply, Replace
-// - Use addRoute(...) from the non-audio thread (UI/voice start/stop).
-// - process(...) is audio-thread safe as long as addRoute/removeRoutes are not
-//   called concurrently. If you need dynamic changes during audio, use double-buffering.
-
-// CONTROLModMatrix might be a better name. no audio patching here
+#include "ModSourceID.h"
+#include "ModTargetID.h"
 
 enum class ModType {
     ADD,
@@ -19,17 +12,17 @@ enum class ModType {
     REPLACE
 };
 
-struct ModRoute {
-    int modIndex;     // index into modulators vector
-    int targetIndex;  // index into targets vector
-    float amount;
-    ModType type;
+struct Route {
+    int srcIndex  = -1;
+    int tgtIndex  = -1;
+    float amount  = 0.0f;
+    ModType type  = ModType::ADD;
 };
 
 struct TargetSlot {
-    float* ptr = nullptr;   // pointer to target variable
-    float base = 0.0f;      // base value captured when the target was first registered
-    // accumulators used in process()
+    float* ptr = nullptr;
+    float base = 0.0f;
+
     float addAcc = 0.0f;
     float replaceAcc = 0.0f;
     float multAcc = 1.0f;
@@ -38,159 +31,118 @@ struct TargetSlot {
 
 class ModMatrix {
 public:
-    ModMatrix() = default;
+    static constexpr int MAX_ROUTES = 128;
 
-    // Add a modulation route.
-    // Should be called off the audio thread (e.g. during voice start or UI).
-    void addRoute(ControlModule* src, float* target, float amount, ModType type = ModType::ADD) {
-        if (!src || !target) return;
+    ControlModule* sources[(int)ModSourceID::COUNT];
+    float*         targets[(int)ModTargetID::COUNT];
 
-        // get or create modulator index
-        int modIndex = -1;
-        auto keyM = modIndexMap.find(src);
-        if (keyM == modIndexMap.end()) {
-            modIndex = static_cast<int>(modulators.size());
-            modulators.push_back(src);
-            modIndexMap[src] = modIndex;
-        } else {
-            modIndex = keyM->second;
+    float modValues[(int)ModSourceID::COUNT];
+    TargetSlot targetSlots[(int)ModTargetID::COUNT];
+
+    Route routes[MAX_ROUTES];
+    int numRoutes = 0;
+
+    ModMatrix() { clearAll(); }
+
+    void clearAll()
+    {
+        numRoutes = 0;
+
+        // zero source values and null pointers
+        for (int i = 0; i < (int)ModSourceID::COUNT; i++)
+        {
+            sources[i]   = nullptr;
+            modValues[i] = 0.0f;
         }
 
-        // get or create target index
-        int targetIndex = -1;
-        auto keyT = targetIndexMap.find(target);
-        if (keyT == targetIndexMap.end()) {
-            targetIndex = static_cast<int>(targets.size());
-            TargetSlot ts;
-            ts.ptr = target;
-            ts.base = *target; // capture base at registration time
-            targets.push_back(ts);
-            targetIndexMap[target] = targetIndex;
-        } else {
-            targetIndex = keyT->second;
-        }
-
-        // push route
-        ModRoute r;
-        r.modIndex = modIndex;
-        r.targetIndex = targetIndex;
-        r.amount = amount;
-        r.type = type;
-        routes.push_back(r);
-    }
-
-    // Remove all routes that write to this target pointer (call off audio thread)
-    void removeRoutesForTarget(float* target) {
-        if (!target) return;
-        auto it = targetIndexMap.find(target);
-        if (it == targetIndexMap.end()) return;
-
-        int tIdx = it->second;
-        // remove routes referencing the target
-        routes.erase(std::remove_if(routes.begin(), routes.end(),
-                    [tIdx](const ModRoute& r){ return r.targetIndex == tIdx; }),
-                    routes.end());
-
-        // remove target slot and update maps/indices
-        // to keep process() allocation-free we compact vectors and fix indices
-        targets.erase(targets.begin() + tIdx);
-
-        // rebuild targetIndexMap (cheap, called off audio thread)
-        targetIndexMap.clear();
-        for (int i = 0; i < (int)targets.size(); ++i)
-            targetIndexMap[targets[i].ptr] = i;
-
-        // fix route.targetIndex values
-        for (auto &r : routes) {
-            if (r.targetIndex > tIdx) --r.targetIndex;
+        for (int i = 0; i < (int)ModTargetID::COUNT; i++)
+        {
+            targets[i] = nullptr;
+            targetSlots[i].ptr = nullptr;
+            targetSlots[i].base = 0.0f;
         }
     }
 
-    // Update the recorded base value for a target (useful when you want an explicit base).
-    // Call off the audio thread.
-    void updateBaseValue(float* target, float newBase) {
-        auto it = targetIndexMap.find(target);
-        if (it == targetIndexMap.end()) return;
-        targets[it->second].base = newBase;
+    // called by Voice during note-on
+    void registerSource(ModSourceID id, ControlModule* src)
+    {
+        sources[(int)id] = src;
     }
 
-    // Clears everything. Call off audio thread.
-    void clear() {
-        modulators.clear();
-        modIndexMap.clear();
-        modValues.clear();
-        targets.clear();
-        targetIndexMap.clear();
-        routes.clear();
+    void registerTarget(ModTargetID id, float* p)
+    {
+        targets[(int)id] = p;
+        targetSlots[(int)id].ptr = p;
+        targetSlots[(int)id].base = *p;
     }
 
-    // Audio-thread safe process: no allocations, only vector reads/writes.
-    // process modulators -> modValues
-    // accumulate the targets using modValues and based on ur MODE, set that parameter to that
-    void process(float sampleRate) {
-        if (routes.empty()) return;
+    void addRoute(ModSourceID s, ModTargetID t, float amt, ModType type)
+    {
+        if (numRoutes >= MAX_ROUTES) return;
+        routes[numRoutes++] = {
+            (int)s, (int)t, amt, type
+        };
+    }
 
-        // 1) Compute each modulator value exactly once
-        // Ensure modValues vector matches modulators size
-        modValues.assign(modulators.size(), 0.0f);
-        for (size_t i = 0; i < modulators.size(); i++) {
-            // call control-rate processing (returns float modulation value)
-            modValues[i] = modulators[i]->process(sampleRate);
+    // called every sample
+    void process(float sr)
+    {
+        // compute source values
+        for (int i = 0; i < (int)ModSourceID::COUNT; i++)
+        {
+            if (sources[i])
+                modValues[i] = sources[i]->process(sr);
+            else
+                modValues[i] = 0.0f;
         }
 
-        // 2) Reset accumulators in targets (fast, contiguous)
-        for (size_t t = 0; t < targets.size(); t++) {
-            targets[t].addAcc = 0.0f;
-            targets[t].replaceAcc = 0.0f;
-            targets[t].multAcc = 1.0f;
-            targets[t].hasReplace = false;
+        // reset target accumulators
+        for (int i = 0; i < (int)ModTargetID::COUNT; i++)
+        {
+            auto& slot = targetSlots[i];
+            slot.addAcc = 0.0f;
+            slot.replaceAcc = 0.0f;
+            slot.multAcc = 1.0f;
+            slot.hasReplace = false;
         }
 
-        // 3) Accumulate each route
-        for (const ModRoute &r : routes) {
-            float srcVal = modValues[r.modIndex];
-            TargetSlot &slot = targets[r.targetIndex];
+        // apply all routes
+        for (int r = 0; r < numRoutes; r++)
+        {
+            const Route& rt = routes[r];
 
-            switch (r.type) {
+            float srcVal = modValues[rt.srcIndex];
+            auto& slot = targetSlots[rt.tgtIndex];
+
+            switch (rt.type)
+            {
                 case ModType::ADD:
-                    slot.addAcc += srcVal * r.amount;
+                    slot.addAcc += srcVal * rt.amount;
                     break;
+
                 case ModType::MULTIPLY:
-                    // multiplicative modulation applied as multiplier (1 + src*amt)
-                    // so amount = how strongly the source influences multiplier
-                    slot.multAcc *= (1.0f + srcVal * r.amount);
+                    slot.multAcc *= (1.0f + srcVal * rt.amount);
                     break;
+
                 case ModType::REPLACE:
-                    slot.replaceAcc = srcVal * r.amount;
+                    slot.replaceAcc = srcVal * rt.amount;
                     slot.hasReplace = true;
                     break;
             }
         }
 
-        // 4) Commit results to target pointers (write final values)
-        for (size_t t = 0; t < targets.size(); ++t) {
-            TargetSlot &slot = targets[t];
-            float finalVal;
-            if (slot.hasReplace) {
-                // Replace semantics: replace takes precedence
-                finalVal = slot.replaceAcc;
-            } else {
-                finalVal = (slot.base + slot.addAcc) * slot.multAcc;
+        // write final values
+        for (int i = 0; i < (int)ModTargetID::COUNT; i++)
+        {
+            auto& slot = targetSlots[i];
+            if (slot.ptr)
+            {
+                float out = slot.hasReplace
+                    ? slot.replaceAcc
+                    : (slot.base + slot.addAcc) * slot.multAcc;
+
+                *slot.ptr = out;
             }
-            *slot.ptr = finalVal;
         }
     }
-
-private:
-    // at the same index i, these all refer to the same module. same with the target ones
-    std::vector<ControlModule*> modulators;
-    std::unordered_map<ControlModule*, int> modIndexMap; // used only when add/removing a modulator (not in process)
-    std::vector<float> modValues; // sized at process() time, read-only during process
-
-    // targets
-    std::vector<TargetSlot> targets;
-    std::unordered_map<float*, int> targetIndexMap; // used only when add/remove a target (not in process)
-
-    // routes can use the same module. MAX: 1 route = 1 module -> 1 target
-    std::vector<ModRoute> routes;
 };

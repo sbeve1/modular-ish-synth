@@ -1,5 +1,5 @@
 #pragma once
-#include "ControlModule.h"
+#include "audio/ControlModule.h"
 #include "core/CONSTANTS.h"
 #include <cmath>
 
