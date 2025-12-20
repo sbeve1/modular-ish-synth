@@ -3,7 +3,6 @@
 #include <array>
 
 #include "engine/Voice.h"
-#include "engine/SourceRouter.h"
 #include "engine/SourceParams.h"
 #include "engine/Bus.h"
 #include "engine/VoiceAmp.h"
@@ -23,8 +22,6 @@ public:
     SourceParams oscCParams;
     SourceParams subParams;
     SourceParams noiseParams;
-
-    SourceRouter router;
 
     Bus bus1;
     Bus bus2;

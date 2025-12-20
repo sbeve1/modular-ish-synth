@@ -3,26 +3,26 @@
 enum class ModTargetID : int {
 
     // ========================
+    // FILTER 0
+    // ========================
+    FILTER0_CUTOFF = 0,
+    FILTER0_RES,
+    FILTER0_DRIVE,
+    FILTER0_FAT,
+    FILTER0_MIX,
+    FILTER0_PAN,
+    FILTER0_LEVEL,
+
+    // ========================
     // FILTER 1
     // ========================
-    FILTER1_CUTOFF = 0,
+    FILTER1_CUTOFF,
     FILTER1_RES,
     FILTER1_DRIVE,
     FILTER1_FAT,
     FILTER1_MIX,
     FILTER1_PAN,
     FILTER1_LEVEL,
-
-    // ========================
-    // FILTER 2
-    // ========================
-    FILTER2_CUTOFF,
-    FILTER2_RES,
-    FILTER2_DRIVE,
-    FILTER2_FAT,
-    FILTER2_MIX,
-    FILTER2_PAN,
-    FILTER2_LEVEL,
 
     // ========================
     // OSC A
@@ -70,34 +70,6 @@ enum class ModTargetID : int {
     NOISE_PITCH,
     NOISE_LEVEL,
     NOISE_PAN,
-
-    // ========================
-    // ROUTING
-    // ========================
-    OSC_A_TO_DIRECT,
-    OSC_A_TO_MAIN,
-    OSC_A_TO_BUS1,
-    OSC_A_TO_BUS2,
-
-    OSC_B_TO_DIRECT,
-    OSC_B_TO_MAIN,
-    OSC_B_TO_BUS1,
-    OSC_B_TO_BUS2,
-
-    OSC_C_TO_DIRECT,
-    OSC_C_TO_MAIN,
-    OSC_C_TO_BUS1,
-    OSC_C_TO_BUS2,
-
-    SUB_TO_DIRECT,
-    SUB_TO_MAIN,
-    SUB_TO_BUS1,
-    SUB_TO_BUS2,
-
-    NOISE_TO_DIRECT,
-    NOISE_TO_MAIN,
-    NOISE_TO_BUS1,
-    NOISE_TO_BUS2,
 
     COUNT
 };
