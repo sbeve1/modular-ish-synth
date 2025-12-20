@@ -335,11 +335,14 @@ CMakeFiles/Synth.dir/src/main.cpp.obj
  C:/msys64/mingw64/include/bemapiset.h
  C:/msys64/mingw64/include/c++/14.2.0/algorithm
  C:/msys64/mingw64/include/c++/14.2.0/array
+ C:/msys64/mingw64/include/c++/14.2.0/atomic
  C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h
  C:/msys64/mingw64/include/c++/14.2.0/bit
  C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h
  C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h
  C:/msys64/mingw64/include/c++/14.2.0/bits/allocator.h
+ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h
+ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h
  C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h
  C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.tcc
  C:/msys64/mingw64/include/c++/14.2.0/bits/basic_string.h
@@ -413,6 +416,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj
  C:/msys64/mingw64/include/c++/14.2.0/cstdint
  C:/msys64/mingw64/include/c++/14.2.0/cstdio
  C:/msys64/mingw64/include/c++/14.2.0/cstdlib
+ C:/msys64/mingw64/include/c++/14.2.0/cstring
  C:/msys64/mingw64/include/c++/14.2.0/cwchar
  C:/msys64/mingw64/include/c++/14.2.0/cwctype
  C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h
@@ -757,6 +761,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj
  C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xtestintrin.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Synth.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/midi/MIDIHandler.h
+ C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/midi/MidiQueue.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/platform/miniaudio.h
 
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj

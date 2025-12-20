@@ -18,16 +18,18 @@ MIDIHandler::MIDIHandler()
     midiin.openPort(0);                      // open first port
     midiin.ignoreTypes(false, false, false); // receive all messages
 
+    // set callback — push events into queue from RtMidi thread
+    midiin.setCallback(&MIDIHandler::rtCallback, this);
+
     std::cout << "Opened MIDI port: " << midiin.getPortName(0) << "\n";
 }
 
-// ------------------------ POLL FUNCTION ------------------------
+// existing poll() left intact for compatibility
 bool MIDIHandler::poll(unsigned char& status,
                        unsigned char& note,
                        unsigned char& velocity)
 {
     std::vector<unsigned char> msg;
-
     midiin.getMessage(&msg);
     if (msg.size() < 3)
         return false;
@@ -39,22 +41,57 @@ bool MIDIHandler::poll(unsigned char& status,
     return true;
 }
 
-// ------------------------ NOTE ON ------------------------
+// RtMidi callback (static) — convert to MidiEvent and push
+void MIDIHandler::rtCallback(double /*timeStamp*/, std::vector<unsigned char> *message, void *userData)
+{
+    if (!message || message->size() < 3) return;
+    auto* self = static_cast<MIDIHandler*>(userData);
+    if (!self) return;
+
+    unsigned char status = (*message)[0];
+    unsigned char note   = (*message)[1];
+    unsigned char vel    = (*message)[2];
+
+    MidiEvent e;
+    if ((status & 0xF0) == 0x90 && vel > 0) {
+        e.type = MidiEventType::NOTE_ON;
+        e.note = note;
+        e.vel  = vel;
+        self->enqueueEvent(e);
+    } else if ((status & 0xF0) == 0x80 || ((status & 0xF0) == 0x90 && vel == 0)) {
+        e.type = MidiEventType::NOTE_OFF;
+        e.note = note;
+        e.vel  = vel;
+        self->enqueueEvent(e);
+    } else {
+        // for now ignore other messages, or extend to CC later
+    }
+}
+
+void MIDIHandler::enqueueEvent(const MidiEvent& e)
+{
+    if (!queue) return;
+    if (!queue->push(e)) {
+        // Queue full — best effort: drop silently or add a lightweight counter
+        // Avoid printing here (could be called on RtMidi thread fast)
+        // You can increment an atomic counter here to observe dropped counts.
+    }
+}
+
+// event handlers unchanged (they mutate synth; now called from audio thread)
 void MIDIHandler::onNoteOn(int channel, int note, int velocity)
 {
     (void)channel;
     float velNorm = velocity / 127.0f;
-    synth->noteOn(note, velNorm);
+    if (synth) synth->noteOn(note, velNorm);
 }
 
-// ------------------------ NOTE OFF ------------------------
 void MIDIHandler::onNoteOff(int channel, int note)
 {
     (void)channel;
-    synth->noteOff(note);
+    if (synth) synth->noteOff(note);
 }
 
-// ------------------------ CC ------------------------
 void MIDIHandler::onControlChange(int cc, int value)
 {
     if (cc == 1) { // Mod Wheel
@@ -64,7 +101,6 @@ void MIDIHandler::onControlChange(int cc, int value)
     }
 }
 
-// ------------------------ AFTERTOUCH ------------------------
 void MIDIHandler::onAftertouch(int pressure)
 {
     float p = pressure / 127.0f;
@@ -72,7 +108,6 @@ void MIDIHandler::onAftertouch(int pressure)
         v.aftertouchMod.value = p;
 }
 
-// ------------------------ PITCH BEND ------------------------
 void MIDIHandler::onPitchBend(int value14bit)
 {
     float norm = ((float)value14bit - 8192.0f) / 8192.0f;

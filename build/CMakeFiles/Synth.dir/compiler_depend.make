@@ -331,11 +331,14 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/bemapiset.h \
   C:/msys64/mingw64/include/c++/14.2.0/algorithm \
   C:/msys64/mingw64/include/c++/14.2.0/array \
+  C:/msys64/mingw64/include/c++/14.2.0/atomic \
   C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h \
   C:/msys64/mingw64/include/c++/14.2.0/bit \
   C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/allocator.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_string.h \
@@ -409,6 +412,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/cstdint \
   C:/msys64/mingw64/include/c++/14.2.0/cstdio \
   C:/msys64/mingw64/include/c++/14.2.0/cstdlib \
+  C:/msys64/mingw64/include/c++/14.2.0/cstring \
   C:/msys64/mingw64/include/c++/14.2.0/cwchar \
   C:/msys64/mingw64/include/c++/14.2.0/cwctype \
   C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h \
@@ -753,6 +757,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xtestintrin.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Synth.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MIDIHandler.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MidiQueue.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/miniaudio.h
 
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MIDIHandler.cpp \
@@ -1379,6 +1384,8 @@ CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj: C:/Users/tevin/Desktop/Develop
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/RtMidi.cpp:
 
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MidiQueue.h:
+
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xtestintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xsavesintrin.h:
@@ -1647,6 +1654,10 @@ C:/msys64/mingw64/include/oaidl.h:
 
 C:/msys64/mingw64/include/ncrypt.h:
 
+C:/msys64/mingw64/include/namespaceapi.h:
+
+C:/msys64/mingw64/include/msxml.h:
+
 C:/msys64/mingw64/include/c++/14.2.0/bits/range_access.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/cwchar:
@@ -1683,6 +1694,10 @@ C:/msys64/mingw64/include/assert.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/stdexcept:
 
+C:/msys64/mingw64/include/namedpipeapi.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Synth.h:
+
 C:/msys64/mingw64/include/c++/14.2.0/bits/exception_ptr.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniint8intrin.h:
@@ -1710,6 +1725,8 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_uninitialized.h:
 C:/msys64/mingw64/include/c++/14.2.0/bits/refwrap.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/cstring:
 
 C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc:
 
@@ -1810,10 +1827,6 @@ C:/msys64/mingw64/include/oleidl.h:
 C:/msys64/mingw64/include/debugapi.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/stl_pair.h:
-
-C:/msys64/mingw64/include/realtimeapiset.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h:
 
@@ -2075,6 +2088,8 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/localefwd.h:
 
 C:/msys64/mingw64/include/stdint.h:
 
+C:/msys64/mingw64/include/c++/14.2.0/atomic:
+
 C:/msys64/mingw64/include/c++/14.2.0/bits/locale_facets.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/ostream_insert.h:
@@ -2099,8 +2114,6 @@ C:/msys64/mingw64/include/c++/14.2.0/compare:
 
 C:/msys64/mingw64/include/lzexpand.h:
 
-C:/msys64/mingw64/include/msxml.h:
-
 C:/msys64/mingw64/include/_mingw_unicode.h:
 
 C:/msys64/mingw64/include/apiset.h:
@@ -2122,6 +2135,18 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/streambuf.tcc:
 C:/msys64/mingw64/include/c++/14.2.0/bits/predefined_ops.h:
 
 C:/msys64/mingw64/include/ioapiset.h:
+
+C:/msys64/mingw64/include/realtimeapiset.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h:
+
+C:/msys64/mingw64/include/fibersapi.h:
+
+C:/msys64/mingw64/include/mmiscapi2.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.tcc:
 
@@ -2154,10 +2179,6 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/ios_base.h:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/sm3intrin.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/locale_classes.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Synth.h:
-
-C:/msys64/mingw64/include/namedpipeapi.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/cmpccxaddintrin.h:
 
@@ -2283,10 +2304,6 @@ C:/msys64/mingw64/include/dpapi.h:
 
 C:/msys64/mingw64/include/mmsyscom.h:
 
-C:/msys64/mingw64/include/fibersapi.h:
-
-C:/msys64/mingw64/include/mmiscapi2.h:
-
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vpopcntdqintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512bitalgintrin.h:
@@ -2334,5 +2351,3 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc:
 C:/msys64/mingw64/include/mmiscapi.h:
 
 C:/msys64/mingw64/include/mmsystem.h:
-
-C:/msys64/mingw64/include/namespaceapi.h:

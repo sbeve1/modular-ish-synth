@@ -4,7 +4,14 @@
 #include <conio.h>
 
 #include "midi/MIDIHandler.h"
+#include "midi/MidiQueue.h"
 #include "engine/Synth.h"
+#include <thread>
+#include <chrono>
+
+
+// instantiate queue with power-of-two size
+static MidiRing<4096> gMidiQueue; // bigger to be safe
 
 Synth synth;
 MIDIHandler midi;
@@ -15,12 +22,24 @@ void audioCallback(ma_device* device, void* pOutput, const void*, ma_uint32 fram
     float* out = (float*)pOutput;
     float sr = device->sampleRate;
 
+    // 1) Drain MIDI queue first (apply events on audio thread)
+    MidiEvent e;
+    while (gMidiQueue.pop(e)) {
+        if (e.type == MidiEventType::NOTE_ON) {
+            synth.noteOn((int)e.note, (float)e.vel / 127.0f);
+        } else if (e.type == MidiEventType::NOTE_OFF) {
+            synth.noteOff((int)e.note);
+        }
+    }
+
+    // 2) Render audio block
     for (ma_uint32 i = 0; i < frameCount; i++) {
         Sample s = synth.process(sr);
         out[i * 2 + 0] = s.left;
         out[i * 2 + 1] = s.right;
     }
 }
+
 
 // ------------------ MAIN ------------------
 int main()
@@ -31,6 +50,7 @@ int main()
 
     // IMPORTANT: wire MIDI → synth
     midi.synth = &synth;
+    midi.setQueue(&gMidiQueue); // send events into queue
 
     // Audio setup
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -47,20 +67,12 @@ int main()
     ma_device_start(&device);
     std::cout << "Press ENTER to quit.\n";
 
-    unsigned char status, note, vel;
-
-    // MIDI poll loop
+    // keep main thread alive; RtMidi callback is delivering MIDI
     while (true) {
-        if (midi.poll(status, note, vel)) {
-            if ((status & 0xF0) == 0x90 && vel > 0)
-                synth.noteOn(note, vel / 127.0f);
-
-            if ((status & 0xF0) == 0x80 || ((status & 0xF0) == 0x90 && vel == 0))
-                synth.noteOff(note);
-        }
-
         if (_kbhit() && _getch() == '\r')
             break;
+        // sleep a little to reduce CPU usage on main thread
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 
     ma_device_uninit(&device);

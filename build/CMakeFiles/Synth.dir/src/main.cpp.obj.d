@@ -386,13 +386,18 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_vector.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/cstdint \
+ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h \
+ C:/msys64/mingw64/include/stdint.h \
+ C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\midi/MidiQueue.h \
+ C:/msys64/mingw64/include/c++/14.2.0/atomic \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cstring \
  C:\Users\tevin\Desktop\Developer\CRAZY\ PROJECT\src\engine/Synth.h \
  C:/msys64/mingw64/include/c++/14.2.0/array \
  C:/msys64/mingw64/include/c++/14.2.0/compare \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Voice.h \
- C:/msys64/mingw64/include/c++/14.2.0/cstdint \
- C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h \
- C:/msys64/mingw64/include/stdint.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
  C:/msys64/mingw64/include/c++/14.2.0/algorithm \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
@@ -431,4 +436,13 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingProcess.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Bus.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/MasterLimiter.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h \
+ C:/msys64/mingw64/include/c++/14.2.0/thread \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/std_thread.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/unique_ptr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/this_thread_sleep.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/chrono.h \
+ C:/msys64/mingw64/include/c++/14.2.0/ratio \
+ C:/msys64/mingw64/include/c++/14.2.0/ctime \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/parse_numbers.h \
+ C:/msys64/mingw64/include/c++/14.2.0/chrono
