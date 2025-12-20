@@ -197,14 +197,28 @@ struct Voice {
     void stop() { env1.noteOff(); }
 
     // ---------- process ----------
-    Sample process(float sr)
-    {
+    Sample process(float sr) {
         Sample out{};
         if (!active) return out;
 
         buffers.clear();
+
+        // ---- ADVANCE CONTROL SOURCES ONCE ----
+        env1.process(sr);
+        lfo1.process(sr);
+        noteMod.process(sr);
+        velocityMod.process(sr);
+        modWheelMod.process(sr);
+        aftertouchMod.process(sr);
+        pitchBendMod.process(sr);
+        alternateMod.process(sr);
+        randomVoiceMod.process(sr);
+        randomNoteMod.process(sr);
+
+        // ---- APPLY MODULATION (READ ONLY) ----
         mod.process(sr);
 
+        // ---- AUDIO SOURCES ----
         VoiceSources src;
         src.oscA  = oscA.process(sr, oscAParams);
         src.oscB  = oscB.process(sr, oscBParams);
@@ -225,7 +239,8 @@ struct Voice {
         out.left  = buffers.main.left  + buffers.direct.left  + f0.left  + f1.left;
         out.right = buffers.main.right + buffers.direct.right + f0.right + f1.right;
 
-        float env = env1.process(sr);
+        // ---- USE CACHED ENVELOPE VALUE ----
+        float env = env1.getValue();
         out.left  *= env;
         out.right *= env;
 
@@ -234,4 +249,5 @@ struct Voice {
 
         return out;
     }
+
 };
