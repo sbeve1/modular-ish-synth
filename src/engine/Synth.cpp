@@ -60,8 +60,9 @@ Sample Synth::process(float sr)
             continue;
 
         Sample v = voice.process(sr);
-        mix.left  += v.left;
-        mix.right += v.right;
+        mix.left  += v.left  * VOICE_GAIN_NORM;
+        mix.right += v.right * VOICE_GAIN_NORM;
+
     }
 
     return limiter.process(mix);

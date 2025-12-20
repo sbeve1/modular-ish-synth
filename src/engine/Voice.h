@@ -100,6 +100,13 @@ struct Voice {
     {
         active   = true;
         midiNote = note;
+        
+        // ---------- reset filter state (prevent runaway bleed) ----------
+        filter0.ic1eqL = filter0.ic2eqL = 0.0f;
+        filter0.ic1eqR = filter0.ic2eqR = 0.0f;
+        filter1.ic1eqL = filter1.ic2eqL = 0.0f;
+        filter1.ic1eqR = filter1.ic2eqR = 0.0f;
+
 
         // ---------- wavetable ----------
         oscA.wavetable = wt;

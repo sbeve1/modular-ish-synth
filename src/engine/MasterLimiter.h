@@ -3,7 +3,7 @@
 #include "core/Sample.h"
 
 struct MasterLimiter {
-    float drive = 1.2f;
+    float drive = 0.9f;
 
     inline float soft(float x) const
     {

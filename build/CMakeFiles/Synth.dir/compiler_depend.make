@@ -345,6 +345,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_string.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/char_traits.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/charconv.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/chrono.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/concept_check.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/cpp_type_traits.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/cxxabi_forced.h \
@@ -370,6 +371,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/bits/new_allocator.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/ostream.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/ostream_insert.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/parse_numbers.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/postypes.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/predefined_ops.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/ptr_traits.h \
@@ -378,6 +380,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/bits/requires_hosted.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/specfun.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/std_abs.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/std_thread.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algobase.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h \
@@ -395,7 +398,9 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/bits/streambuf_iterator.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stringfwd.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/this_thread_sleep.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/uniform_int_dist.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/unique_ptr.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h \
@@ -404,6 +409,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/cassert \
   C:/msys64/mingw64/include/c++/14.2.0/cctype \
   C:/msys64/mingw64/include/c++/14.2.0/cerrno \
+  C:/msys64/mingw64/include/c++/14.2.0/chrono \
   C:/msys64/mingw64/include/c++/14.2.0/clocale \
   C:/msys64/mingw64/include/c++/14.2.0/cmath \
   C:/msys64/mingw64/include/c++/14.2.0/compare \
@@ -413,6 +419,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/cstdio \
   C:/msys64/mingw64/include/c++/14.2.0/cstdlib \
   C:/msys64/mingw64/include/c++/14.2.0/cstring \
+  C:/msys64/mingw64/include/c++/14.2.0/ctime \
   C:/msys64/mingw64/include/c++/14.2.0/cwchar \
   C:/msys64/mingw64/include/c++/14.2.0/cwctype \
   C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h \
@@ -435,12 +442,14 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
   C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
   C:/msys64/mingw64/include/c++/14.2.0/pstl/pstl_config.h \
+  C:/msys64/mingw64/include/c++/14.2.0/ratio \
   C:/msys64/mingw64/include/c++/14.2.0/stdexcept \
   C:/msys64/mingw64/include/c++/14.2.0/stdlib.h \
   C:/msys64/mingw64/include/c++/14.2.0/streambuf \
   C:/msys64/mingw64/include/c++/14.2.0/string \
   C:/msys64/mingw64/include/c++/14.2.0/string_view \
   C:/msys64/mingw64/include/c++/14.2.0/system_error \
+  C:/msys64/mingw64/include/c++/14.2.0/thread \
   C:/msys64/mingw64/include/c++/14.2.0/tr1/bessel_function.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/tr1/beta_function.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/tr1/ell_integral.tcc \
@@ -803,11 +812,14 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/include/assert.h \
   C:/msys64/mingw64/include/c++/14.2.0/algorithm \
   C:/msys64/mingw64/include/c++/14.2.0/array \
+  C:/msys64/mingw64/include/c++/14.2.0/atomic \
   C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h \
   C:/msys64/mingw64/include/c++/14.2.0/bit \
   C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/allocator.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/basic_string.h \
@@ -881,6 +893,7 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/include/c++/14.2.0/cstdint \
   C:/msys64/mingw64/include/c++/14.2.0/cstdio \
   C:/msys64/mingw64/include/c++/14.2.0/cstdlib \
+  C:/msys64/mingw64/include/c++/14.2.0/cstring \
   C:/msys64/mingw64/include/c++/14.2.0/cwchar \
   C:/msys64/mingw64/include/c++/14.2.0/cwctype \
   C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h \
@@ -955,6 +968,7 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/include/sdks/_mingw_ddk.h \
   C:/msys64/mingw64/include/sec_api/stdio_s.h \
   C:/msys64/mingw64/include/sec_api/stdlib_s.h \
+  C:/msys64/mingw64/include/sec_api/string_s.h \
   C:/msys64/mingw64/include/sec_api/sys/timeb_s.h \
   C:/msys64/mingw64/include/sec_api/wchar_s.h \
   C:/msys64/mingw64/include/signal.h \
@@ -962,6 +976,7 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/include/stdint.h \
   C:/msys64/mingw64/include/stdio.h \
   C:/msys64/mingw64/include/stdlib.h \
+  C:/msys64/mingw64/include/string.h \
   C:/msys64/mingw64/include/swprintf.inl \
   C:/msys64/mingw64/include/sys/timeb.h \
   C:/msys64/mingw64/include/sys/types.h \
@@ -974,7 +989,8 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MIDIHandler.h
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MIDIHandler.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MidiQueue.h
 
 CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/RtMidi.cpp \
   C:/msys64/mingw64/include/_bsd_types.h \
@@ -1424,8 +1440,6 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/popcntintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pmmintrin.h:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mwaitxintrin.h:
-
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/movdirintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/lzcntintrin.h:
@@ -1475,8 +1489,6 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512bitalgvlintrin
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512bf16vlintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx5124vnniwintrin.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx5124fmapsintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx2intrin.h:
 
@@ -1598,8 +1610,6 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xsavecintrin.h:
 
 C:/msys64/mingw64/include/rpcnsi.h:
 
-C:/msys64/mingw64/include/rpcndr.h:
-
 C:/msys64/mingw64/include/winuser.h:
 
 C:/msys64/mingw64/include/rpcdcep.h:
@@ -1634,8 +1644,6 @@ C:/msys64/mingw64/include/psdk_inc/_ip_mreq1.h:
 
 C:/msys64/mingw64/include/propidl.h:
 
-C:/msys64/mingw64/include/processthreadsapi.h:
-
 C:/msys64/mingw64/include/sys/stat.h:
 
 C:/msys64/mingw64/include/processenv.h:
@@ -1657,6 +1665,20 @@ C:/msys64/mingw64/include/ncrypt.h:
 C:/msys64/mingw64/include/namespaceapi.h:
 
 C:/msys64/mingw64/include/msxml.h:
+
+C:/msys64/mingw64/include/mmsystem.h:
+
+C:/msys64/mingw64/include/mmsyscom.h:
+
+C:/msys64/mingw64/include/mmiscapi2.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xopintrin.h:
+
+C:/msys64/mingw64/include/mmeapi.h:
+
+C:/msys64/mingw64/include/memoryapi.h:
+
+C:/msys64/mingw64/include/mcx.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/range_access.h:
 
@@ -1705,6 +1727,10 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniint8intrin.h:
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceSources.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/NoiseParams.h:
+
+C:/msys64/mingw64/include/mmiscapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc:
 
 C:/msys64/mingw64/include/c++/14.2.0/cstdio:
 
@@ -1780,6 +1806,10 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/amxcomplexintrin.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/PitchBendModule.h:
 
+C:/msys64/mingw64/include/minwinbase.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/AlternateModule.h:
+
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/limits.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/hash_bytes.h:
@@ -1795,10 +1825,6 @@ C:/msys64/mingw64/include/sec_api/conio_s.h:
 C:/msys64/mingw64/include/objidl.h:
 
 C:/msys64/mingw64/include/conio.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/AlternateModule.h:
-
-C:/msys64/mingw64/include/minwinbase.h:
 
 C:/msys64/mingw64/include/corecrt.h:
 
@@ -1887,8 +1913,6 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/exception_defines.h:
 C:/msys64/mingw64/include/c++/14.2.0/string_view:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h:
-
-C:/msys64/mingw64/include/_mingw_secapi.h:
 
 C:/msys64/mingw64/include/ddeml.h:
 
@@ -2046,12 +2070,6 @@ C:/msys64/mingw64/include/sdks/_mingw_ddk.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc:
 
-C:/msys64/mingw64/include/timeapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/ptr_traits.h:
-
-C:/msys64/mingw64/include/datetimeapi.h:
-
 C:/msys64/mingw64/include/c++/14.2.0/cstddef:
 
 C:/msys64/mingw64/include/vadefs.h:
@@ -2085,6 +2103,10 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512fp16vlintrin.h
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Bus.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/localefwd.h:
+
+C:/msys64/mingw64/include/processthreadsapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/this_thread_sleep.h:
 
 C:/msys64/mingw64/include/stdint.h:
 
@@ -2144,8 +2166,6 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h:
 
 C:/msys64/mingw64/include/fibersapi.h:
 
-C:/msys64/mingw64/include/mmiscapi2.h:
-
 C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.tcc:
@@ -2167,6 +2187,12 @@ C:/msys64/mingw64/include/stdio.h:
 C:/msys64/mingw64/include/rpcasync.h:
 
 C:/msys64/mingw64/include/driverspecs.h:
+
+C:/msys64/mingw64/include/rpcndr.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/chrono.h:
+
+C:/msys64/mingw64/include/cguid.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/cxxabi_forced.h:
 
@@ -2194,11 +2220,31 @@ C:/msys64/mingw64/include/c++/14.2.0/cstdlib:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/ostream.tcc:
 
+C:/msys64/mingw64/include/c++/14.2.0/bits/parse_numbers.h:
+
+C:/msys64/mingw64/include/timeapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/ptr_traits.h:
+
+C:/msys64/mingw64/include/datetimeapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/std_thread.h:
+
 C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algobase.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/streambuf_iterator.h:
 
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx5124fmapsintrin.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/unique_ptr.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/chrono:
+
 C:/msys64/mingw64/include/c++/14.2.0/cctype:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mwaitxintrin.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/ctime:
 
 C:/msys64/mingw64/include/pthread_time.h:
 
@@ -2231,6 +2277,10 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/rtmintrin.h:
 C:/msys64/mingw64/include/c++/14.2.0/typeinfo:
 
 C:/msys64/mingw64/include/dlgs.h:
+
+C:/msys64/mingw64/include/_mingw_secapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/ratio:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vlbwintrin.h:
 
@@ -2266,8 +2316,6 @@ C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/ctype_inline.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/gthr-default.h:
 
-C:/msys64/mingw64/include/cguid.h:
-
 C:/msys64/mingw64/include/concurrencysal.h:
 
 C:/msys64/mingw64/include/pthread.h:
@@ -2298,11 +2346,11 @@ C:/msys64/mingw64/include/pshpack1.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/basic_string.h:
 
+C:/msys64/mingw64/include/c++/14.2.0/thread:
+
 C:/msys64/mingw64/include/c++/14.2.0/iosfwd:
 
 C:/msys64/mingw64/include/dpapi.h:
-
-C:/msys64/mingw64/include/mmsyscom.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vpopcntdqintrin.h:
 
@@ -2337,17 +2385,3 @@ C:/msys64/mingw64/include/joystickapi.h:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/wmmintrin.h:
 
 C:/msys64/mingw64/include/libloaderapi.h:
-
-C:/msys64/mingw64/include/mcx.h:
-
-C:/msys64/mingw64/include/memoryapi.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xopintrin.h:
-
-C:/msys64/mingw64/include/mmeapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc:
-
-C:/msys64/mingw64/include/mmiscapi.h:
-
-C:/msys64/mingw64/include/mmsystem.h:
