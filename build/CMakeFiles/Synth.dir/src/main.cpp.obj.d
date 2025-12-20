@@ -391,10 +391,6 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/compare \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Voice.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Module.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Wavetable.h \
  C:/msys64/mingw64/include/c++/14.2.0/algorithm \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \
@@ -403,10 +399,17 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Wavetable.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/OscParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Noise.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstdint \
  C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h \
  C:/msys64/mingw64/include/stdint.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/NoiseParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/FilterParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModMatrix.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModSourceID.h \
@@ -414,18 +417,17 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/VoiceSources.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/LFO.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/NoteModule.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/VelocityModule.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/ModWheelModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AftertouchModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AlternateModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/ModWheelModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/NoteModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/PitchBendModule.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerVoiceModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerNoteModule.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/SourceRouter.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/RoutedSignal.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/SourceRouting.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/SourceParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerVoiceModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/VelocityModule.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/Routing.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingBuffers.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingProcess.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Bus.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/VoiceAmp.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/MasterLimiter.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h

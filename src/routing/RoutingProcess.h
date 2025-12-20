@@ -1,21 +1,24 @@
 #pragma once
+
 #include "Routing.h"
 #include "RoutingBuffers.h"
 #include "core/Sample.h"
 
-inline Sample routeSource(
+// Single, canonical routing function.
+// Writes audio into routing buses.
+// Does NOT return a Sample.
+inline void routeSource(
     const Sample& s,
     const SourceRouting& r,
     RoutingBuffers& buf)
 {
-    Sample out{};
-    out.left = 0.0f;
-    out.right = 0.0f;
+    if (r.count == 0)
+        return;
 
     for (int i = 0; i < r.count; ++i) {
         const auto& rt = r.routes[i];
 
-        float l = s.left  * rt.gain;
+        float l   = s.left  * rt.gain;
         float rgt = s.right * rt.gain;
 
         switch (rt.target) {
@@ -30,12 +33,14 @@ inline Sample routeSource(
                 break;
 
             case LayerTarget::MAIN:
+                buf.main.left  += l;
+                buf.main.right += rgt;
+                break;
+
             case LayerTarget::DIRECT:
-                out.left  += l;
-                out.right += rgt;
+                buf.direct.left  += l;
+                buf.direct.right += rgt;
                 break;
         }
     }
-
-    return out;
 }

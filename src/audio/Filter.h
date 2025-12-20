@@ -1,105 +1,46 @@
 #pragma once
-#include "audio/Module.h"
-#include "core/CONSTANTS.h"
+
 #include <cmath>
 #include <algorithm>
 
-class Filter : public Module {
+#include "core/Sample.h"
+#include "core/CONSTANTS.h"
+#include "engine/FilterParams.h"
+
+class Filter {
 public:
-    enum class Mode {
-        BYPASS,
-        LP,
-        HP,
-        BP,
-        NOTCH
-    };
+    // DSP state
+    float zL = 0.0f;
+    float zR = 0.0f;
 
-    Filter()
+    Sample process(float sr, const Sample& in, const FilterParams& p)
     {
-        cutoffBase    = 1000.0f;
-        resonanceBase = 0.0f;
-        driveBase     = 0.0f;
-        mixBase       = 1.0f;
-        fatBase       = 0.0f;
+        // ---------- cutoff ----------
+        float cutoff = std::clamp(p.cutoffMod, 20.0f, sr * 0.45f);
+        float a = expf(-2.0f * PI * cutoff / sr);
 
-        resetModValues();
-        mode = Mode::LP;
-    }
+        // ---------- one-pole LP ----------
+        zL = (1.0f - a) * in.left  + a * zL;
+        zR = (1.0f - a) * in.right + a * zR;
 
-    Sample process(float sr, const Sample& in) override
-    {
-        if (mode == Mode::BYPASS)
-            return in;
+        Sample wet{ zL, zR };
 
-        bool oversample = (modFat > 0.5f);
-        Sample filtered = oversample
-            ? processSingle(sr * 2.0f, in)
-            : processSingle(sr, in);
+        // ---------- MIX (wet/dry) ----------
+        float mix = std::clamp(p.mixMod, 0.0f, 1.0f);
+        Sample out;
+        out.left  = in.left  * (1.0f - mix) + wet.left  * mix;
+        out.right = in.right * (1.0f - mix) + wet.right * mix;
 
-        float l = filtered.left  * modMix + in.left  * (1.0f - modMix);
-        float r = filtered.right * modMix + in.right * (1.0f - modMix);
+        // ---------- LEVEL ----------
+        out.left  *= p.levelMod;
+        out.right *= p.levelMod;
 
-        return { sat(l), sat(r) };
-    }
+        // ---------- PAN ----------
+        float pan = std::clamp(p.panMod, -1.0f, 1.0f);
+        float angle = (pan + 1.0f) * 0.25f * PI;
+        float l = cosf(angle);
+        float r = sinf(angle);
 
-    // ============================
-    // MOD TARGET POINTERS
-    // ============================
-    float* getCutoffPtr() { return &modCutoff; }
-    float  getCutoffBase() const { return cutoffBase; }
-
-    float* getResPtr() { return &modRes; }
-    float  getResBase() const { return resonanceBase; }
-
-    float* getDrivePtr() { return &modDrive; }
-    float  getDriveBase() const { return driveBase; }
-
-    float* getMixPtr() { return &modMix; }
-    float  getMixBase() const { return mixBase; }
-
-    float* getFatPtr() { return &modFat; }
-    float  getFatBase() const { return fatBase; }
-
-    void resetModValues()
-    {
-        modCutoff = cutoffBase;
-        modRes    = resonanceBase;
-        modDrive  = driveBase;
-        modMix    = mixBase;
-        modFat    = fatBase;
-    }
-
-private:
-    struct State { float ic1 = 0, ic2 = 0; } stL, stR;
-
-    Mode mode;
-
-    float cutoffBase, resonanceBase, driveBase, mixBase, fatBase;
-    float modCutoff,  modRes,  modDrive,  modMix,  modFat;
-
-    inline float sat(float x) const { return x / (1.0f + fabsf(x)); }
-
-    float processSample(float x, float sr, State& s)
-    {
-        float fc = std::clamp(modCutoff, MIN_FREQ, sr * NYQUIST_SCALE);
-        float g = tanf(PI * fc / sr);
-        float R = FILTER_RESONANCE_MIN + modRes * FILTER_RESONANCE_RANGE;
-
-        float a = 1.0f + 2.0f * R * g + g * g;
-        float v3 = (x - 2.0f * R * g * s.ic1 - g * g * s.ic2) / a;
-        float v1 = g * v3 + s.ic1;
-        float v2 = g * v1 + s.ic2;
-
-        s.ic1 = 2.0f * v1 - s.ic1;
-        s.ic2 = 2.0f * v2 - s.ic2;
-
-        return sat(v2);
-    }
-
-    Sample processSingle(float sr, const Sample& in)
-    {
-        float l = sat(in.left  * (1.0f + modDrive));
-        float r = sat(in.right * (1.0f + modDrive));
-        return { processSample(l, sr, stL), processSample(r, sr, stR) };
+        return { out.left * l, out.right * r };
     }
 };

@@ -10,85 +10,75 @@
 
 #include "engine/ModMatrix.h"
 #include "engine/VoiceSources.h"
+#include "engine/OscParams.h"
+#include "engine/NoiseParams.h"
+#include "engine/FilterParams.h"
 
 #include "control/Envelope.h"
 #include "control/LFO.h"
 
-#include "control/performance/NoteModule.h"
-#include "control/performance/VelocityModule.h"
-#include "control/performance/ModWheelModule.h"
 #include "control/performance/AftertouchModule.h"
+#include "control/performance/AlternateModule.h"
+#include "control/performance/ModWheelModule.h"
+#include "control/performance/NoteModule.h"
 #include "control/performance/PitchBendModule.h"
-#include "control/performance/RandomPerVoiceModule.h"
 #include "control/performance/RandomPerNoteModule.h"
+#include "control/performance/RandomPerVoiceModule.h"
+#include "control/performance/VelocityModule.h"
 
 #include "routing/Routing.h"
 #include "routing/RoutingBuffers.h"
+#include "routing/RoutingProcess.h"
 
 struct Voice {
 
     bool active = false;
     int  midiNote = -1;
 
-    // ============================
-    // SOURCES
-    // ============================
-    Oscillator oscA;
-    Oscillator oscB;
-    Oscillator oscC;
-    Oscillator sub;
-    Noise      noise;
+    Oscillator oscA, oscB, oscC, sub;
+    Noise noise;
 
-    // ============================
-    // FILTERS
-    // ============================
-    Filter filter0;
-    Filter filter1;
+    Filter filter0, filter1;
 
-    // ============================
-    // CONTROL
-    // ============================
+    OscParams   oscAParams, oscBParams, oscCParams, subParams;
+    NoiseParams noiseParams;
+    FilterParams filter0Params, filter1Params;
+
     Envelope env1;
     LFO      lfo1;
 
-    // ============================
-    // PERFORMANCE MODS
-    // ============================
-    NoteModule           noteMod;
-    VelocityModule       velocityMod;
-    ModWheelModule       modWheelMod;
-    AftertouchModule     aftertouchMod;
-    PitchBendModule      pitchBendMod;
-    RandomPerVoiceModule randomVoiceMod;
+    AftertouchModule aftertouchMod;
+    AlternateModule  alternateMod;
+    ModWheelModule   modWheelMod;
+    NoteModule       noteMod;
+    PitchBendModule  pitchBendMod;
     RandomPerNoteModule  randomNoteMod;
+    RandomPerVoiceModule randomVoiceMod;
+    VelocityModule       velocityMod;
 
     float noteModValue = 0.0f;
 
-    // ============================
-    // MOD MATRIX
-    // ============================
     ModMatrix mod;
 
-    // ============================
-    // SERUM-STYLE ROUTING
-    // ============================
-    enum class SourceMode {
-        NONE,
-        FILTER,
-        MAIN,
-        DIRECT
-    };
-
-    std::array<SourceMode, NUM_SOURCES> mode{};
-    std::array<float, NUM_SOURCES>      filterBlend{};
+    std::array<SourceRouting, NUM_SOURCES> routing{};
     RoutingBuffers buffers;
 
-    // ============================
-    // START NOTE
-    // ============================
+    // ---------- routing helpers ----------
+    void routeFilterBlend(int src, float blend)
+    {
+        routing[src].clear();
+        routing[src].add(LayerTarget::FILTER0, 1.0f - blend);
+        routing[src].add(LayerTarget::FILTER1, blend);
+    }
+
+    void routeMain(int src)   { routing[src].clear(); routing[src].add(LayerTarget::MAIN,   1.0f); }
+    void routeDirect(int src) { routing[src].clear(); routing[src].add(LayerTarget::DIRECT, 1.0f); }
+    void routeNone(int src)   { routing[src].clear(); }
+
+    // ---------- start ----------
     void start(int note, float velocity, const Wavetable* wt)
     {
-        active   = true;
+        active = true;
         midiNote = note;
 
         oscA.wavetable = wt;
@@ -97,17 +87,28 @@ struct Voice {
         sub.wavetable  = wt;
 
         float f = oscA.midiNoteToFreq(note);
-        oscA.freqBase = f;
-        oscB.freqBase = f;
-        oscC.freqBase = f;
-        sub.freqBase  = f;
-        sub.semitoneBase = -12.0f;
 
-        oscA.resetModValues();
-        oscB.resetModValues();
-        oscC.resetModValues();
-        sub.resetModValues();
-        noise.resetModValues();
+        auto initOsc = [&](OscParams& p)
+        {
+            p.freqBase = p.freqMod = f;
+            p.semitoneBase = p.semitoneMod = 0.0f;
+            p.fineBase = p.fineMod = 0.0f;
+            p.levelBase = p.levelMod = 0.4f;
+            p.panBase = p.panMod = 0.0f;
+            p.wtPosBase = p.wtPosMod = 0.0f;
+        };
+
+        initOsc(oscAParams);
+        initOsc(oscBParams);
+        initOsc(oscCParams);
+        initOsc(subParams);
+
+        noiseParams.pitchBase = noiseParams.pitchMod = 0.0f;
+        noiseParams.levelBase = noiseParams.levelMod = 0.3f;
+        noiseParams.panBase   = noiseParams.panMod   = 0.0f;
+
+        filter0Params = {};
+        filter1Params = filter0Params;
 
         env1.noteOn(note, velocity);
         lfo1.retrigger();
@@ -118,93 +119,112 @@ struct Voice {
         noteMod.midiNote = &noteModValue;
         velocityMod.value = velocity;
 
-        randomVoiceMod.value = (float(rand()) / RAND_MAX) * 2.0f - 1.0f;
-        randomNoteMod.value  = (float(rand()) / RAND_MAX) * 2.0f - 1.0f;
-
+        // -------- register sources --------
         mod.registerSource(ModSourceID::ENV1, &env1);
         mod.registerSource(ModSourceID::LFO1, &lfo1);
         mod.registerSource(ModSourceID::NOTE, &noteMod);
         mod.registerSource(ModSourceID::VELOCITY, &velocityMod);
+        mod.registerSource(ModSourceID::MOD_WHEEL, &modWheelMod);
+        mod.registerSource(ModSourceID::AFTERTOUCH, &aftertouchMod);
+        mod.registerSource(ModSourceID::PITCH_BEND, &pitchBendMod);
+        mod.registerSource(ModSourceID::ALTRNATE, &alternateMod);
 
         // ============================
-        // SERUM INIT PATCH
+        // REGISTER MOD TARGETS
         // ============================
-        mode = {
-            SourceMode::FILTER,
-            SourceMode::NONE,
-            SourceMode::NONE,
-            SourceMode::NONE,
-            SourceMode::NONE
-        };
 
-        for (int i = 0; i < (int)NUM_SOURCES; ++i)
-            filterBlend[i] = 0.0f;
+        // -------- OSC A --------
+        mod.registerTarget(ModTargetID::OSC_A_FREQ,      &oscAParams.freqMod,      oscAParams.freqBase);
+        mod.registerTarget(ModTargetID::OSC_A_SEMITONE,  &oscAParams.semitoneMod,  oscAParams.semitoneBase);
+        mod.registerTarget(ModTargetID::OSC_A_FINE,      &oscAParams.fineMod,      oscAParams.fineBase);
+        mod.registerTarget(ModTargetID::OSC_A_LEVEL,     &oscAParams.levelMod,     oscAParams.levelBase);
+        mod.registerTarget(ModTargetID::OSC_A_PAN,       &oscAParams.panMod,       oscAParams.panBase);
+        mod.registerTarget(ModTargetID::OSC_A_WT_POS,    &oscAParams.wtPosMod,     oscAParams.wtPosBase);
+
+        // -------- OSC B --------
+        mod.registerTarget(ModTargetID::OSC_B_FREQ,      &oscBParams.freqMod,      oscBParams.freqBase);
+        mod.registerTarget(ModTargetID::OSC_B_SEMITONE,  &oscBParams.semitoneMod,  oscBParams.semitoneBase);
+        mod.registerTarget(ModTargetID::OSC_B_FINE,      &oscBParams.fineMod,      oscBParams.fineBase);
+        mod.registerTarget(ModTargetID::OSC_B_LEVEL,     &oscBParams.levelMod,     oscBParams.levelBase);
+        mod.registerTarget(ModTargetID::OSC_B_PAN,       &oscBParams.panMod,       oscBParams.panBase);
+        mod.registerTarget(ModTargetID::OSC_B_WT_POS,    &oscBParams.wtPosMod,     oscBParams.wtPosBase);
+
+        // -------- OSC C --------
+        mod.registerTarget(ModTargetID::OSC_C_FREQ,      &oscCParams.freqMod,      oscCParams.freqBase);
+        mod.registerTarget(ModTargetID::OSC_C_SEMITONE,  &oscCParams.semitoneMod,  oscCParams.semitoneBase);
+        mod.registerTarget(ModTargetID::OSC_C_FINE,      &oscCParams.fineMod,      oscCParams.fineBase);
+        mod.registerTarget(ModTargetID::OSC_C_LEVEL,     &oscCParams.levelMod,     oscCParams.levelBase);
+        mod.registerTarget(ModTargetID::OSC_C_PAN,       &oscCParams.panMod,       oscCParams.panBase);
+        mod.registerTarget(ModTargetID::OSC_C_WT_POS,    &oscCParams.wtPosMod,     oscCParams.wtPosBase);
+
+        // -------- SUB --------
+        mod.registerTarget(ModTargetID::SUB_FREQ,        &subParams.freqMod,       subParams.freqBase);
+        mod.registerTarget(ModTargetID::SUB_SEMITONE,    &subParams.semitoneMod,   subParams.semitoneBase);
+        mod.registerTarget(ModTargetID::SUB_FINE,        &subParams.fineMod,       subParams.fineBase);
+        mod.registerTarget(ModTargetID::SUB_LEVEL,       &subParams.levelMod,      subParams.levelBase);
+        mod.registerTarget(ModTargetID::SUB_PAN,         &subParams.panMod,        subParams.panBase);
+        mod.registerTarget(ModTargetID::SUB_WT_POS,      &subParams.wtPosMod,      subParams.wtPosBase);
+
+        // -------- NOISE --------
+        mod.registerTarget(ModTargetID::NOISE_PITCH, &noiseParams.pitchMod, noiseParams.pitchBase);
+        mod.registerTarget(ModTargetID::NOISE_LEVEL, &noiseParams.levelMod, noiseParams.levelBase);
+        mod.registerTarget(ModTargetID::NOISE_PAN,   &noiseParams.panMod,   noiseParams.panBase);
+
+        // -------- FILTER 0 --------
+        mod.registerTarget(ModTargetID::FILTER0_CUTOFF, &filter0Params.cutoffMod, filter0Params.cutoffBase);
+        mod.registerTarget(ModTargetID::FILTER0_RES,    &filter0Params.resMod,    filter0Params.resBase);
+        mod.registerTarget(ModTargetID::FILTER0_DRIVE,  &filter0Params.driveMod,  filter0Params.driveBase);
+        mod.registerTarget(ModTargetID::FILTER0_FAT,    &filter0Params.driveMod,  filter0Params.driveBase);
+        mod.registerTarget(ModTargetID::FILTER0_MIX,    &filter0Params.mixMod,    filter0Params.mixBase);
+        mod.registerTarget(ModTargetID::FILTER0_LEVEL,  &filter0Params.levelMod,  filter0Params.levelBase);
+        mod.registerTarget(ModTargetID::FILTER0_PAN,    &filter0Params.panMod,    filter0Params.panBase);
+
+        // -------- FILTER 1 --------
+        mod.registerTarget(ModTargetID::FILTER1_CUTOFF, &filter1Params.cutoffMod, filter1Params.cutoffBase);
+        mod.registerTarget(ModTargetID::FILTER1_RES,    &filter1Params.resMod,    filter1Params.resBase);
+        mod.registerTarget(ModTargetID::FILTER1_DRIVE,  &filter1Params.driveMod,  filter1Params.driveBase);
+        mod.registerTarget(ModTargetID::FILTER1_FAT,    &filter1Params.driveMod,  filter1Params.driveBase);
+        mod.registerTarget(ModTargetID::FILTER1_MIX,    &filter1Params.mixMod,    filter1Params.mixBase);
+        mod.registerTarget(ModTargetID::FILTER1_LEVEL,  &filter1Params.levelMod,  filter1Params.levelBase);
+        mod.registerTarget(ModTargetID::FILTER1_PAN,    &filter1Params.panMod,    filter1Params.panBase);
+
+        for (int i = 0; i < NUM_SOURCES; ++i)
+            routing[i].clear();
+
+        routeFilterBlend(0, 0.0f);
     }
 
     void stop() { env1.noteOff(); }
 
-    // ============================
-    // PROCESS
-    // ============================
-    Sample process(float sr) {
+    // ---------- process ----------
+    Sample process(float sr)
+    {
         Sample out{};
-        out.left = 0.0f;
-        out.right = 0.0f;
-
-        if (!active)
-            return out;
+        if (!active) return out;
 
         buffers.clear();
         mod.process(sr);
 
         VoiceSources src;
-        src.oscA  = oscA.process(sr, {});
-        src.oscB  = oscB.process(sr, {});
-        src.oscC  = oscC.process(sr, {});
-        src.sub   = sub.process(sr, {});
-        src.noise = noise.process(sr, {});
+        src.oscA  = oscA.process(sr, oscAParams);
+        src.oscB  = oscB.process(sr, oscBParams);
+        src.oscC  = oscC.process(sr, oscCParams);
+        src.sub   = sub.process(sr, subParams);
+        src.noise = noise.process(sr, noiseParams);
 
         const Sample sources[NUM_SOURCES] = {
             src.oscA, src.oscB, src.oscC, src.sub, src.noise
         };
 
-        // -------- source routing --------
-        for (int i = 0; i < (int)NUM_SOURCES; ++i) {
-            const Sample& s = sources[i];
+        for (int i = 0; i < NUM_SOURCES; ++i)
+            routeSource(sources[i], routing[i], buffers);
 
-            switch (mode[i]) {
-                case SourceMode::NONE:
-                    break;
+        Sample f0 = filter0.process(sr, buffers.filterInput[0], filter0Params);
+        Sample f1 = filter1.process(sr, buffers.filterInput[1], filter1Params);
 
-                case SourceMode::FILTER:
-                {
-                    float a = 1.0f - filterBlend[i];
-                    float b = filterBlend[i];
+        out.left  = buffers.main.left  + buffers.direct.left  + f0.left  + f1.left;
+        out.right = buffers.main.right + buffers.direct.right + f0.right + f1.right;
 
-                    buffers.filterInput[0].left  += s.left  * a;
-                    buffers.filterInput[0].right += s.right * a;
-
-                    buffers.filterInput[1].left  += s.left  * b;
-                    buffers.filterInput[1].right += s.right * b;
-                }
-                break;
-
-                case SourceMode::MAIN:
-                case SourceMode::DIRECT:
-                    out.left  += s.left;
-                    out.right += s.right;
-                    break;
-            }
-        }
-
-        // -------- filters --------
-        Sample f0 = filter0.process(sr, buffers.filterInput[0]);
-        Sample f1 = filter1.process(sr, buffers.filterInput[1]);
-
-        out.left  += f0.left  + f1.left;
-        out.right += f0.right + f1.right;
-
-        // -------- amp envelope --------
         float env = env1.process(sr);
         out.left  *= env;
         out.right *= env;

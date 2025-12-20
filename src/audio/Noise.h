@@ -1,53 +1,51 @@
 #pragma once
 
-#include "audio/Module.h"
 #include <cstdint>
 #include <cmath>
+#include <algorithm>
 
-class Noise : public Module {
+#include "core/Sample.h"
+#include "engine/NoiseParams.h"
+#include "core/CONSTANTS.h"
+
+class Noise {
 public:
     // ============================
-    // BASE PARAMS (Serum-style)
-    // ============================
-    float pitchBase = 0.0f;   // fine pitch only (semitone-ish)
-
-    // ============================
-    // MOD SHADOW
-    // ============================
-    float pitchMod  = 0.0f;
-
-    // ============================
-    // INTERNAL RNG (per voice)
+    // DSP STATE ONLY
     // ============================
     uint32_t seed = 1u;
 
-    void resetModValues()
+    // ============================
+    // PROCESS (PURE SOURCE)
+    // ============================
+    Sample process(float /*sr*/, const NoiseParams& p)
     {
-        pitchMod = pitchBase;
-    }
-
-    // ============================
-    // MOD TARGET
-    // ============================
-    float* getPitchPtr()        { return &pitchMod; }
-    float  getPitchBase() const { return pitchBase; }
-
-    // ============================
-    // PROCESS
-    // ============================
-    Sample process(float /*sr*/, const Sample&) override
-    {
-        // Per-voice deterministic RNG
+        // Deterministic per-voice RNG
         seed = seed * 1664525u + 1013904223u;
 
         float n = ((seed >> 16) & 0x7FFF) / 16384.0f - 1.0f;
 
-        // Pitch = spectral scaling (simple approximation)
-        float pitchRatio = powf(2.0f, pitchMod / 12.0f);
+        // ----------------------------
+        // PITCH (spectral tilt)
+        // ----------------------------
+        float pitchRatio = powf(2.0f, p.pitchMod / 12.0f);
         n *= pitchRatio;
 
-        // Raw mono noise (no pan, no level)
-        return { n, n };
+        // ----------------------------
+        // LEVEL
+        // ----------------------------
+        n *= p.levelMod;
+
+        // ----------------------------
+        // PAN (-1 .. +1), equal-power
+        // ----------------------------
+        float pan = std::clamp(p.panMod, -1.0f, 1.0f);
+
+        float angle = (pan + 1.0f) * 0.25f * PI;
+        float l = cosf(angle);
+        float r = sinf(angle);
+
+        return { n * l, n * r };
     }
 
     void reset(uint32_t voiceSeed)

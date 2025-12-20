@@ -30,10 +30,26 @@ void Synth::noteOff(int note)
 Sample Synth::process(float sr)
 {
     Sample mix{};
-    for (auto& v : voices)
-        if (v.active)
-            mix.left += v.process(sr).left;
-            mix.right += v.process(sr).right;
+    Sample direct{};
 
-    return limiter.process(mix);
+    for (auto& voice : voices) {
+        if (!voice.active)
+            continue;
+
+        Sample v = voice.process(sr);
+
+        // MAIN goes through FX (later)
+        mix.left  += v.left;
+        mix.right += v.right;
+    }
+
+    // FX would go here (later)
+
+    Sample out;
+    out.left  = mix.left;
+    out.right = mix.right;
+
+    return limiter.process(out);
 }
+
+
