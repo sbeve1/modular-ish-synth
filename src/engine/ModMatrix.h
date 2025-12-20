@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <cmath>
+#include <algorithm>
+#include <limits>
 #include "control/ControlModule.h"
 #include "ModSourceID.h"
 #include "ModTargetID.h"
@@ -31,6 +33,9 @@ struct TargetSlot {
     float replaceAcc = 0.0f;
     bool hasReplace = false;
     float curveAcc = 1.0f;
+    // Target limits (clamped when writing out)
+    float minVal = -std::numeric_limits<float>::infinity();
+    float maxVal =  std::numeric_limits<float>::infinity();
 };
 
 class ModMatrix {
@@ -65,11 +70,18 @@ public:
         sources[(int)id] = src;
     }
 
-    void registerTarget(ModTargetID id, float* modValuePtr, float baseValue)
+    // Register a mod target. minVal/maxVal are optional and default to +/-inf
+    void registerTarget(ModTargetID id,
+                        float* modValuePtr,
+                        float baseValue,
+                        float minVal = -std::numeric_limits<float>::infinity(),
+                        float maxVal =  std::numeric_limits<float>::infinity())
     {
         auto& slot = targetSlots[(int)id];
         slot.modPtr = modValuePtr;
         slot.base   = baseValue;
+        slot.minVal = minVal;
+        slot.maxVal = maxVal;
     }
 
     void addRoute(ModSourceID s, ModTargetID t, float amt, ModType type)
@@ -134,6 +146,8 @@ public:
             out *= slot.multAcc;
             out *= slot.curveAcc;
 
+            // clamp using target-specific limits to avoid invalid DSP inputs
+            out = std::clamp(out, slot.minVal, slot.maxVal);
             *slot.modPtr = out;
         }
     }

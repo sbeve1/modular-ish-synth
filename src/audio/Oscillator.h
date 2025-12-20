@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <array>
 #include <algorithm>
+#include <cstdlib>
 
 #include "core/CONSTANTS.h"
 #include "core/Sample.h"
@@ -10,90 +12,91 @@
 
 class Oscillator {
 public:
-    // ==================================================
-    // DSP STATE ONLY
-    // ==================================================
-    float phase = 0.0f;
+    static constexpr int MAX_UNISON = 8;
 
-    // ==================================================
-    // WAVETABLE
-    // ==================================================
+    std::array<float, MAX_UNISON> phase{};
     const Wavetable* wavetable = nullptr;
 
-    // ==================================================
-    // HELPERS
-    // ==================================================
-    float midiNoteToFreq(int n) const
+    // ============================
+    // MIDI → frequency helper (RESTORED)
+    // ============================
+    float midiNoteToFreq(int note) const
     {
-        return 440.0f * powf(2.0f, (n - 69) / 12.0f);
+        return 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
     }
 
-    // ==================================================
-    // PROCESS (PURE DSP)
-    // ==================================================
+    void resetPhase(bool randomize)
+    {
+        for (auto& p : phase)
+            p = randomize ? ((float)std::rand() / RAND_MAX) * TWO_PI : 0.0f;
+    }
+
     Sample process(float sr, const OscParams& p)
     {
         if (!wavetable || wavetable->numFrames == 0)
             return {};
 
-        // ----------------------------
-        // PITCH
-        // ----------------------------
-        // semitone + fine (cents)
+        int voices = std::clamp(
+            (int)std::round(p.unisonVoices),
+            1,
+            MAX_UNISON
+        );
+
         float pitchRatio =
-            powf(2.0f, p.semitoneMod / 12.0f) *
-            powf(2.0f, p.fineMod / 1200.0f);
+            std::pow(2.0f, p.semitoneMod / 12.0f) *
+            std::pow(2.0f, p.fineMod / 1200.0f);
 
-        float freq = p.freqMod * pitchRatio;
+        float baseFreq = std::clamp(
+            p.freqMod * pitchRatio,
+            MIN_FREQ,
+            sr * 0.45f
+        );
 
-        phase += (TWO_PI * freq) / sr;
-        if (phase >= TWO_PI)
-            phase -= TWO_PI;
-
-        float phaseNorm = phase * INV_2PI;
-
-        // ----------------------------
-        // WAVETABLE POSITION
-        // ----------------------------
         float wtPos = std::clamp(p.wtPosMod, 0.0f, 1.0f);
-
         float framePos = wtPos * (wavetable->numFrames - 1);
-        int   f0 = (int)framePos;
-        int   f1 = std::min(f0 + 1, wavetable->numFrames - 1);
+        int f0 = (int)framePos;
+        int f1 = std::min(f0 + 1, wavetable->numFrames - 1);
         float frameFrac = framePos - f0;
 
-        // ----------------------------
-        // SAMPLE INTERPOLATION
-        // ----------------------------
-        float idx = phaseNorm * wavetable->tableSize;
-        int   i0  = (int)idx % wavetable->tableSize;
-        int   i1  = (i0 + 1) % wavetable->tableSize;
-        float sampleFrac = idx - i0;
+        float outL = 0.0f;
+        float outR = 0.0f;
 
-        float s00 = wavetable->sample(f0, i0);
-        float s01 = wavetable->sample(f0, i1);
-        float s10 = wavetable->sample(f1, i0);
-        float s11 = wavetable->sample(f1, i1);
+        for (int i = 0; i < voices; ++i) {
+            float spread = (voices == 1) ? 0.0f
+                : (float(i) / (voices - 1) * 2.0f - 1.0f);
 
-        float s0 = s00 + (s01 - s00) * sampleFrac;
-        float s1 = s10 + (s11 - s10) * sampleFrac;
-        float s  = s0  + (s1  - s0)  * frameFrac;
+            float detuneRatio = std::pow(2.0f, (spread * p.detune) / 1200.0f);
+            float freq = baseFreq * detuneRatio;
 
-        // ----------------------------
-        // LEVEL
-        // ----------------------------
-        s *= p.levelMod;
+            phase[i] += TWO_PI * freq / sr;
+            if (phase[i] >= TWO_PI)
+                phase[i] -= TWO_PI;
 
-        // ----------------------------
-        // PAN (-1 .. +1)
-        // equal-power panning
-        // ----------------------------
-        float pan = std::clamp(p.panMod, -1.0f, 1.0f);
+            float ph = phase[i] * INV_2PI;
+            float idx = ph * wavetable->tableSize;
+            int i0 = (int)idx & (wavetable->tableSize - 1);
+            int i1 = (i0 + 1) & (wavetable->tableSize - 1);
+            float frac = idx - i0;
 
-        float angle = (pan + 1.0f) * 0.25f * PI; // -1..1 → 0..π/2
-        float l = cosf(angle);
-        float r = sinf(angle);
+            float s00 = wavetable->sample(f0, i0);
+            float s01 = wavetable->sample(f0, i1);
+            float s10 = wavetable->sample(f1, i0);
+            float s11 = wavetable->sample(f1, i1);
 
-        return { s * l, s * r };
+            float s0 = s00 + (s01 - s00) * frac;
+            float s1 = s10 + (s11 - s10) * frac;
+            float s  = s0  + (s1  - s0)  * frameFrac;
+
+            float pan = spread * p.stereoSpread;
+            float ang = (pan + 1.0f) * 0.25f * PI;
+
+            outL += s * std::cos(ang);
+            outR += s * std::sin(ang);
+        }
+
+        float norm = 1.0f / std::sqrt((float)voices);
+        float level = std::max(p.levelMod, 0.0f) * norm * 0.8f;
+
+        return { outL * level, outR * level };
     }
 };

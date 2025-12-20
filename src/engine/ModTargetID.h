@@ -34,6 +34,12 @@ enum class ModTargetID : int {
     OSC_A_PAN,
     OSC_A_WT_POS,
 
+    // ---- UNISON (OSC A) ----
+    OSC_A_UNISON,
+    OSC_A_DETUNE,
+    OSC_A_STEREO,
+    OSC_A_PHASE,
+
     // ========================
     // OSC B
     // ========================
@@ -44,6 +50,12 @@ enum class ModTargetID : int {
     OSC_B_PAN,
     OSC_B_WT_POS,
 
+    // ---- UNISON (OSC B) ----
+    OSC_B_UNISON,
+    OSC_B_DETUNE,
+    OSC_B_STEREO,
+    OSC_B_PHASE,
+
     // ========================
     // OSC C
     // ========================
@@ -53,6 +65,12 @@ enum class ModTargetID : int {
     OSC_C_LEVEL,
     OSC_C_PAN,
     OSC_C_WT_POS,
+
+    // ---- UNISON (OSC C) ----
+    OSC_C_UNISON,
+    OSC_C_DETUNE,
+    OSC_C_STEREO,
+    OSC_C_PHASE,
 
     // ========================
     // SUB

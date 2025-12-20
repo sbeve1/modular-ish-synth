@@ -1,5 +1,6 @@
 #pragma once
 #include "control/ControlModule.h"
+#include "core/CONSTANTS.h"
 #include <cmath>
 #include <algorithm>
 
@@ -10,22 +11,22 @@ public:
     // PUBLIC ADSR PARAMETERS
     // -----------------------------
     float attack  = 0.01f;   // seconds
-    float hold    = 0.00f;   // seconds (NEW)
+    float hold    = 0.00f;   // seconds
     float decay   = 0.20f;
     float sustain = 0.70f;
     float release = 0.30f;
 
     // -----------------------------
-    // Serum-style curve controls
+    // Curve controls
     // -----------------------------
     float attackCurve  = 0.0f;
     float decayCurve   = 0.0f;
     float releaseCurve = 0.0f;
 
     // -----------------------------
-    // Envelope depth (NEW)
+    // Envelope depth (modulatable)
     // -----------------------------
-    float amount = 1.0f; // Output multiplier (modulatable)
+    float amount = 1.0f; // Output multiplier
 
     // -----------------------------
     // Global time scaling
@@ -45,7 +46,7 @@ public:
     int noteNumber = 60;
 
     // -----------------------------
-    // Retrigger smoothing (NEW)
+    // Retrigger smoothing
     // -----------------------------
     bool smoothRetrigger = true;
 
@@ -54,6 +55,7 @@ public:
         velocity = vel;
         noteNumber = midiNote;
 
+        // If currently loud, softly jump down a bit to avoid clicks when retriggering
         if (smoothRetrigger && value > 0.3f)
             value = 0.3f;
 
@@ -71,7 +73,7 @@ public:
         float dt = 1.0f / sr;
 
         float scaledAttack  = clampTime(attack  * computeTimeScale());
-        float scaledHold    = clampTime(hold); // simple hold
+        float scaledHold    = clampTime(hold); // hold treated as plain seconds
         float scaledDecay   = clampTime(decay   * computeTimeScale());
         float scaledRelease = clampTime(release * computeTimeScale());
 
@@ -79,10 +81,10 @@ public:
 
         switch (state)
         {
-            // --------------------------
             case State::ATTACK:
             {
                 float curve = computeCurve(attackCurve);
+                // Note: this is perceptual-style integration (fine for musical behavior)
                 value += ((1.0f - value) * curve * dt) / scaledAttack;
 
                 if (value >= 0.999999f) {
@@ -93,7 +95,6 @@ public:
                 break;
             }
 
-            // --------------------------
             case State::HOLD:
                 if (elapsed >= scaledHold) {
                     elapsed = 0.0f;
@@ -101,7 +102,6 @@ public:
                 }
                 break;
 
-            // --------------------------
             case State::DECAY:
             {
                 float curve = computeCurve(decayCurve);
@@ -114,12 +114,10 @@ public:
                 break;
             }
 
-            // --------------------------
             case State::SUSTAIN:
                 value = sustain * velocityScale();
                 break;
 
-            // --------------------------
             case State::RELEASE:
             {
                 float curve = computeCurve(releaseCurve);
@@ -132,13 +130,13 @@ public:
                 break;
             }
 
-            // --------------------------
             case State::IDLE:
                 value = 0.0f;
                 break;
         }
 
-        return value * amount; // apply envelope amount
+        // apply amount as final multiplier
+        return value * amount;
     }
 
     bool isActive() const { return state != State::IDLE; }
@@ -148,12 +146,13 @@ private:
     enum class State { IDLE, ATTACK, HOLD, DECAY, SUSTAIN, RELEASE };
     State state = State::IDLE;
 
-    float value = 0.0f;
+    // Use the protected 'value' defined in ControlModule (do NOT redeclare it here)
     float elapsed = 0.0f;
 
     // ------------------------------------
     float computeCurve(float c) const
     {
+        // simple curve mapping: >=0 boosts speed, <0 slows (sane mapping)
         return (c >= 0.f) ? (1.f + c) : 1.f / (1.f - c);
     }
 
@@ -171,8 +170,6 @@ private:
 
     float clampTime(float t) const
     {
-        const float MIN_T = 0.001f;
-        const float MAX_T = 20.0f;
-        return std::clamp(t, MIN_T, MAX_T);
+        return std::clamp(t, ENV_MIN_TIME, ENV_MAX_TIME);
     }
 };

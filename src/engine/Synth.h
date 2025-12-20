@@ -26,8 +26,6 @@ public:
 
     MasterLimiter limiter;
 
-    int nextVoice = 0;
-
     Wavetable basicWavetable;
 
     Synth();

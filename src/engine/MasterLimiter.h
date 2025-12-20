@@ -1,17 +1,18 @@
 #pragma once
-#include "core/Sample.h"
 #include <cmath>
+#include "core/Sample.h"
 
-// very small soft clip limiter — cheap, safe
 struct MasterLimiter {
-    // simple soft clip scale: x / (1 + |x|)
-    Sample process(const Sample& in) {
-        return { soft(in.left), soft(in.right) };
+    float drive = 1.2f;
+
+    inline float soft(float x) const
+    {
+        x *= drive;
+        return x / (1.0f + fabsf(x));
     }
 
-    inline float soft(float x) const {
-        // small pre-gain, then soft saturate
-        float y = x;
-        return y / (1.0f + fabsf(y));
+    Sample process(const Sample& in)
+    {
+        return { soft(in.left), soft(in.right) };
     }
 };

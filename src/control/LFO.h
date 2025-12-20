@@ -2,34 +2,30 @@
 #include "control/ControlModule.h"
 #include "core/CONSTANTS.h"
 #include <cmath>
+#include <algorithm>
 
 constexpr int LFO_TABLE_SIZE = 256;
+static_assert((LFO_TABLE_SIZE & (LFO_TABLE_SIZE - 1)) == 0,
+              "LFO_TABLE_SIZE must be power of two");
+
 extern float LFO_SHAPE[LFO_TABLE_SIZE];
 
 class LFO : public ControlModule {
 public:
+    float freq = 2.0f;
+    float bpm = 120.0f;
+    float syncDivision = 1.0f;
 
-    // ============================
-    // Public modulatable parameters
-    // ============================
-    float freq = 2.0f;         // rate in Hz
-    float bpm = 120.0f;        // if sync mode
-    float syncDivision = 1.0f; // 1/1, 1/2, etc.
+    float delay  = 0.0f;
+    float rise   = 0.0f;
+    float amount = 1.0f;
 
-    float delay = 0.0f;        // seconds before LFO starts
-    float rise  = 0.0f;        // fade-in time
-    float amount = 1.0f;       // output depth
-
-    // ============================
-    // Modes
-    // ============================
     enum class PlayMode { FREE, TRIGGER, ENVELOPE };
     enum class Polarity { BIPOLAR, UNIPOLAR };
     enum class RateMode { HZ, SYNC };
 
-    float process(float sampleRate) override
+    float process(float sr) override
     {
-        // On retrigger
         if (mode == PlayMode::TRIGGER && retriggerPending) {
             phase = 0.0f;
             elapsed = 0.0f;
@@ -37,20 +33,16 @@ public:
             finished = false;
         }
 
-        // One-shot envelope LFO
         if (mode == PlayMode::ENVELOPE && finished)
             return 0.0f;
 
-        elapsed += 1.0f / sampleRate;
-
-        // Delay handling
+        elapsed += 1.0f / sr;
         if (elapsed < delay)
             return 0.0f;
 
         float t = elapsed - delay;
 
-        // Advance phase
-        phase += computePhaseIncrement(sampleRate);
+        phase += computePhaseIncrement(sr);
         if (phase >= 1.0f) {
             if (mode == PlayMode::ENVELOPE) {
                 phase = 1.0f;
@@ -60,37 +52,22 @@ public:
             }
         }
 
-        float raw = readTable(phase);
+        float pos = phase * LFO_TABLE_SIZE;
+        int i0 = (int)pos & (LFO_TABLE_SIZE - 1);
+        int i1 = (i0 + 1) & (LFO_TABLE_SIZE - 1);
+        float frac = pos - (float)i0;
+
+        float raw = LFO_SHAPE[i0] * (1.0f - frac) + LFO_SHAPE[i1] * frac;
         raw = applyPolarity(raw);
 
-        // Fade-in (rise)
         float fade = (rise <= 0.0f) ? 1.0f : std::min(t / rise, 1.0f);
-
         return raw * fade * amount;
     }
 
-    // ModMatrix pointers
-    float* getFrequencyPtr()     { return &freq; }
-    float* getBPMPtr()           { return &bpm; }
-    float* getSyncDivisionPtr()  { return &syncDivision; }
-    float* getDelayPtr()         { return &delay; }
-    float* getRisePtr()          { return &rise; }
-    float* getAmountPtr()        { return &amount; }
-
-    // Controls
     void retrigger() { retriggerPending = true; }
     void setPlayMode(PlayMode m) { mode = m; }
 
 private:
-    float readTable(float ph)
-    {
-        float pos = ph * LFO_TABLE_SIZE;
-        int i0 = (int)pos & (LFO_TABLE_SIZE - 1);
-        int i1 = (i0 + 1) & (LFO_TABLE_SIZE - 1);
-        float frac = pos - (float)i0;
-        return LFO_SHAPE[i0] * (1.0f - frac) + LFO_SHAPE[i1] * frac;
-    }
-
     float computePhaseIncrement(float sr)
     {
         if (rateMode == RateMode::HZ)

@@ -7,9 +7,12 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/C
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
   C:/msys64/mingw64/include/_mingw_secapi.h \
+  C:/msys64/mingw64/include/c++/14.2.0/algorithm \
   C:/msys64/mingw64/include/c++/14.2.0/bit \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/concept_check.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/cpp_type_traits.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/exception_defines.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/functexcept.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/move.h \
@@ -18,20 +21,30 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/C
   C:/msys64/mingw64/include/c++/14.2.0/bits/requires_hosted.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/specfun.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/std_abs.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algobase.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_construct.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_heap.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_iterator.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_iterator_base_funcs.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_iterator_base_types.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/stl_pair.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h \
+  C:/msys64/mingw64/include/c++/14.2.0/bits/uniform_int_dist.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/version.h \
   C:/msys64/mingw64/include/c++/14.2.0/cmath \
   C:/msys64/mingw64/include/c++/14.2.0/concepts \
+  C:/msys64/mingw64/include/c++/14.2.0/cstdlib \
   C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h \
   C:/msys64/mingw64/include/c++/14.2.0/debug/debug.h \
   C:/msys64/mingw64/include/c++/14.2.0/ext/numeric_traits.h \
   C:/msys64/mingw64/include/c++/14.2.0/ext/type_traits.h \
+  C:/msys64/mingw64/include/c++/14.2.0/initializer_list \
   C:/msys64/mingw64/include/c++/14.2.0/limits \
+  C:/msys64/mingw64/include/c++/14.2.0/new \
+  C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
+  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
   C:/msys64/mingw64/include/c++/14.2.0/pstl/pstl_config.h \
   C:/msys64/mingw64/include/c++/14.2.0/stdlib.h \
   C:/msys64/mingw64/include/c++/14.2.0/tr1/bessel_function.tcc \
@@ -164,6 +177,7 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: C:/Users/tevin/Desktop/Developer/
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
   C:/msys64/mingw64/include/_mingw_secapi.h \
+  C:/msys64/mingw64/include/assert.h \
   C:/msys64/mingw64/include/c++/14.2.0/algorithm \
   C:/msys64/mingw64/include/c++/14.2.0/array \
   C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h \
@@ -209,6 +223,7 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: C:/Users/tevin/Desktop/Developer/
   C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/version.h \
+  C:/msys64/mingw64/include/c++/14.2.0/cassert \
   C:/msys64/mingw64/include/c++/14.2.0/cmath \
   C:/msys64/mingw64/include/c++/14.2.0/compare \
   C:/msys64/mingw64/include/c++/14.2.0/concepts \
@@ -383,6 +398,7 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/version.h \
+  C:/msys64/mingw64/include/c++/14.2.0/cassert \
   C:/msys64/mingw64/include/c++/14.2.0/cctype \
   C:/msys64/mingw64/include/c++/14.2.0/cerrno \
   C:/msys64/mingw64/include/c++/14.2.0/clocale \
@@ -779,6 +795,7 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/include/_mingw_secapi.h \
   C:/msys64/mingw64/include/_mingw_stat64.h \
   C:/msys64/mingw64/include/_timeval.h \
+  C:/msys64/mingw64/include/assert.h \
   C:/msys64/mingw64/include/c++/14.2.0/algorithm \
   C:/msys64/mingw64/include/c++/14.2.0/array \
   C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h \
@@ -848,6 +865,7 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h \
   C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc \
   C:/msys64/mingw64/include/c++/14.2.0/bits/version.h \
+  C:/msys64/mingw64/include/c++/14.2.0/cassert \
   C:/msys64/mingw64/include/c++/14.2.0/cctype \
   C:/msys64/mingw64/include/c++/14.2.0/cerrno \
   C:/msys64/mingw64/include/c++/14.2.0/clocale \
@@ -1627,21 +1645,7 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512bf16intrin.h:
 
 C:/msys64/mingw64/include/oaidl.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/ext/alloc_traits.h:
-
-C:/msys64/mingw64/include/playsoundapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pkuintrin.h:
-
-C:/msys64/mingw64/include/_timeval.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/uniform_int_dist.h:
-
-C:/msys64/mingw64/include/realtimeapiset.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h:
+C:/msys64/mingw64/include/ncrypt.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/range_access.h:
 
@@ -1672,6 +1676,12 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/Routing.h:
 C:/msys64/mingw64/include/prsht.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/istream.tcc:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pconfigintrin.h:
+
+C:/msys64/mingw64/include/assert.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/stdexcept:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/exception_ptr.h:
 
@@ -1705,33 +1715,13 @@ C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Sample.h:
 
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h:
-
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/NoteModule.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/RandomPerNoteModule.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModSourceID.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/tr1/bessel_function.tcc:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/RandomPerNoteModule.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/sha512intrin.h:
-
-C:/msys64/mingw64/include/unknwnbase.h:
-
-C:/msys64/mingw64/include/oleidl.h:
-
-C:/msys64/mingw64/include/debugapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_pair.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/sm4intrin.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vbmi2intrin.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/amxcomplexintrin.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/PitchBendModule.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/smmintrin.h:
 
@@ -1765,95 +1755,19 @@ C:/msys64/mingw64/include/c++/14.2.0/streambuf:
 
 C:/msys64/mingw64/include/combaseapi.h:
 
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/sm4intrin.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vbmi2intrin.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/amxcomplexintrin.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/PitchBendModule.h:
+
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/limits.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/algorithm:
+C:/msys64/mingw64/include/c++/14.2.0/bits/hash_bytes.h:
 
-C:/msys64/mingw64/include/poppack.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/concepts:
-
-C:/msys64/mingw64/include/interlockedapi.h:
-
-C:/msys64/mingw64/include/winsock.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingBuffers.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/cstdint:
-
-C:/msys64/mingw64/include/vadefs.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/nested_exception.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/cmath:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/audio/Wavetable.h:
-
-C:/msys64/mingw64/include/psdk_inc/_fd_types.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h:
-
-C:/msys64/mingw64/include/profileapi.h:
-
-C:/msys64/mingw64/include/process.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h:
-
-C:/msys64/mingw64/include/shellapi.h:
-
-C:/msys64/mingw64/include/corecrt_wstdlib.h:
-
-C:/msys64/mingw64/include/sec_api/stdlib_s.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/stdlib.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModMatrix.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/initializer_list:
-
-C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h:
-
-C:/msys64/mingw64/include/pshpack8.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/Envelope.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/debug/debug.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/clflushoptintrin.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/main.cpp:
-
-C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/ext/atomicity.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_function.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vp2intersectvlintrin.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/cpu_defines.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/limits:
-
-C:/msys64/mingw64/include/winsmcrd.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/functional_hash.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_heap.h:
-
-C:/msys64/mingw64/include/math.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/tr1/hypergeometric.tcc:
-
-C:/msys64/mingw64/include/_mingw.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/exception_defines.h:
+C:/msys64/mingw64/include/limits.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mwaitintrin.h:
 
@@ -1869,43 +1783,61 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/Alternat
 
 C:/msys64/mingw64/include/minwinbase.h:
 
-C:/msys64/mingw64/include/fileapi.h:
+C:/msys64/mingw64/include/corecrt.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/bits/cpp_type_traits.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/string_view:
-
-C:/msys64/mingw64/include/c++/14.2.0/cstddef:
-
-C:/msys64/mingw64/include/_mingw_secapi.h:
-
-C:/msys64/mingw64/include/ddeml.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/hash_bytes.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/ext/type_traits.h:
+C:/msys64/mingw64/include/c++/14.2.0/tr1/modified_bessel_func.tcc:
 
 C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/os_defines.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/ext/numeric_traits.h:
+C:/msys64/mingw64/include/c++/14.2.0/ext/type_traits.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/type_traits:
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vp2intersectvlintrin.h:
 
-C:/msys64/mingw64/include/securitybaseapi.h:
+C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/cpu_defines.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h:
+C:/msys64/mingw64/include/c++/14.2.0/limits:
 
-C:/msys64/mingw64/include/winreg.h:
+C:/msys64/mingw64/include/c++/14.2.0/cmath:
 
-C:/msys64/mingw64/include/c++/14.2.0/tr1/ell_integral.tcc:
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/audio/Wavetable.h:
 
-C:/msys64/mingw64/include/stdlib.h:
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/sha512intrin.h:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vpopcntdqvlintrin.h:
+C:/msys64/mingw64/include/unknwnbase.h:
 
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/LFO.cpp:
+C:/msys64/mingw64/include/oleidl.h:
+
+C:/msys64/mingw64/include/debugapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_pair.h:
+
+C:/msys64/mingw64/include/realtimeapiset.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/stdlib.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModMatrix.h:
+
+C:/msys64/mingw64/include/math.h:
+
+C:/msys64/mingw64/include/winsmcrd.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/functional_hash.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_heap.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_function.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h:
+
+C:/msys64/mingw64/include/psdk_inc/_wsadata.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/LFO.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/error_constants.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/invoke.h:
 
@@ -1915,15 +1847,123 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/RtMidi.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/functexcept.h:
 
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vpopcntdqvlintrin.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/LFO.cpp:
+
+C:/msys64/mingw64/include/c++/14.2.0/tr1/hypergeometric.tcc:
+
+C:/msys64/mingw64/include/c++/14.2.0/algorithm:
+
+C:/msys64/mingw64/include/poppack.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/concepts:
+
+C:/msys64/mingw64/include/interlockedapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++config.h:
+
+C:/msys64/mingw64/include/stdarg.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/specfun.h:
+
+C:/msys64/mingw64/include/_mingw.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/exception_defines.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/string_view:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h:
+
+C:/msys64/mingw64/include/_mingw_secapi.h:
+
+C:/msys64/mingw64/include/ddeml.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/move.h:
+
 C:/msys64/mingw64/include/winefs.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/RandomPerVoiceModule.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/cwctype:
 
+C:/msys64/mingw64/include/c++/14.2.0/ext/atomicity.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/backward/binders.h:
+
+C:/msys64/mingw64/include/psdk_inc/_fd_types.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h:
+
 C:/msys64/mingw64/include/c++/14.2.0/tr1/legendre_function.tcc:
 
-C:/msys64/mingw64/include/c++/14.2.0/bits/move.h:
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h:
+
+C:/msys64/mingw64/include/playsoundapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pkuintrin.h:
+
+C:/msys64/mingw64/include/_timeval.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/uniform_int_dist.h:
+
+C:/msys64/mingw64/include/winsock.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingBuffers.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/nested_exception.h:
+
+C:/msys64/mingw64/include/profileapi.h:
+
+C:/msys64/mingw64/include/process.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/alloc_traits.h:
+
+C:/msys64/mingw64/include/sec_api/stdlib_s.h:
+
+C:/msys64/mingw64/include/shellapi.h:
+
+C:/msys64/mingw64/include/corecrt_wstdlib.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/cpp_type_traits.h:
+
+C:/msys64/mingw64/include/fileapi.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xmmintrin.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_vector.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vldqintrin.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h:
+
+C:/msys64/mingw64/include/pshpack8.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/Envelope.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/debug/debug.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/clflushoptintrin.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/main.cpp:
+
+C:/msys64/mingw64/include/c++/14.2.0/ext/numeric_traits.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/type_traits:
+
+C:/msys64/mingw64/include/securitybaseapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/initializer_list:
 
 C:/msys64/mingw64/include/c++/14.2.0/pstl/pstl_config.h:
 
@@ -1951,6 +1991,16 @@ C:/msys64/mingw64/include/minwindef.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/stl_iterator_base_funcs.h:
 
+C:/msys64/mingw64/include/winreg.h:
+
+C:/msys64/mingw64/include/stdlib.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/tr1/ell_integral.tcc:
+
+C:/msys64/mingw64/include/c++/14.2.0/ext/alloc_traits.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/cassert:
+
 C:/msys64/mingw64/include/c++/14.2.0/tr1/gamma.tcc:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/hresetintrin.h:
@@ -1968,18 +2018,6 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingProcess.h:
 C:/msys64/mingw64/include/ktmtypes.h:
 
 C:/msys64/mingw64/include/locale.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/tr1/modified_bessel_func.tcc:
-
-C:/msys64/mingw64/include/corecrt.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xmmintrin.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_vector.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vldqintrin.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/utility.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniint16intrin.h:
 
@@ -2001,21 +2039,11 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/ptr_traits.h:
 
 C:/msys64/mingw64/include/datetimeapi.h:
 
-C:/msys64/mingw64/include/stdarg.h:
+C:/msys64/mingw64/include/c++/14.2.0/cstddef:
 
-C:/msys64/mingw64/include/c++/14.2.0/bits/specfun.h:
+C:/msys64/mingw64/include/vadefs.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++config.h:
-
-C:/msys64/mingw64/include/limits.h:
-
-C:/msys64/mingw64/include/psdk_inc/_wsadata.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/LFO.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/error_constants.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h:
+C:/msys64/mingw64/include/c++/14.2.0/cstdint:
 
 C:/msys64/mingw64/include/c++/14.2.0/tuple:
 
@@ -2080,12 +2108,6 @@ C:/msys64/mingw64/include/apiset.h:
 C:/msys64/mingw64/include/wctype.h:
 
 C:/msys64/mingw64/include/apisetcconv.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pconfigintrin.h:
-
-C:/msys64/mingw64/include/assert.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/stdexcept:
 
 C:/msys64/mingw64/include/c++/14.2.0/bit:
 
@@ -2314,5 +2336,3 @@ C:/msys64/mingw64/include/mmiscapi.h:
 C:/msys64/mingw64/include/mmsystem.h:
 
 C:/msys64/mingw64/include/namespaceapi.h:
-
-C:/msys64/mingw64/include/ncrypt.h:
