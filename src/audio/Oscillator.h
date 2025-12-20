@@ -1,127 +1,115 @@
 #pragma once
+
 #include "audio/Module.h"
+#include "audio/Wavetable.h"
 #include "core/CONSTANTS.h"
 #include <cmath>
+#include <algorithm>
 
 class Oscillator : public Module {
 public:
+    // ============================
+    // BASE PARAMETERS
+    // ============================
+    float freqBase     = 440.0f;
+    float semitoneBase = 0.0f;
+    float fineBase     = 0.0f;
+
+    // Wavetable position (0..1)
+    float positionBase = 0.0f;
 
     // ============================
-    // WAVEFORMS
+    // MOD SHADOWS
     // ============================
-    enum class Waveform {
-        Sine,
-        Saw,
-        Square,
-        Triangle
-    };
+    float freqMod     = 440.0f;
+    float semitoneMod = 0.0f;
+    float fineMod     = 0.0f;
+    float positionMod = 0.0f;
 
-    // ============================
-    // BASE PARAMETERS (UI / stored)
-    // ============================
-    float freqBase        = 440.0f;  // Hz
-    float fineBase        = 0.0f;    // cents
-    float levelBase       = 1.0f;    // amplitude
-    float phaseOffsetBase = 0.0f;    // 0..1 normalized offset
-    float panBase         = 0.0f;    // -1..+1
-
-    // ============================
-    // MOD-SHADOW PARAMETERS
-    // (ModMatrix writes into these)
-    // ============================
-    float freqMod        = 440.0f;
-    float fineMod        = 0.0f;
-    float levelMod       = 1.0f;
-    float phaseOffsetMod = 0.0f;
-    float panMod         = 0.0f;
-
-    // ============================
-    // RUNTIME STATE
-    // ============================
     float phase = 0.0f;
-    Waveform waveform = Waveform::Triangle;
 
-    Oscillator() = default;
+    // ============================
+    // WAVETABLE
+    // ============================
+    const Wavetable* wavetable = nullptr;
 
-    // Reset shadow parameters to base each note
-    void resetModValues() {
-        freqMod        = freqBase;
-        fineMod        = fineBase;
-        levelMod       = levelBase;
-        phaseOffsetMod = phaseOffsetBase;
-        panMod         = panBase;
+    void resetModValues()
+    {
+        freqMod     = freqBase;
+        semitoneMod = semitoneBase;
+        fineMod     = fineBase;
+        positionMod = positionBase;
     }
 
     // ============================
-    // MOD MATRIX POINTERS
+    // MOD TARGET POINTERS
     // ============================
-    float* getFreqModPtr()        { return &freqMod; }
-    float  getFreqBase()    const { return freqBase; }
+    float* getFreqPtr()        { return &freqMod; }
+    float  getFreqBase() const { return freqBase; }
 
-    float* getFineModPtr()        { return &fineMod; }
-    float  getFineBase()    const { return fineBase; }
+    float* getSemitonePtr()        { return &semitoneMod; }
+    float  getSemitoneBase() const { return semitoneBase; }
 
-    float* getLevelModPtr()       { return &levelMod; }
-    float  getLevelBase()   const { return levelBase; }
+    float* getFinePtr()        { return &fineMod; }
+    float  getFineBase() const { return fineBase; }
 
-    float* getPhaseOffsetModPtr() { return &phaseOffsetMod; }
-    float  getPhaseOffsetBase() const { return phaseOffsetBase; }
+    float* getPositionPtr()        { return &positionMod; }
+    float  getPositionBase() const { return positionBase; }
 
-    float* getPanModPtr()         { return &panMod; }
-    float  getPanBase()     const { return panBase; }
-
-    // ============================
-    // Helper: MIDI note → frequency
-    // ============================
-    float midiNoteToFreq(int n) {
+    float midiNoteToFreq(int n) const
+    {
         return 440.0f * powf(2.0f, (n - 69) / 12.0f);
     }
 
-    // Set frequency base (UI/preset)
-    void setFrequency(float f) {
-        freqBase = f;
-        freqMod  = f;
-    }
-
     // ============================
-    // AUDIO DSP
+    // DSP
     // ============================
     Sample process(float sr, const Sample&) override
     {
-        float freq = freqMod * powf(2.0f, fineMod / 1200.0f);
+        if (!wavetable || wavetable->numFrames == 0)
+            return { 0.f, 0.f };
 
-        float s = 0.0f;
+        float pitchRatio =
+            powf(2.0f, semitoneMod / 12.0f) *
+            powf(2.0f, fineMod / 1200.0f);
 
-        switch (waveform) {
-            case Waveform::Sine:
-                s = sinf(phase + phaseOffsetMod * TWO_PI);
-                break;
+        float freq = freqMod * pitchRatio;
 
-            case Waveform::Saw:
-                s = (2.0f * (phase * INV_2PI)) - 1.0f;
-                break;
-
-            case Waveform::Square:
-                s = (phase < PI ? 1.0f : -1.0f);
-                break;
-
-            case Waveform::Triangle:
-                s = 2.0f * fabsf((phase * INV_PI) - 1.0f) - 1.0f;
-                break;
-        }
-
-        s *= levelMod;
-
-        // Advance phase
         phase += (TWO_PI * freq) / sr;
         if (phase >= TWO_PI)
             phase -= TWO_PI;
 
-        // Stereo panning
-        float angle = (panMod * 0.5f + 0.5f) * HALF_PI;
-        float left  = cosf(angle);
-        float right = sinf(angle);
+        float phaseNorm = phase * INV_2PI;
+        float pos = std::clamp(positionMod, 0.0f, 1.0f);
 
-        return { s * left, s * right };
+        // ============================
+        // FRAME INTERPOLATION
+        // ============================
+        float framePos = pos * (wavetable->numFrames - 1);
+        int   f0 = (int)framePos;
+        int   f1 = std::min(f0 + 1, wavetable->numFrames - 1);
+        float frameFrac = framePos - f0;
+
+        // ============================
+        // SAMPLE INTERPOLATION
+        // ============================
+        float idx = phaseNorm * wavetable->tableSize;
+        int   i0  = (int)idx % wavetable->tableSize;
+        int   i1  = (i0 + 1) % wavetable->tableSize;
+        float sampleFrac = idx - i0;
+
+        float s00 = wavetable->sample(f0, i0);
+        float s01 = wavetable->sample(f0, i1);
+        float s10 = wavetable->sample(f1, i0);
+        float s11 = wavetable->sample(f1, i1);
+
+        // ============================
+        // EXPLICIT BILINEAR INTERPOLATION
+        // ============================
+        float s0 = s00 + (s01 - s00) * sampleFrac;
+        float s1 = s10 + (s11 - s10) * sampleFrac;
+        float s  = s0  + (s1  - s0)  * frameFrac;
+
+        return { s, s };
     }
 };

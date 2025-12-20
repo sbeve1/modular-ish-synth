@@ -3,99 +3,101 @@
 enum class ModTargetID : int {
 
     // ========================
-    // VCA PARAMETERS
+    // FILTER 1
     // ========================
-    VCA_GAIN = 0,
-    VCA_PAN  = 1,
+    FILTER1_CUTOFF = 0,
+    FILTER1_RES,
+    FILTER1_DRIVE,
+    FILTER1_FAT,
+    FILTER1_MIX,
+    FILTER1_PAN,
+    FILTER1_LEVEL,
 
     // ========================
-    // FILTER PARAMETERS
+    // FILTER 2
     // ========================
-    FILTER_CUTOFF     = 2,
-    FILTER_RESONANCE  = 3,
-    FILTER_DRIVE      = 4,
-    FILTER_POST_DRIVE = 5,
-    FILTER_MIX        = 6,
-    FILTER_KEYTRACK   = 7,
+    FILTER2_CUTOFF,
+    FILTER2_RES,
+    FILTER2_DRIVE,
+    FILTER2_FAT,
+    FILTER2_MIX,
+    FILTER2_PAN,
+    FILTER2_LEVEL,
 
     // ========================
-    // OSCILLATOR PARAMETERS
+    // OSC A
     // ========================
-    OSC_FREQUENCY = 8,
-    OSC_FINE      = 9,
-    OSC_LEVEL     = 10,
-    OSC_PHASE_OFF = 11,
-    OSC_PAN       = 12,
+    OSC_A_FREQ,
+    OSC_A_SEMITONE,
+    OSC_A_FINE,
+    OSC_A_LEVEL,
+    OSC_A_PAN,
+    OSC_A_WT_POS,
 
     // ========================
-    // ENVELOPE 1 PARAMETERS
+    // OSC B
     // ========================
-    ENV1_ATTACK  = 13,
-    ENV1_HOLD    = 14,
-    ENV1_DECAY   = 15,
-    ENV1_SUSTAIN = 16,
-    ENV1_RELEASE = 17,
-    ENV1_AMOUNT  = 18,
+    OSC_B_FREQ,
+    OSC_B_SEMITONE,
+    OSC_B_FINE,
+    OSC_B_LEVEL,
+    OSC_B_PAN,
+    OSC_B_WT_POS,
 
     // ========================
-    // ENVELOPE 2 PARAMETERS
+    // OSC C
     // ========================
-    ENV2_ATTACK  = 19,
-    ENV2_HOLD    = 20,
-    ENV2_DECAY   = 21,
-    ENV2_SUSTAIN = 22,
-    ENV2_RELEASE = 23,
-    ENV2_AMOUNT  = 24,
+    OSC_C_FREQ,
+    OSC_C_SEMITONE,
+    OSC_C_FINE,
+    OSC_C_LEVEL,
+    OSC_C_PAN,
+    OSC_C_WT_POS,
 
     // ========================
-    // ENVELOPE 3 PARAMETERS
+    // SUB
     // ========================
-    ENV3_ATTACK  = 25,
-    ENV3_HOLD    = 26,
-    ENV3_DECAY   = 27,
-    ENV3_SUSTAIN = 28,
-    ENV3_RELEASE = 29,
-    ENV3_AMOUNT  = 30,
+    SUB_FREQ,
+    SUB_SEMITONE,
+    SUB_FINE,
+    SUB_LEVEL,
+    SUB_PAN,
+    SUB_WT_POS,
 
     // ========================
-    // LFO 1 PARAMETERS
+    // NOISE
     // ========================
-    LFO1_RATE     = 31,
-    LFO1_BPM      = 32,
-    LFO1_SYNC_DIV = 33,
-    LFO1_DELAY    = 34,
-    LFO1_RISE     = 35,
-    LFO1_AMOUNT   = 36,
+    NOISE_PITCH,
+    NOISE_LEVEL,
+    NOISE_PAN,
 
     // ========================
-    // LFO 2 PARAMETERS
+    // ROUTING
     // ========================
-    LFO2_RATE     = 37,
-    LFO2_BPM      = 38,
-    LFO2_SYNC_DIV = 39,
-    LFO2_DELAY    = 40,
-    LFO2_RISE     = 41,
-    LFO2_AMOUNT   = 42,
+    OSC_A_TO_DIRECT,
+    OSC_A_TO_MAIN,
+    OSC_A_TO_BUS1,
+    OSC_A_TO_BUS2,
 
-    // ========================
-    // LFO 3 PARAMETERS
-    // ========================
-    LFO3_RATE     = 43,
-    LFO3_BPM      = 44,
-    LFO3_SYNC_DIV = 45,
-    LFO3_DELAY    = 46,
-    LFO3_RISE     = 47,
-    LFO3_AMOUNT   = 48,
+    OSC_B_TO_DIRECT,
+    OSC_B_TO_MAIN,
+    OSC_B_TO_BUS1,
+    OSC_B_TO_BUS2,
 
-    // ========================
-    // LFO 4 PARAMETERS
-    // ========================
-    LFO4_RATE     = 49,
-    LFO4_BPM      = 50,
-    LFO4_SYNC_DIV = 51,
-    LFO4_DELAY    = 52,
-    LFO4_RISE     = 53,
-    LFO4_AMOUNT   = 54,
+    OSC_C_TO_DIRECT,
+    OSC_C_TO_MAIN,
+    OSC_C_TO_BUS1,
+    OSC_C_TO_BUS2,
 
-    COUNT = 55
+    SUB_TO_DIRECT,
+    SUB_TO_MAIN,
+    SUB_TO_BUS1,
+    SUB_TO_BUS2,
+
+    NOISE_TO_DIRECT,
+    NOISE_TO_MAIN,
+    NOISE_TO_BUS1,
+    NOISE_TO_BUS2,
+
+    COUNT
 };
