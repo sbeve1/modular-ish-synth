@@ -4,7 +4,6 @@
 
 #include "engine/Voice.h"
 #include "engine/Bus.h"
-#include "engine/MasterLimiter.h"
 #include "core/Sample.h"
 #include "audio/Wavetable.h"
 #include "audio/WavetableFactory.h"
@@ -29,7 +28,6 @@ public:
     Bus bus1;
     Bus bus2;
 
-    MasterLimiter limiter;
     Wavetable basicWavetable;
 
     Synth();

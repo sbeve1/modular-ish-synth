@@ -21,7 +21,7 @@ public:
     // =============================
     // ADSR PARAMETERS (seconds)
     // =============================
-    float attack  = 0.01f;
+    float attack  = 0.001f;
     float hold    = 0.0f;
     float decay   = 1.00f;
     float sustain = 1.00f; // 0 to 1, 1 being 0db

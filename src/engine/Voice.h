@@ -36,6 +36,9 @@ struct Voice {
     bool active = false;
     int  midiNote = -1;
     int noteId = -1;
+    uint32_t samplesSinceNoteOn = 0;
+    uint32_t samplesSinceNoteOff = 0;
+    bool released = false;
 
     // ============================
     // AUDIO MODULES
@@ -101,12 +104,9 @@ struct Voice {
     {
         active   = true;
         midiNote = note;
-
-        // ---------- reset filter state (safe at true start) ----------
-        filter0.ic1eqL = filter0.ic2eqL = 0.0f;
-        filter0.ic1eqR = filter0.ic2eqR = 0.0f;
-        filter1.ic1eqL = filter1.ic2eqL = 0.0f;
-        filter1.ic1eqR = filter1.ic2eqR = 0.0f;
+        released = false;
+        samplesSinceNoteOn = 0;
+        samplesSinceNoteOff = 0;
 
         // ---------- wavetable ----------
         oscA.wavetable = wt;
@@ -114,14 +114,12 @@ struct Voice {
         oscC.wavetable = wt;
         sub.wavetable  = wt;
 
-        float f = oscA.midiNoteToFreq(note);
-
         // ---------- oscillator defaults ----------
         auto initOsc = [&](OscParams& p)
         {
-            p.freqBase     = p.freqMod     = f;
-            p.semitoneBase = p.semitoneMod = 0.0f;
-            p.fineBase     = p.fineMod     = 0.0f;
+            p.semitoneBase = 0.0f;
+            p.fineBase     = 0.0f;
+
 
             p.levelBase    = DB_MINUS_10; // −10 dB
             p.levelMod     = 0.0f;
@@ -146,6 +144,12 @@ struct Voice {
         oscB.resetPhase(true);
         oscC.resetPhase(true);
         sub.resetPhase(false);
+
+        oscAParams.midiNote = note;
+        oscBParams.midiNote = note;
+        oscCParams.midiNote = note;
+        subParams.midiNote  = note;
+
 
         // ---------- noise ----------
         noiseParams.pitchBase = 0.0f;
@@ -212,7 +216,6 @@ struct Voice {
         // ============================
         // REGISTER TARGETS — OSC A
         // ============================
-        mod.registerTarget(ModTargetID::OSC_A_FREQ,     &oscAParams.freqMod,     oscAParams.freqBase);
         mod.registerTarget(ModTargetID::OSC_A_SEMITONE, &oscAParams.semitoneMod, oscAParams.semitoneBase);
         mod.registerTarget(ModTargetID::OSC_A_FINE,     &oscAParams.fineMod,     oscAParams.fineBase);
         mod.registerTarget(ModTargetID::OSC_A_LEVEL,    &oscAParams.levelMod,    oscAParams.levelBase);
@@ -227,7 +230,6 @@ struct Voice {
         // ============================
         // REGISTER TARGETS — OSC B
         // ============================
-        mod.registerTarget(ModTargetID::OSC_B_FREQ,     &oscBParams.freqMod,     oscBParams.freqBase);
         mod.registerTarget(ModTargetID::OSC_B_SEMITONE, &oscBParams.semitoneMod, oscBParams.semitoneBase);
         mod.registerTarget(ModTargetID::OSC_B_FINE,     &oscBParams.fineMod,     oscBParams.fineBase);
         mod.registerTarget(ModTargetID::OSC_B_LEVEL,    &oscBParams.levelMod,    oscBParams.levelBase);
@@ -242,7 +244,6 @@ struct Voice {
         // ============================
         // REGISTER TARGETS — OSC C
         // ============================
-        mod.registerTarget(ModTargetID::OSC_C_FREQ,     &oscCParams.freqMod,     oscCParams.freqBase);
         mod.registerTarget(ModTargetID::OSC_C_SEMITONE, &oscCParams.semitoneMod, oscCParams.semitoneBase);
         mod.registerTarget(ModTargetID::OSC_C_FINE,     &oscCParams.fineMod,     oscCParams.fineBase);
         mod.registerTarget(ModTargetID::OSC_C_LEVEL,    &oscCParams.levelMod,    oscCParams.levelBase);
@@ -257,7 +258,6 @@ struct Voice {
         // ============================
         // REGISTER TARGETS — SUB
         // ============================
-        mod.registerTarget(ModTargetID::SUB_FREQ,     &subParams.freqMod,     subParams.freqBase);
         mod.registerTarget(ModTargetID::SUB_SEMITONE, &subParams.semitoneMod, subParams.semitoneBase);
         mod.registerTarget(ModTargetID::SUB_FINE,     &subParams.fineMod,     subParams.fineBase);
         mod.registerTarget(ModTargetID::SUB_LEVEL,    &subParams.levelMod,    subParams.levelBase);
@@ -282,6 +282,8 @@ struct Voice {
 
     void stop()
     {
+        released = true;
+        samplesSinceNoteOff = 0;
         env1.noteOff();
     }
 
@@ -290,6 +292,11 @@ struct Voice {
     // ============================
     Sample process(float sr)
     {
+        samplesSinceNoteOn++;
+
+        if (released)
+            samplesSinceNoteOff++;
+
         Sample out{};
         if (!active) return out;
 
@@ -317,6 +324,7 @@ struct Voice {
         src.oscC  = oscC.process(sr, oscCParams);
         src.sub   = sub.process(sr, subParams);
         src.noise = noise.process(sr, noiseParams);
+
 
         // APPLY AMP ENVELOPE PRE-ROUTING (SERUM STYLE)
         src.oscA.left  *= env; src.oscA.right  *= env;

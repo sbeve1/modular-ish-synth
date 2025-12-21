@@ -4,6 +4,7 @@
 #include <array>
 #include <algorithm>
 #include <cstdlib>
+#include <cstdio>
 
 #include "core/CONSTANTS.h"
 #include "core/Sample.h"
@@ -25,14 +26,39 @@ public:
         return 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
     }
 
-    void resetPhase(bool randomize)
-    {
-        for (auto& p : phase)
+   void resetPhase(bool randomize)
+{
+    for (auto& p : phase) {
+        if (randomize) {
+            float r = (float)std::rand() / RAND_MAX;
+            // avoid zero crossings
             p = randomize ? ((float)std::rand() / RAND_MAX) * TWO_PI : 0.0f;
+
+        } else {
+            p = 0.0f;
+        }
     }
+}
 
     Sample process(float sr, const OscParams& p)
-    {
+    {   
+        // ----------------------------
+        // PITCH (Serum-style, SINGLE ownership)
+        // ----------------------------
+        float semitone = p.semitoneBase + p.semitoneMod;
+        float fine     = p.fineBase + p.fineMod;
+
+        // Work in MIDI space (musical domain)
+        float midi = (float)p.midiNote
+                + semitone
+                + fine / 100.0f;
+
+        // Convert ONCE to Hz
+        float baseFreq = 440.0f * std::pow(2.0f, (midi - 69.0f) / 12.0f);
+
+        // Safety clamp
+        baseFreq = std::clamp(baseFreq, MIN_FREQ, sr * 0.45f);
+
         if (!wavetable || wavetable->numFrames == 0)
             return {};
 
@@ -41,23 +67,7 @@ public:
             1,
             MAX_UNISON
         );
-
-        // ----------------------------
-        // PITCH (base + mod semantics)
-        // ----------------------------
-        float semitone = p.semitoneBase + p.semitoneMod;
-        float fine     = p.fineBase + p.fineMod;
-
-        float pitchRatio =
-            std::pow(2.0f, semitone / 12.0f) *
-            std::pow(2.0f, fine / 1200.0f);
-
-        float baseFreq = std::clamp(
-            (p.freqBase + p.freqMod) * pitchRatio,
-            MIN_FREQ,
-            sr * 0.45f
-        );
-
+        
         // ----------------------------
         // WAVETABLE POSITION
         // ----------------------------
@@ -80,10 +90,6 @@ public:
             float detuneRatio = std::pow(2.0f, (spread * p.detune) / 1200.0f);
             float freq = baseFreq * detuneRatio;
 
-            phase[i] += TWO_PI * freq / sr;
-            if (phase[i] >= TWO_PI)
-                phase[i] -= TWO_PI;
-
             float ph = phase[i] * INV_2PI;
             float idx = ph * wavetable->tableSize;
             int i0 = (int)idx & (wavetable->tableSize - 1);
@@ -99,6 +105,10 @@ public:
             float s1 = s10 + (s11 - s10) * frac;
             float s  = s0  + (s1  - s0)  * frameFrac;
 
+            phase[i] += TWO_PI * freq / sr;
+            if (phase[i] >= TWO_PI)
+                phase[i] -= TWO_PI;
+
             float pan = spread * p.stereoSpread;
             float ang = (pan + 1.0f) * 0.25f * PI;
 
@@ -113,8 +123,8 @@ public:
         float level = std::max(p.levelBase + p.levelMod, 0.0f);
 
         return {
-            outL * level * norm * 0.8f,
-            outR * level * norm * 0.8f
+            outL * level * norm,
+            outR * level * norm
         };
     }
 

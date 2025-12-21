@@ -82,6 +82,12 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_construct.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cstdio \
+ C:/msys64/mingw64/include/stdio.h \
+ C:/msys64/mingw64/include/corecrt_stdio_config.h \
+ C:/msys64/mingw64/include/_mingw_off_t.h \
+ C:/msys64/mingw64/include/swprintf.inl \
+ C:/msys64/mingw64/include/sec_api/stdio_s.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Wavetable.h \
@@ -133,5 +139,4 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingBuffers.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingProcess.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Bus.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/MasterLimiter.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h

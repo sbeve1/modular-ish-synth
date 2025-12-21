@@ -27,7 +27,6 @@ enum class ModTargetID : int {
     // ========================
     // OSC A
     // ========================
-    OSC_A_FREQ,
     OSC_A_SEMITONE,
     OSC_A_FINE,
     OSC_A_LEVEL,
@@ -43,7 +42,6 @@ enum class ModTargetID : int {
     // ========================
     // OSC B
     // ========================
-    OSC_B_FREQ,
     OSC_B_SEMITONE,
     OSC_B_FINE,
     OSC_B_LEVEL,
@@ -59,7 +57,6 @@ enum class ModTargetID : int {
     // ========================
     // OSC C
     // ========================
-    OSC_C_FREQ,
     OSC_C_SEMITONE,
     OSC_C_FINE,
     OSC_C_LEVEL,
@@ -75,7 +72,6 @@ enum class ModTargetID : int {
     // ========================
     // SUB
     // ========================
-    SUB_FREQ,
     SUB_SEMITONE,
     SUB_FINE,
     SUB_LEVEL,

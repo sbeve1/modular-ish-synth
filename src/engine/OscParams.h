@@ -4,9 +4,8 @@ struct OscParams {
     // ------------------------
     // PITCH
     // ------------------------
-    float freqBase     = 0.0f;
-    float freqMod      = 0.0f;
-
+    int midiNote = 60;
+    
     float semitoneBase = 0.0f;
     float semitoneMod  = 0.0f;
 
