@@ -35,6 +35,7 @@ struct Voice {
 
     bool active = false;
     int  midiNote = -1;
+    int noteId = -1;
 
     // ============================
     // AUDIO MODULES
@@ -100,13 +101,12 @@ struct Voice {
     {
         active   = true;
         midiNote = note;
-        
-        // ---------- reset filter state (prevent runaway bleed) ----------
+
+        // ---------- reset filter state (safe at true start) ----------
         filter0.ic1eqL = filter0.ic2eqL = 0.0f;
         filter0.ic1eqR = filter0.ic2eqR = 0.0f;
         filter1.ic1eqL = filter1.ic2eqL = 0.0f;
         filter1.ic1eqR = filter1.ic2eqR = 0.0f;
-
 
         // ---------- wavetable ----------
         oscA.wavetable = wt;
@@ -123,7 +123,7 @@ struct Voice {
             p.semitoneBase = p.semitoneMod = 0.0f;
             p.fineBase     = p.fineMod     = 0.0f;
 
-            p.levelBase    = 0.25f;
+            p.levelBase    = DB_MINUS_10; // −10 dB
             p.levelMod     = 0.0f;
             p.panBase      = 0.0f;
             p.panMod       = 0.0f;
@@ -150,14 +150,14 @@ struct Voice {
         // ---------- noise ----------
         noiseParams.pitchBase = 0.0f;
         noiseParams.pitchMod  = 0.0f;
-        noiseParams.levelBase = 0.15f;
+        noiseParams.levelBase = DB_MINUS_20; // −20 dB
         noiseParams.levelMod  = 0.0f;
         noiseParams.panBase   = 0.0f;
         noiseParams.panMod    = 0.0f;
 
         noise.reset((uint32_t)(note * 2654435761u) ^ (uint32_t)std::rand());
 
-        // ---------- filters (IMPORTANT: not zero) ----------
+        // ---------- filters ----------
         filter0Params = {};
         filter0Params.cutoffBase = 1000.0f;
         filter0Params.mixBase    = 1.0f;
@@ -272,12 +272,11 @@ struct Voice {
         mod.registerTarget(ModTargetID::NOISE_PAN,   &noiseParams.panMod,   noiseParams.panBase);
 
         // ============================
-        // ROUTING (CRITICAL)
+        // ROUTING
         // ============================
         for (int i = 0; i < NUM_SOURCES; ++i)
             routing[i].clear();
 
-        // Default audible path
         routeMain(0);
     }
 
@@ -286,6 +285,9 @@ struct Voice {
         env1.noteOff();
     }
 
+    // ============================
+    // PROCESS
+    // ============================
     Sample process(float sr)
     {
         Sample out{};
@@ -294,7 +296,8 @@ struct Voice {
         buffers.clear();
 
         // ---- CONTROL ----
-        env1.process(sr);
+        float env = env1.process(sr);
+
         lfo1.process(sr);
         noteMod.process(sr);
         velocityMod.process(sr);
@@ -315,6 +318,13 @@ struct Voice {
         src.sub   = sub.process(sr, subParams);
         src.noise = noise.process(sr, noiseParams);
 
+        // APPLY AMP ENVELOPE PRE-ROUTING (SERUM STYLE)
+        src.oscA.left  *= env; src.oscA.right  *= env;
+        src.oscB.left  *= env; src.oscB.right  *= env;
+        src.oscC.left  *= env; src.oscC.right  *= env;
+        src.sub.left   *= env; src.sub.right   *= env;
+        src.noise.left *= env; src.noise.right *= env;
+
         const Sample sources[NUM_SOURCES] = {
             src.oscA, src.oscB, src.oscC, src.sub, src.noise
         };
@@ -322,16 +332,9 @@ struct Voice {
         for (int i = 0; i < NUM_SOURCES; ++i)
             routeSource(sources[i], routing[i], buffers);
 
-        Sample f0 = filter0.process(sr, buffers.filterInput[0], filter0Params);
-        Sample f1 = filter1.process(sr, buffers.filterInput[1], filter1Params);
-
-        out.left  = buffers.main.left  + buffers.direct.left  + f0.left  + f1.left;
-        out.right = buffers.main.right + buffers.direct.right + f0.right + f1.right;
-
-        // ---- VCA ----
-        float env = env1.getValue();
-        out.left  *= env;
-        out.right *= env;
+        // TEMP: bypass filters
+        out.left  = buffers.main.left  + buffers.direct.left;
+        out.right = buffers.main.right + buffers.direct.right;
 
         if (!env1.isActive())
             active = false;

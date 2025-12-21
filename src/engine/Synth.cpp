@@ -10,9 +10,7 @@ void Synth::noteOn(int note, float velocity)
 {
     Voice* chosen = nullptr;
 
-    // -----------------------------------------
-    // 1. Try to find a free voice
-    // -----------------------------------------
+    // 1) Find a free voice
     for (auto& v : voices) {
         if (!v.active) {
             chosen = &v;
@@ -20,49 +18,54 @@ void Synth::noteOn(int note, float velocity)
         }
     }
 
-    // -----------------------------------------
-    // 2. Steal the quietest active voice
-    // -----------------------------------------
+    // 2) Steal the oldest voice if all are active
     if (!chosen) {
-        float minEnv = std::numeric_limits<float>::max();
-
+        int oldestId = std::numeric_limits<int>::max();
         for (auto& v : voices) {
-            float env = v.env1.getValue();
-            if (env < minEnv) {
-                minEnv = env;
+            if (v.noteId < oldestId) {
+                oldestId = v.noteId;
                 chosen = &v;
             }
         }
     }
 
-    // Safety (should never happen)
     if (!chosen)
         return;
 
+    chosen->noteId = nextNoteId++;
     chosen->start(note, velocity, &basicWavetable);
 }
 
 void Synth::noteOff(int note)
 {
+    // Release only the most recent voice for this note
+    int bestId = -1;
+    Voice* chosen = nullptr;
+
     for (auto& v : voices) {
         if (v.active && v.midiNote == note) {
-            v.stop();
+            if (!chosen || v.noteId > bestId) {
+                bestId = v.noteId;
+                chosen = &v;
+            }
         }
     }
+
+    if (chosen)
+        chosen->stop();
 }
 
 Sample Synth::process(float sr)
 {
     Sample mix{};
 
-    for (auto& voice : voices) {
-        if (!voice.active)
+    for (auto& v : voices) {
+        if (!v.active)
             continue;
 
-        Sample v = voice.process(sr);
-        mix.left  += v.left  * VOICE_GAIN_NORM;
-        mix.right += v.right * VOICE_GAIN_NORM;
-
+        Sample s = v.process(sr);
+        mix.left  += s.left  * VOICE_GAIN_NORM;
+        mix.right += s.right * VOICE_GAIN_NORM;
     }
 
     return limiter.process(mix);

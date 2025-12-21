@@ -42,17 +42,26 @@ public:
             MAX_UNISON
         );
 
+        // ----------------------------
+        // PITCH (base + mod semantics)
+        // ----------------------------
+        float semitone = p.semitoneBase + p.semitoneMod;
+        float fine     = p.fineBase + p.fineMod;
+
         float pitchRatio =
-            std::pow(2.0f, p.semitoneMod / 12.0f) *
-            std::pow(2.0f, p.fineMod / 1200.0f);
+            std::pow(2.0f, semitone / 12.0f) *
+            std::pow(2.0f, fine / 1200.0f);
 
         float baseFreq = std::clamp(
-            p.freqMod * pitchRatio,
+            (p.freqBase + p.freqMod) * pitchRatio,
             MIN_FREQ,
             sr * 0.45f
         );
 
-        float wtPos = std::clamp(p.wtPosMod, 0.0f, 1.0f);
+        // ----------------------------
+        // WAVETABLE POSITION
+        // ----------------------------
+        float wtPos = std::clamp(p.wtPosBase + p.wtPosMod, 0.0f, 1.0f);
         float framePos = wtPos * (wavetable->numFrames - 1);
         int f0 = (int)framePos;
         int f1 = std::min(f0 + 1, wavetable->numFrames - 1);
@@ -61,6 +70,9 @@ public:
         float outL = 0.0f;
         float outR = 0.0f;
 
+        // ----------------------------
+        // UNISON LOOP
+        // ----------------------------
         for (int i = 0; i < voices; ++i) {
             float spread = (voices == 1) ? 0.0f
                 : (float(i) / (voices - 1) * 2.0f - 1.0f);
@@ -94,9 +106,16 @@ public:
             outR += s * std::sin(ang);
         }
 
-        float norm = 1.0f / std::sqrt((float)voices);
-        float level = std::max(p.levelMod, 0.0f) * norm * 0.8f;
+        // ----------------------------
+        // LEVEL (base + mod semantics)
+        // ----------------------------
+        float norm  = 1.0f / std::sqrt((float)voices);
+        float level = std::max(p.levelBase + p.levelMod, 0.0f);
 
-        return { outL * level, outR * level };
+        return {
+            outL * level * norm * 0.8f,
+            outR * level * norm * 0.8f
+        };
     }
+
 };

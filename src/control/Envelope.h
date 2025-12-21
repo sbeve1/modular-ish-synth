@@ -4,78 +4,84 @@
 #include <cmath>
 #include <algorithm>
 
+/*
+    Serum-style ADSR envelope with curve control.
+
+    Concept:
+    - Each stage runs on normalized time t ∈ [0,1]
+    - A curve parameter c ∈ [-1, +1] shapes t:
+        c < 0 : logarithmic (fast start, punchy)
+        c = 0 : linear
+        c > 0 : exponential (slow start, smooth)
+    - process() returns the FINAL gain (use this as VCA)
+*/
+
 class Envelope : public ControlModule {
 public:
+    // =============================
+    // ADSR PARAMETERS (seconds)
+    // =============================
+    float attack  = 0.01f;
+    float hold    = 0.0f;
+    float decay   = 1.00f;
+    float sustain = 1.00f; // 0 to 1, 1 being 0db
+    float release = 0.015f;
 
-    // -----------------------------
-    // PUBLIC ADSR PARAMETERS
-    // -----------------------------
-    float attack  = 0.01f;   // seconds
-    float hold    = 0.00f;   // seconds
-    float decay   = 0.20f;
-    float sustain = 0.70f;
-    float release = 0.30f;
-
-    // -----------------------------
-    // Curve controls
-    // -----------------------------
+    // =============================
+    // CURVE PARAMETERS [-1 .. +1]
+    // =============================
     float attackCurve  = 0.0f;
     float decayCurve   = 0.0f;
     float releaseCurve = 0.0f;
 
-    // -----------------------------
-    // Envelope depth (modulatable)
-    // -----------------------------
-    float amount = 1.0f; // Output multiplier
+    // =============================
+    // OUTPUT SCALING
+    // =============================
+    float amount = 1.0f;
 
-    // -----------------------------
-    // Global time scaling
-    // -----------------------------
-    float timeScale = 1.0f;
-
-    // -----------------------------
-    // Velocity → amplitude scaling
-    // -----------------------------
-    float velocitySensitivity = 0.0f;
+    // =============================
+    // VELOCITY
+    // =============================
+    float velocitySensitivity = 0.0f; // 0 = off
     float velocity = 1.0f;
 
-    // -----------------------------
-    // Note tracking
-    // -----------------------------
+    // =============================
+    // TIME SCALING / KEY TRACK
+    // =============================
+    float timeScale = 1.0f;
+    int   noteNumber = 60;
     float noteTracking = 0.0f;
-    int noteNumber = 60;
 
-    // -----------------------------
-    // Retrigger smoothing
-    // -----------------------------
-    bool smoothRetrigger = true;
-
+    // =============================
+    // NOTE EVENTS
+    // =============================
     void noteOn(int midiNote = 60, float vel = 1.0f)
     {
-        velocity = vel;
+        velocity   = vel;
         noteNumber = midiNote;
 
-        // If currently loud, softly jump down a bit to avoid clicks when retriggering
-        if (smoothRetrigger && value > 0.3f)
-            value = 0.3f;
-
         elapsed = 0.0f;
+        startLevel = value; // retrigger from current value (no click)
         state = State::ATTACK;
     }
 
     void noteOff()
     {
+        elapsed = 0.0f;
+        releaseStart = value;
         state = State::RELEASE;
     }
 
+    // =============================
+    // PROCESS (RETURNS FINAL GAIN)
+    // =============================
     float process(float sr) override
     {
         float dt = 1.0f / sr;
 
-        float scaledAttack  = clampTime(attack  * computeTimeScale());
-        float scaledHold    = clampTime(hold); // hold treated as plain seconds
-        float scaledDecay   = clampTime(decay   * computeTimeScale());
-        float scaledRelease = clampTime(release * computeTimeScale());
+        float a = clampTime(attack  * computeTimeScale());
+        float d = clampTime(decay   * computeTimeScale());
+        float r = clampTime(release * computeTimeScale());
 
         elapsed += dt;
 
@@ -83,20 +89,21 @@ public:
         {
             case State::ATTACK:
             {
-                float curve = computeCurve(attackCurve);
-                // Note: this is perceptual-style integration (fine for musical behavior)
-                value += ((1.0f - value) * curve * dt) / scaledAttack;
+                float t = elapsed / a;
 
-                if (value >= 0.999999f) {
+                if (t >= 1.0f) {
                     value = 1.0f;
                     elapsed = 0.0f;
-                    state = (scaledHold > 0.0f) ? State::HOLD : State::DECAY;
+                    state = (hold > 0.0f) ? State::HOLD : State::DECAY;
+                } else {
+                    float shaped = shapeCurve(t, attackCurve);
+                    value = lerp(startLevel, 1.0f, shaped);
                 }
                 break;
             }
 
             case State::HOLD:
-                if (elapsed >= scaledHold) {
+                if (elapsed >= hold) {
                     elapsed = 0.0f;
                     state = State::DECAY;
                 }
@@ -104,28 +111,32 @@ public:
 
             case State::DECAY:
             {
-                float curve = computeCurve(decayCurve);
-                value += ((sustain - value) * curve * dt) / scaledDecay;
+                float t = elapsed / d;
 
-                if (fabs(value - sustain) < 0.000001f) {
+                if (t >= 1.0f) {
                     value = sustain;
                     state = State::SUSTAIN;
+                } else {
+                    float shaped = shapeCurve(t, decayCurve);
+                    value = lerp(1.0f, sustain, shaped);
                 }
                 break;
             }
 
             case State::SUSTAIN:
-                value = sustain * velocityScale();
+                value = sustain;
                 break;
 
             case State::RELEASE:
             {
-                float curve = computeCurve(releaseCurve);
-                value += (-value * curve * dt) / scaledRelease;
+                float t = elapsed / r;
 
-                if (value <= 0.000001f) {
+                if (t >= 1.0f) {
                     value = 0.0f;
                     state = State::IDLE;
+                } else {
+                    float shaped = shapeCurve(t, releaseCurve);
+                    value = lerp(releaseStart, 0.0f, shaped);
                 }
                 break;
             }
@@ -135,32 +146,54 @@ public:
                 break;
         }
 
-        // apply amount as final multiplier
-        return value * amount;
+        return value * amount * velocityScale();
     }
 
     bool isActive() const { return state != State::IDLE; }
 
 private:
-
+    // =============================
+    // INTERNAL STATE
+    // =============================
     enum class State { IDLE, ATTACK, HOLD, DECAY, SUSTAIN, RELEASE };
     State state = State::IDLE;
 
-    // Use the protected 'value' defined in ControlModule (do NOT redeclare it here)
     float elapsed = 0.0f;
+    float startLevel = 0.0f;
+    float releaseStart = 0.0f;
 
-    // ------------------------------------
-    float computeCurve(float c) const
+    // =============================
+    // CURVE SHAPER (CORE FUNCTION)
+    // =============================
+    static inline float shapeCurve(float x, float curve)
     {
-        // simple curve mapping: >=0 boosts speed, <0 slows (sane mapping)
-        return (c >= 0.f) ? (1.f + c) : 1.f / (1.f - c);
+        x = std::clamp(x, 0.0f, 1.0f);
+        curve = std::clamp(curve, -1.0f, 1.0f);
+
+        // Curve strength (Serum-ish)
+        constexpr float k = 4.0f;
+
+        // curve -> exponent
+        // < 1 : log-like
+        // = 1 : linear
+        // > 1 : exp-like
+        float exponent = std::pow(2.0f, curve * k);
+
+        return std::pow(x, exponent);
+    }
+
+    // =============================
+    // HELPERS
+    // =============================
+    static inline float lerp(float a, float b, float t)
+    {
+        return a + (b - a) * t;
     }
 
     float computeTimeScale() const
     {
-        float noteFactor = powf(2.0f, (noteNumber - 60) / 12.0f);
-        float noteScale = 1.0f + noteTracking * (noteFactor - 1.0f);
-        return timeScale * noteScale;
+        float noteFactor = std::pow(2.0f, (noteNumber - 60) / 12.0f);
+        return timeScale * (1.0f + noteTracking * (noteFactor - 1.0f));
     }
 
     float velocityScale() const

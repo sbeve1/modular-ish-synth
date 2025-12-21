@@ -15,17 +15,21 @@ public:
 
     std::array<Voice, NUM_VOICES> voices;
 
+    // FIX: unique note instance counter for voice stealing / release
+    int nextNoteId = 0;
+
+    // ---- GLOBAL PARAM BLOCKS (KEEP THESE) ----
     OscParams oscAParams;
     OscParams oscBParams;
     OscParams oscCParams;
     OscParams subParams;
     NoiseParams noiseParams;
 
+    // ---- BUSES (KEEP THESE) ----
     Bus bus1;
     Bus bus2;
 
     MasterLimiter limiter;
-
     Wavetable basicWavetable;
 
     Synth();
