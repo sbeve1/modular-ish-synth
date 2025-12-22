@@ -198,7 +198,6 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModSourceID.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModTargetID.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/VoiceSources.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/LFO.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AftertouchModule.h \
@@ -210,7 +209,5 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerVoiceModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/VelocityModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/Routing.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingBuffers.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingProcess.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Bus.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/VoiceGraph.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h

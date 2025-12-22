@@ -142,7 +142,7 @@ public:
             if (!slot.modPtr) continue;
 
             float out = slot.hasReplace ? slot.replaceAcc
-                                        : slot.base + slot.addAcc;
+                                        : slot.addAcc;
             out *= slot.multAcc;
             out *= slot.curveAcc;
 

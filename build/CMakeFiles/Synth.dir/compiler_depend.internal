@@ -164,7 +164,6 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/control/performance/VelocityModule.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/CONSTANTS.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/Sample.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Bus.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/FilterParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/ModMatrix.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/ModSourceID.h
@@ -172,10 +171,8 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/NoiseParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/OscParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Voice.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/VoiceSources.h
+ C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/VoiceGraph.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/Routing.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/RoutingBuffers.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/RoutingProcess.h
  C:/msys64/mingw64/include/_mingw.h
  C:/msys64/mingw64/include/_mingw_mac.h
  C:/msys64/mingw64/include/_mingw_off_t.h
@@ -309,7 +306,6 @@ CMakeFiles/Synth.dir/src/main.cpp.obj
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/control/performance/VelocityModule.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/CONSTANTS.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/Sample.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Bus.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/FilterParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/ModMatrix.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/ModSourceID.h
@@ -317,11 +313,9 @@ CMakeFiles/Synth.dir/src/main.cpp.obj
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/NoiseParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/OscParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Voice.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/VoiceSources.h
+ C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/VoiceGraph.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/platform/RtMidi.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/Routing.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/RoutingBuffers.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/RoutingProcess.h
  C:/msys64/mingw64/include/_bsd_types.h
  C:/msys64/mingw64/include/_mingw.h
  C:/msys64/mingw64/include/_mingw_mac.h
@@ -797,7 +791,6 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/control/performance/VelocityModule.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/CONSTANTS.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/Sample.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Bus.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/FilterParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/ModMatrix.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/ModSourceID.h
@@ -806,11 +799,9 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/OscParams.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Synth.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Voice.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/VoiceSources.h
+ C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/VoiceGraph.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/platform/RtMidi.h
  C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/Routing.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/RoutingBuffers.h
- C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/routing/RoutingProcess.h
  C:/msys64/mingw64/include/_mingw.h
  C:/msys64/mingw64/include/_mingw_mac.h
  C:/msys64/mingw64/include/_mingw_off_t.h

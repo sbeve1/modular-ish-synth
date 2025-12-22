@@ -161,7 +161,6 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: C:/Users/tevin/Desktop/Developer/
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Sample.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Bus.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/FilterParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModMatrix.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModSourceID.h \
@@ -169,10 +168,8 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: C:/Users/tevin/Desktop/Developer/
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/NoiseParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/OscParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Voice.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceSources.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceGraph.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/Routing.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingBuffers.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingProcess.h \
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
   C:/msys64/mingw64/include/_mingw_off_t.h \
@@ -305,7 +302,6 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Sample.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Bus.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/FilterParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModMatrix.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModSourceID.h \
@@ -313,11 +309,9 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ P
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/NoiseParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/OscParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Voice.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceSources.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceGraph.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/RtMidi.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/Routing.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingBuffers.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingProcess.h \
   C:/msys64/mingw64/include/_bsd_types.h \
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
@@ -792,7 +786,6 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Sample.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Bus.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/FilterParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModMatrix.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModSourceID.h \
@@ -801,11 +794,9 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Develo
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/OscParams.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Synth.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Voice.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceSources.h \
+  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceGraph.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/RtMidi.h \
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/Routing.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingBuffers.h \
-  C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingProcess.h \
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
   C:/msys64/mingw64/include/_mingw_off_t.h \
@@ -1469,6 +1460,8 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/clwbintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniintrin.h:
 
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniint8intrin.h:
+
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxneconvertintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vp2intersectintrin.h:
@@ -1518,6 +1511,8 @@ C:/msys64/mingw64/include/winver.h:
 C:/msys64/mingw64/include/winsvc.h:
 
 C:/msys64/mingw64/include/winspool.h:
+
+C:/msys64/mingw64/include/winsock.h:
 
 C:/msys64/mingw64/include/winscard.h:
 
@@ -1629,8 +1624,6 @@ C:/msys64/mingw64/include/pshpack4.h:
 
 C:/msys64/mingw64/include/pshpack2.h:
 
-C:/msys64/mingw64/include/psdk_inc/intrin-impl.h:
-
 C:/msys64/mingw64/include/psdk_inc/_wsa_errnos.h:
 
 C:/msys64/mingw64/include/psdk_inc/_socket_types.h:
@@ -1677,7 +1670,13 @@ C:/msys64/mingw64/include/mmeapi.h:
 
 C:/msys64/mingw64/include/memoryapi.h:
 
-C:/msys64/mingw64/include/mcx.h:
+C:/msys64/mingw64/include/playsoundapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pkuintrin.h:
+
+C:/msys64/mingw64/include/_timeval.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h:
 
@@ -1715,6 +1714,10 @@ C:/msys64/mingw64/include/prsht.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/istream.tcc:
 
+C:/msys64/mingw64/include/psdk_inc/intrin-impl.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceGraph.h:
+
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pconfigintrin.h:
 
 C:/msys64/mingw64/include/assert.h:
@@ -1727,10 +1730,6 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Synth.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/exception_ptr.h:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniint8intrin.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/VoiceSources.h:
-
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/NoiseParams.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/cstdio:
@@ -1739,19 +1738,13 @@ C:/msys64/mingw64/include/mmiscapi.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc:
 
-C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_hermite.tcc:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/FilterParams.h:
+C:/msys64/mingw64/include/c++/14.2.0/bits/refwrap.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/stl_uninitialized.h:
 
-C:/msys64/mingw64/include/c++/14.2.0/bits/refwrap.h:
+C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_hermite.tcc:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/cstring:
-
-C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc:
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/FilterParams.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/Sample.h:
 
@@ -1766,6 +1759,8 @@ C:/msys64/mingw64/include/c++/14.2.0/tr1/bessel_function.tcc:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/smmintrin.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/AftertouchModule.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/keylockerintrin.h:
 
@@ -1851,11 +1846,11 @@ C:/msys64/mingw64/include/debugapi.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/stl_pair.h:
 
-C:/msys64/mingw64/include/mciapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/stl_construct.h:
-
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/cstring:
 
 C:/msys64/mingw64/include/c++/14.2.0/stdlib.h:
 
@@ -1919,6 +1914,8 @@ C:/msys64/mingw64/include/c++/14.2.0/string_view:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h:
 
+C:/msys64/mingw64/include/c++/14.2.0/cstddef:
+
 C:/msys64/mingw64/include/ddeml.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/move.h:
@@ -1943,25 +1940,7 @@ C:/msys64/mingw64/include/c++/14.2.0/tr1/legendre_function.tcc:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h:
 
-C:/msys64/mingw64/include/playsoundapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h:
-
-C:/msys64/mingw64/include/sal.h:
-
-C:/msys64/mingw64/include/lzexpand.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/compare:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pkuintrin.h:
-
-C:/msys64/mingw64/include/_timeval.h:
-
 C:/msys64/mingw64/include/c++/14.2.0/bits/uniform_int_dist.h:
-
-C:/msys64/mingw64/include/winsock.h:
-
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingBuffers.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/nested_exception.h:
 
@@ -2065,8 +2044,6 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/OscParams.h:
 
 C:/msys64/mingw64/include/cderr.h:
 
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/RoutingProcess.h:
-
 C:/msys64/mingw64/include/ktmtypes.h:
 
 C:/msys64/mingw64/include/locale.h:
@@ -2078,8 +2055,6 @@ C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc:
 C:/msys64/mingw64/include/sdks/_mingw_ddk.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc:
-
-C:/msys64/mingw64/include/c++/14.2.0/cstddef:
 
 C:/msys64/mingw64/include/vadefs.h:
 
@@ -2103,9 +2078,11 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/stringfwd.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/string:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512fp16vlintrin.h:
+C:/msys64/mingw64/include/c++/14.2.0/bits/stl_construct.h:
 
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Bus.h:
+C:/msys64/mingw64/include/mciapi.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512fp16vlintrin.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/localefwd.h:
 
@@ -2138,6 +2115,12 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdint.h:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mmintrin.h:
 
 C:/msys64/mingw64/include/_mingw_stat64.h:
+
+C:/msys64/mingw64/include/sal.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/compare:
+
+C:/msys64/mingw64/include/lzexpand.h:
 
 C:/msys64/mingw64/include/_mingw_unicode.h:
 
@@ -2386,3 +2369,5 @@ C:/msys64/mingw64/include/joystickapi.h:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/wmmintrin.h:
 
 C:/msys64/mingw64/include/libloaderapi.h:
+
+C:/msys64/mingw64/include/mcx.h:

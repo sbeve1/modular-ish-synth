@@ -3,7 +3,6 @@
 #include <array>
 
 #include "engine/Voice.h"
-#include "engine/Bus.h"
 #include "core/Sample.h"
 #include "audio/Wavetable.h"
 #include "audio/WavetableFactory.h"
@@ -23,10 +22,6 @@ public:
     OscParams oscCParams;
     OscParams subParams;
     NoiseParams noiseParams;
-
-    // ---- BUSES (KEEP THESE) ----
-    Bus bus1;
-    Bus bus2;
 
     Wavetable basicWavetable;
 
