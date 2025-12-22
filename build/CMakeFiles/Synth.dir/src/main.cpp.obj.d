@@ -398,6 +398,8 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/array \
  C:/msys64/mingw64/include/c++/14.2.0/compare \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Voice.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
  C:/msys64/mingw64/include/c++/14.2.0/algorithm \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
@@ -407,19 +409,17 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/execution_defs.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/Sample.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Wavetable.h \
  C:/msys64/mingw64/include/c++/14.2.0/cassert \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/OscParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Noise.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/NoiseParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/FilterParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModMatrix.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModSourceID.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModTargetID.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/OscParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/FilterParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/LFO.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AftertouchModule.h \

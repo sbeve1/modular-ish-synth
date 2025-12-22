@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <cstdio>
 
 // ============================================================
 // Math constants
@@ -50,8 +51,8 @@ constexpr float ENV_EXP_CURVE  = 5.0f;
 // ============================================================
 // Gain staging (engine-level)
 // ============================================================
-constexpr float VOICE_GAIN_NORM = 0.25f;   // 16 voices → 1/sqrt(16)
-constexpr float MASTER_GAIN     = 1.20f;
+constexpr float VOICE_GAIN_NORM = 0.353553f;   // 8 voices → 1/sqrt(8)
+constexpr float MASTER_GAIN     = 2.50f;
 constexpr float DB_MINUS_10     = 0.31622777f;
 constexpr float DB_MINUS_20     = 0.1f;
 
@@ -89,3 +90,8 @@ extern float FILTER_NORM_TABLE[FILTER_NORM_TABLE_SIZE];
 // ============================================================
 void initDSPTables();
 void initLFOShape();
+
+inline float dbToLin(float db)
+    {
+        return std::pow(10.0f, db / 20.0f);
+    }

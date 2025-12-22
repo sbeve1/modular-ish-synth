@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <initializer_list>
 
+#include "core/CONSTANTS.h"
+#include "core/Sample.h"
 #include "audio/Oscillator.h"
 #include "audio/Noise.h"
 #include "audio/Wavetable.h"
@@ -29,6 +31,7 @@
 
 #include "routing/Routing.h"       // provides: NUM_SOURCES, SourceRouting, routeSource(...)
 #include "engine/VoiceGraph.h"    // provides: SourceRouteConfig, FilterRoute, SourceDest
+
 
 struct Voice {
 
@@ -246,6 +249,15 @@ struct Voice {
         filter1Route = FilterRoute::TO_FX;
 
         applyRoutingGraph();
+        bool anyRoute = false;
+        for (int i = 0; i < NUM_SOURCES; ++i)
+            if (routing[i].count > 0)
+                anyRoute = true;
+
+        if (!anyRoute) {
+            printf("VOICE HAS NO ROUTES\n");
+            __debugbreak();
+        }
     }
 
 
@@ -282,6 +294,48 @@ struct Voice {
         }
     }
 
+    inline OscResolved resolveOsc(const OscParams& p, float sr) const
+    {
+        OscResolved r{};
+
+        // ---- pitch (musical domain → Hz) ----
+        float semitone = p.semitoneBase + p.semitoneMod;
+        float fine     = p.fineBase     + p.fineMod;
+
+        float midi = (float)p.midiNote
+                + semitone
+                + fine / 100.0f;
+
+        r.freq = 440.0f * std::pow(2.0f, (midi - 69.0f) / 12.0f);
+        r.freq = std::clamp(r.freq, MIN_FREQ, sr * 0.45f);
+
+        // ---- wavetable position ----
+        r.wtPos = std::clamp(
+            p.wtPosBase + p.wtPosMod,
+            0.0f, 1.0f
+        );
+
+        // ---- pan (explicit per-osc pan) ----
+        r.pan = std::clamp(p.panBase + p.panMod, -1.0f, 1.0f);
+
+        // ---- amp ----
+        r.level = std::max(p.levelBase + p.levelMod, 0.0f);
+
+        // ---- unison ----
+        r.unison = std::clamp(
+            (int)std::round(p.unisonVoices),
+            1,
+            Oscillator::MAX_UNISON
+        );
+
+        r.detune        = p.detune;
+        r.stereoSpread  = p.stereoSpread;
+        r.phaseSpread   = p.phaseSpread; // if OscParams has it, otherwise 0.0f
+
+        return r;
+    }
+
+
     // ============================
     // Small helper to process filter + routing (shared by both filters)
     // index must be 0 or 1
@@ -295,33 +349,97 @@ struct Voice {
         float sr)
     {
         if (route == FilterRoute::NONE)
-            return; // terminate signal
+            return;
 
         auto& in = buffers.filterInput[index];
 
-        Sample out = filter.process(sr, in, params);
+        // ---- Resolve params (Voice owns this) ----
+        float cutoff = params.cutoffBase + params.cutoffMod;
+        float res    = std::clamp(params.resBase + params.resMod, 0.0f, 0.99f);
 
+        float outL = 0.0f;
+        float outR = 0.0f;
+
+        // ---- Core filter DSP (lossy, stable) ----
+        filter.process(
+            in.left,
+            in.right,
+            cutoff,
+            res,
+            sr,
+            outL,
+            outR
+        );
+
+        // =====================================================
+        // SERUM-STYLE LOUDNESS COMPENSATION (CRITICAL)
+        // =====================================================
+        float makeup =
+            1.0f
+            + 0.6f * res
+            + 0.3f * res * res;
+
+        outL *= makeup;
+        outR *= makeup;
+
+        // ----------------------------
+        // DRIVE (optional, safe)
+        // ----------------------------
+        float drive = std::max(params.driveBase + params.driveMod, 0.0f);
+        if (drive > 0.0f) {
+            float d = 1.0f + drive * 2.0f;
+            outL = std::tanh(outL * d);
+            outR = std::tanh(outR * d);
+        }
+
+        // ----------------------------
+        // DRY / WET MIX
+        // ----------------------------
+        float mix = std::clamp(params.mixBase + params.mixMod, 0.0f, 1.0f);
+        outL = outL * mix + in.left  * (1.0f - mix);
+        outR = outR * mix + in.right * (1.0f - mix);
+
+        // ----------------------------
+        // FILTER LEVEL (POST)
+        // ----------------------------
+        float level = std::max(params.levelBase + params.levelMod, 0.0f);
+        outL *= level;
+        outR *= level;
+
+        // ----------------------------
+        // PAN (EQUAL POWER)
+        // ----------------------------
+        float pan = std::clamp(params.panBase + params.panMod, -1.0f, 1.0f);
+        float ang = (pan + 1.0f) * 0.25f * PI;
+        float l = std::cos(ang);
+        float r = std::sin(ang);
+
+        outL *= l;
+        outR *= r;
+
+        // ---- Route ----
         switch (route) {
             case FilterRoute::TO_FX:
-                buffers.fx.left  += out.left;
-                buffers.fx.right += out.right;
+                buffers.fx.left  += outL;
+                buffers.fx.right += outR;
                 break;
 
             case FilterRoute::TO_DIRECT:
-                buffers.direct.left  += out.left;
-                buffers.direct.right += out.right;
+                buffers.direct.left  += outL;
+                buffers.direct.right += outR;
                 break;
 
             case FilterRoute::TO_OTHER_FILTER:
-                buffers.filterInput[1 - index].left  += out.left;
-                buffers.filterInput[1 - index].right += out.right;
+                buffers.filterInput[1 - index].left  += outL;
+                buffers.filterInput[1 - index].right += outR;
                 break;
 
             case FilterRoute::NONE:
-                // already handled
                 break;
         }
     }
+
+
 
 
 
@@ -332,14 +450,35 @@ struct Voice {
     inline Sample processSource(int idx, float sr)
     {
         switch (idx) {
-            case 0: return oscA.process(sr, oscAParams);
-            case 1: return oscB.process(sr, oscBParams);
-            case 2: return oscC.process(sr, oscCParams);
-            case 3: return sub.process(sr, subParams);
-            case 4: return noise.process(sr, noiseParams);
-            default: return Sample{};
+
+            case 0: {
+                OscResolved r = resolveOsc(oscAParams, sr);
+                return oscA.process(sr, r);
+            }
+
+            case 1: {
+                OscResolved r = resolveOsc(oscBParams, sr);
+                return oscB.process(sr, r);
+            }
+
+            case 2: {
+                OscResolved r = resolveOsc(oscCParams, sr);
+                return oscC.process(sr, r);
+            }
+
+            case 3: {
+                OscResolved r = resolveOsc(subParams, sr);
+                return sub.process(sr, r);
+            }
+
+            case 4:
+                return noise.process(sr, noiseParams);
+
+            default:
+                return Sample{};
         }
     }
+
 
     // ============================
     // NOTE START
@@ -364,7 +503,7 @@ struct Voice {
             p.semitoneBase = 0.0f;
             p.fineBase     = 0.0f;
 
-            p.levelBase    = DB_MINUS_10; // −10 dB
+            p.levelBase    = dbToLin(0.0f);
             p.levelMod     = 0.0f;
             p.panBase      = 0.0f;
             p.panMod       = 0.0f;
@@ -394,23 +533,52 @@ struct Voice {
         subParams.midiNote  = note;
 
         // ---------- noise ----------
-        noiseParams.pitchBase = 0.0f;
-        noiseParams.pitchMod  = 0.0f;
-        noiseParams.levelBase = DB_MINUS_20; // −20 dB
-        noiseParams.levelMod  = 0.0f;
-        noiseParams.panBase   = 0.0f;
-        noiseParams.panMod    = 0.0f;
+        auto initNoise = [&](NoiseParams& p)
+        {
+            p.pitchBase = 0.0f;
+            p.pitchMod  = 0.0f;
+
+            p.levelBase = dbToLin(-20.0f); // Serum noise default
+            p.levelMod  = 0.0f;
+
+            p.panBase   = 0.0f;
+            p.panMod    = 0.0f;
+        };
+        initNoise(noiseParams);
 
         noise.reset((uint32_t)(note * 2654435761u) ^ (uint32_t)std::rand());
 
         // ---------- filters ----------
-        filter0Params = {};
-        filter0Params.cutoffBase = 1000.0f;
-        filter0Params.mixBase    = 1.0f;
-        filter0Params.levelBase  = 1.0f;
+        auto initFilter = [&](FilterParams& p)
+        {
+            p.cutoffBase = 1000.0f;   // Serum-ish init cutoff
+            p.cutoffMod  = 0.0f;
 
-        filter1Params = filter0Params;
+            p.resBase    = 0.0f;
+            p.resMod     = 0.0f;
 
+            p.driveBase  = 0.0f;
+            p.driveMod   = 0.0f;
+
+            p.fatBase    = 0.0f;
+            p.fatMod     = 0.0f;
+
+            p.mixBase    = 1.0f;      // 100% wet (Serum default)
+            p.mixMod     = 0.0f;
+
+            p.levelBase  = 1.0f;      // 0 dB
+            p.levelMod   = 0.0f;
+
+            p.panBase    = 0.0f;      // center
+            p.panMod     = 0.0f;
+        };
+
+        initFilter(filter0Params);
+        initFilter(filter1Params);
+
+        filter0.reset();
+        filter1.reset();
+        
         // ---------- envelope / lfo ----------
         env1.noteOn(note, velocity);
         lfo1.retrigger();
@@ -564,7 +732,6 @@ struct Voice {
         // FINAL VOICE OUTPUT (Serum-style)
         out.left  = buffers.fx.left  + buffers.direct.left;
         out.right = buffers.fx.right + buffers.direct.right;
-
 
         if (!env1.isActive())
             active = false;

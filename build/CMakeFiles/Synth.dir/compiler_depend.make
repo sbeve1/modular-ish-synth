@@ -6,6 +6,7 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/C
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h \
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
+  C:/msys64/mingw64/include/_mingw_off_t.h \
   C:/msys64/mingw64/include/_mingw_secapi.h \
   C:/msys64/mingw64/include/c++/14.2.0/algorithm \
   C:/msys64/mingw64/include/c++/14.2.0/bit \
@@ -35,6 +36,7 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/C
   C:/msys64/mingw64/include/c++/14.2.0/bits/version.h \
   C:/msys64/mingw64/include/c++/14.2.0/cmath \
   C:/msys64/mingw64/include/c++/14.2.0/concepts \
+  C:/msys64/mingw64/include/c++/14.2.0/cstdio \
   C:/msys64/mingw64/include/c++/14.2.0/cstdlib \
   C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h \
   C:/msys64/mingw64/include/c++/14.2.0/debug/debug.h \
@@ -64,6 +66,7 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/C
   C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/cpu_defines.h \
   C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/os_defines.h \
   C:/msys64/mingw64/include/corecrt.h \
+  C:/msys64/mingw64/include/corecrt_stdio_config.h \
   C:/msys64/mingw64/include/corecrt_wstdlib.h \
   C:/msys64/mingw64/include/crtdefs.h \
   C:/msys64/mingw64/include/errno.h \
@@ -71,8 +74,11 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/C
   C:/msys64/mingw64/include/malloc.h \
   C:/msys64/mingw64/include/math.h \
   C:/msys64/mingw64/include/sdks/_mingw_ddk.h \
+  C:/msys64/mingw64/include/sec_api/stdio_s.h \
   C:/msys64/mingw64/include/sec_api/stdlib_s.h \
+  C:/msys64/mingw64/include/stdio.h \
   C:/msys64/mingw64/include/stdlib.h \
+  C:/msys64/mingw64/include/swprintf.inl \
   C:/msys64/mingw64/include/vadefs.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/limits.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mm_malloc.h \
@@ -83,6 +89,7 @@ CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj: C:/Users/tevin/Desktop/Develope
   C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/core/CONSTANTS.h \
   C:/msys64/mingw64/include/_mingw.h \
   C:/msys64/mingw64/include/_mingw_mac.h \
+  C:/msys64/mingw64/include/_mingw_off_t.h \
   C:/msys64/mingw64/include/_mingw_secapi.h \
   C:/msys64/mingw64/include/c++/14.2.0/bit \
   C:/msys64/mingw64/include/c++/14.2.0/bits/concept_check.h \
@@ -104,6 +111,7 @@ CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj: C:/Users/tevin/Desktop/Develope
   C:/msys64/mingw64/include/c++/14.2.0/bits/version.h \
   C:/msys64/mingw64/include/c++/14.2.0/cmath \
   C:/msys64/mingw64/include/c++/14.2.0/concepts \
+  C:/msys64/mingw64/include/c++/14.2.0/cstdio \
   C:/msys64/mingw64/include/c++/14.2.0/debug/assertions.h \
   C:/msys64/mingw64/include/c++/14.2.0/debug/debug.h \
   C:/msys64/mingw64/include/c++/14.2.0/ext/numeric_traits.h \
@@ -128,6 +136,7 @@ CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj: C:/Users/tevin/Desktop/Develope
   C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/cpu_defines.h \
   C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/os_defines.h \
   C:/msys64/mingw64/include/corecrt.h \
+  C:/msys64/mingw64/include/corecrt_stdio_config.h \
   C:/msys64/mingw64/include/corecrt_wstdlib.h \
   C:/msys64/mingw64/include/crtdefs.h \
   C:/msys64/mingw64/include/errno.h \
@@ -135,8 +144,11 @@ CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj: C:/Users/tevin/Desktop/Develope
   C:/msys64/mingw64/include/malloc.h \
   C:/msys64/mingw64/include/math.h \
   C:/msys64/mingw64/include/sdks/_mingw_ddk.h \
+  C:/msys64/mingw64/include/sec_api/stdio_s.h \
   C:/msys64/mingw64/include/sec_api/stdlib_s.h \
+  C:/msys64/mingw64/include/stdio.h \
   C:/msys64/mingw64/include/stdlib.h \
+  C:/msys64/mingw64/include/swprintf.inl \
   C:/msys64/mingw64/include/vadefs.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/limits.h \
   C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mm_malloc.h \
@@ -1670,16 +1682,6 @@ C:/msys64/mingw64/include/mmeapi.h:
 
 C:/msys64/mingw64/include/memoryapi.h:
 
-C:/msys64/mingw64/include/playsoundapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pkuintrin.h:
-
-C:/msys64/mingw64/include/_timeval.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h:
-
 C:/msys64/mingw64/include/c++/14.2.0/bits/range_access.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/cwchar:
@@ -1704,10 +1706,6 @@ C:/msys64/mingw64/include/threadpoollegacyapiset.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator.h:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/ia32intrin.h:
-
-C:/msys64/mingw64/include/_mingw_off_t.h:
-
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/routing/Routing.h:
 
 C:/msys64/mingw64/include/prsht.h:
@@ -1730,14 +1728,6 @@ C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/Synth.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/exception_ptr.h:
 
-C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/NoiseParams.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/cstdio:
-
-C:/msys64/mingw64/include/mmiscapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc:
-
 C:/msys64/mingw64/include/c++/14.2.0/bits/refwrap.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/stl_uninitialized.h:
@@ -1759,8 +1749,6 @@ C:/msys64/mingw64/include/c++/14.2.0/tr1/bessel_function.tcc:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/smmintrin.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/AftertouchModule.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/keylockerintrin.h:
 
@@ -1803,6 +1791,28 @@ C:/msys64/mingw64/include/minwinbase.h:
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/AlternateModule.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/limits.h:
+
+C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/NoiseParams.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/cstdio:
+
+C:/msys64/mingw64/include/mmiscapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/string_view.tcc:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxifmaintrin.h:
+
+C:/msys64/mingw64/include/sec_api/stdio_s.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/type_traits:
+
+C:/msys64/mingw64/include/c++/14.2.0/ext/numeric_traits.h:
+
+C:/msys64/mingw64/include/securitybaseapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/hash_bytes.h:
 
@@ -1878,6 +1888,10 @@ C:/msys64/mingw64/include/malloc.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/postypes.h:
 
+C:/msys64/mingw64/include/c++/14.2.0/bits/exception_defines.h:
+
+C:/msys64/mingw64/include/_mingw.h:
+
 C:/msys64/mingw64/include/c++/14.2.0/bits/invoke.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/ModTargetID.h:
@@ -1906,15 +1920,9 @@ C:/msys64/mingw64/include/stdarg.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/specfun.h:
 
-C:/msys64/mingw64/include/_mingw.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/exception_defines.h:
-
 C:/msys64/mingw64/include/c++/14.2.0/string_view:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/cstddef:
 
 C:/msys64/mingw64/include/ddeml.h:
 
@@ -1940,9 +1948,25 @@ C:/msys64/mingw64/include/c++/14.2.0/tr1/legendre_function.tcc:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/VelocityModule.h:
 
+C:/msys64/mingw64/include/playsoundapi.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/exception.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/pkuintrin.h:
+
+C:/msys64/mingw64/include/_timeval.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/ia32intrin.h:
+
+C:/msys64/mingw64/include/_mingw_off_t.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/tr1/beta_function.tcc:
+
 C:/msys64/mingw64/include/c++/14.2.0/bits/uniform_int_dist.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/nested_exception.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc:
 
 C:/msys64/mingw64/include/profileapi.h:
 
@@ -1980,18 +2004,6 @@ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_bvector.h:
 
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/main.cpp:
 
-C:/msys64/mingw64/include/c++/14.2.0/ext/numeric_traits.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/type_traits:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxifmaintrin.h:
-
-C:/msys64/mingw64/include/sec_api/stdio_s.h:
-
-C:/msys64/mingw64/include/securitybaseapi.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/basic_ios.h:
-
 C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_algorithm_defs.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/initializer_list:
@@ -2003,8 +2015,6 @@ C:/msys64/mingw64/include/processtopologyapi.h:
 C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/performance/ModWheelModule.h:
 
 C:/msys64/mingw64/include/_bsd_types.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/tr1/beta_function.tcc:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/wbnoinvdintrin.h:
 
@@ -2052,9 +2062,19 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxvnniint16intrin.h
 
 C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc:
 
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vbmiintrin.h:
+
+C:/msys64/mingw64/include/swprintf.inl:
+
+C:/msys64/mingw64/include/_mingw_stdarg.h:
+
+C:/msys64/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h:
+
 C:/msys64/mingw64/include/sdks/_mingw_ddk.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/vector.tcc:
+
+C:/msys64/mingw64/include/c++/14.2.0/cstddef:
 
 C:/msys64/mingw64/include/vadefs.h:
 
@@ -2097,14 +2117,6 @@ C:/msys64/mingw64/include/c++/14.2.0/atomic:
 C:/msys64/mingw64/include/c++/14.2.0/bits/locale_facets.h:
 
 C:/msys64/mingw64/include/c++/14.2.0/bits/ostream_insert.h:
-
-C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h:
-
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vbmiintrin.h:
-
-C:/msys64/mingw64/include/_mingw_stdarg.h:
-
-C:/msys64/mingw64/include/swprintf.inl:
 
 C:/msys64/mingw64/include/objbase.h:
 

@@ -61,6 +61,12 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_hermite.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc \
+ C:/msys64/mingw64/include/c++/14.2.0/cstdio \
+ C:/msys64/mingw64/include/stdio.h \
+ C:/msys64/mingw64/include/corecrt_stdio_config.h \
+ C:/msys64/mingw64/include/_mingw_off_t.h \
+ C:/msys64/mingw64/include/swprintf.inl \
+ C:/msys64/mingw64/include/sec_api/stdio_s.h \
  C:/msys64/mingw64/include/c++/14.2.0/algorithm \
  C:/msys64/mingw64/include/c++/14.2.0/bits/stl_algo.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \

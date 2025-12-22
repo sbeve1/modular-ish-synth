@@ -9,7 +9,7 @@
 
 class Synth {
 public:
-    static constexpr int NUM_VOICES = 16;
+    static constexpr int NUM_VOICES = 8;
 
     std::array<Voice, NUM_VOICES> voices;
 

@@ -3,13 +3,27 @@
 #include <cmath>
 #include <array>
 #include <algorithm>
-#include <cstdlib>
-#include <cstdio>
 
 #include "core/CONSTANTS.h"
 #include "core/Sample.h"
 #include "audio/Wavetable.h"
-#include "engine/OscParams.h"
+
+// ============================
+// Resolved oscillator params
+// (Voice owns modulation; osc consumes)
+// ============================
+// Resolved oscillator params
+struct OscResolved {
+    float freq = 440.0f;        // Hz
+    float wtPos = 0.0f;         // 0..1
+    float level = 1.0f;         // linear
+    float detune = 0.0f;        // cents
+    float stereoSpread = 0.0f;  // amount unison spreads
+    float pan = 0.0f;           // -1..1 explicit per-osc pan (center = 0)
+    float phaseSpread = 0.0f;   // optional per-osc phase spread (0..1)
+    int   unison = 1;           // 1..MAX_UNISON
+};
+
 
 class Oscillator {
 public:
@@ -19,59 +33,33 @@ public:
     const Wavetable* wavetable = nullptr;
 
     // ============================
-    // MIDI → frequency helper (RESTORED)
+    // PHASE RESET
     // ============================
-    float midiNoteToFreq(int note) const
+    void resetPhase(bool randomize)
     {
-        return 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
-    }
-
-   void resetPhase(bool randomize)
-{
-    for (auto& p : phase) {
-        if (randomize) {
-            float r = (float)std::rand() / RAND_MAX;
-            // avoid zero crossings
-            p = randomize ? ((float)std::rand() / RAND_MAX) * TWO_PI : 0.0f;
-
-        } else {
-            p = 0.0f;
+        for (auto& p : phase) {
+            p = randomize
+                ? ((float)std::rand() / RAND_MAX) * TWO_PI
+                : 0.0f;
         }
     }
-}
 
-    Sample process(float sr, const OscParams& p)
-    {   
-        // ----------------------------
-        // PITCH (Serum-style, SINGLE ownership)
-        // ----------------------------
-        float semitone = p.semitoneBase + p.semitoneMod;
-        float fine     = p.fineBase + p.fineMod;
+    // ============================
+    // PROCESS (Serum-style)
+    // ============================
+    inline Sample process(float sr, const OscResolved& r)
+    {
+        Sample out{};
 
-        // Work in MIDI space (musical domain)
-        float midi = (float)p.midiNote
-                + semitone
-                + fine / 100.0f;
+        if (!wavetable || wavetable->numFrames == 0 || sr <= 0.0f)
+            return out;
 
-        // Convert ONCE to Hz
-        float baseFreq = 440.0f * std::pow(2.0f, (midi - 69.0f) / 12.0f);
+        int voices = std::clamp(r.unison, 1, MAX_UNISON);
 
-        // Safety clamp
-        baseFreq = std::clamp(baseFreq, MIN_FREQ, sr * 0.45f);
-
-        if (!wavetable || wavetable->numFrames == 0)
-            return {};
-
-        int voices = std::clamp(
-            (int)std::round(p.unisonVoices),
-            1,
-            MAX_UNISON
-        );
-        
         // ----------------------------
         // WAVETABLE POSITION
         // ----------------------------
-        float wtPos = std::clamp(p.wtPosBase + p.wtPosMod, 0.0f, 1.0f);
+        float wtPos = std::clamp(r.wtPos, 0.0f, 1.0f);
         float framePos = wtPos * (wavetable->numFrames - 1);
         int f0 = (int)framePos;
         int f1 = std::min(f0 + 1, wavetable->numFrames - 1);
@@ -84,12 +72,15 @@ public:
         // UNISON LOOP
         // ----------------------------
         for (int i = 0; i < voices; ++i) {
-            float spread = (voices == 1) ? 0.0f
+
+            float spread = (voices == 1)
+                ? 0.0f
                 : (float(i) / (voices - 1) * 2.0f - 1.0f);
 
-            float detuneRatio = std::pow(2.0f, (spread * p.detune) / 1200.0f);
-            float freq = baseFreq * detuneRatio;
+            float detuneRatio = std::pow(2.0f, (spread * r.detune) / 1200.0f);
+            float freq = r.freq * detuneRatio;
 
+            // phase → table index
             float ph = phase[i] * INV_2PI;
             float idx = ph * wavetable->tableSize;
             int i0 = (int)idx & (wavetable->tableSize - 1);
@@ -109,23 +100,24 @@ public:
             if (phase[i] >= TWO_PI)
                 phase[i] -= TWO_PI;
 
-            float pan = spread * p.stereoSpread;
+            // explicit per-osc pan + per-voice spread offset (combined)
+            float explicitPan = std::clamp(r.pan, -1.0f, 1.0f);
+            float spreadOffset = (r.unison == 1) ? 0.0f : (spread * r.stereoSpread);
+
+            // combine and clamp
+            float pan = std::clamp(explicitPan + spreadOffset, -1.0f, 1.0f);
             float ang = (pan + 1.0f) * 0.25f * PI;
+
 
             outL += s * std::cos(ang);
             outR += s * std::sin(ang);
         }
 
-        // ----------------------------
-        // LEVEL (base + mod semantics)
-        // ----------------------------
-        float norm  = 1.0f / std::sqrt((float)voices);
-        float level = std::max(p.levelBase + p.levelMod, 0.0f);
+        float norm = 1.0f / std::sqrt((float)voices);
 
-        return {
-            outL * level * norm,
-            outR * level * norm
-        };
+        out.left  = outL * r.level * norm;
+        out.right = outR * r.level * norm;
+
+        return out;
     }
-
 };

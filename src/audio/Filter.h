@@ -1,75 +1,75 @@
 #pragma once
-
 #include <cmath>
 #include <algorithm>
 
-#include "core/Sample.h"
-#include "core/CONSTANTS.h"
-#include "engine/FilterParams.h"
-
-// A modest, cheap resonant-ish filter with drive and safe clamping.
-// Uses base+mod semantics: caller/storage keeps base in *.Base and mod in *.Mod (modifiable by ModMatrix).
-class Filter {
-public:
-    // state for a 2-pole-ish integrator
+struct Filter {
+    // State (per channel)
     float ic1eqL = 0.0f, ic2eqL = 0.0f;
     float ic1eqR = 0.0f, ic2eqR = 0.0f;
 
-    Sample process(float sr, const Sample& in, const FilterParams& p)
-    {
-        // -------- combine base + mod (explicit) --------
-        float cutoff = std::clamp(p.cutoffBase + p.cutoffMod, 20.0f, sr * 0.45f);
-        float res    = std::clamp(p.resBase + p.resMod, 0.0f, 1.0f);
-        float drive  = std::max(p.driveBase + p.driveMod, 0.0f);
-        float fat    = std::max(p.fatBase + p.fatMod, 0.0f);
-        float mix    = std::clamp(p.mixBase + p.mixMod, 0.0f, 1.0f);
-        float level  = std::max(p.levelBase + p.levelMod, 0.0f);
-        float pan    = std::clamp(p.panBase + p.panMod, -1.0f, 1.0f);
+    inline void reset() {
+        ic1eqL = ic2eqL = 0.0f;
+        ic1eqR = ic2eqR = 0.0f;
+    }
 
-        // small safety: if level is effectively zero, return silence quickly
-        if (level <= 0.0000001f || std::isnan(level) || std::isinf(level)) {
-            return { 0.0f, 0.0f };
+    inline float sanitizeCutoff(float cutoff, float sr) {
+        if (!std::isfinite(cutoff)) return 1000.0f;
+        return std::clamp(cutoff, 20.0f, sr * 0.45f);
+    }
+
+    inline float sanitizeRes(float res) {
+        if (!std::isfinite(res)) return 0.0f;
+        return std::clamp(res, 0.0f, 0.99f); // critical
+    }
+
+    inline float processSample(
+        float in,
+        float cutoff,
+        float res,
+        float sr,
+        float& ic1eq,
+        float& ic2eq
+    ) {
+        // TPT SVF (zero-delay feedback)
+        float g = std::tan(float(M_PI) * cutoff / sr);
+        float k = 2.0f - 2.0f * res; // Serum-style mapping
+
+        float v0 = in;
+        float v1 = (v0 - ic2eq) * g / (1.0f + g * (g + k));
+        float v2 = ic2eq + g * v1;
+
+        ic1eq = 2.0f * v1 - ic1eq;
+        ic2eq = 2.0f * v2 - ic2eq;
+
+        // Lowpass output
+        return v2;
+    }
+
+    inline void process(
+        float inL,
+        float inR,
+        float cutoff,
+        float res,
+        float sr,
+        float& outL,
+        float& outR
+    ) {
+        if (sr <= 0.0f) {
+            outL = outR = 0.0f;
+            reset();
+            return;
         }
 
-        // resonant-ish biquad approximation (cheap)
-        float g = tanf(PI * cutoff / sr);
+        cutoff = sanitizeCutoff(cutoff, sr);
+        res    = sanitizeRes(res);
 
-        // map res (0..1) to k. higher res -> stronger feedback
-        float k = 2.0f * res;
+        outL = processSample(inL, cutoff, res, sr, ic1eqL, ic2eqL);
+        outR = processSample(inR, cutoff, res, sr, ic1eqR, ic2eqR);
 
-        auto proc = [&](float x, float& ic1, float& ic2)
-        {
-            // pre-drive nonlinearity
-            float xd = tanhf(x * (1.0f + drive));
-
-            // two-integrator loop (TPT-style-ish)
-            float v1 = (xd - ic2) * g / (1.0f + g * (g + k));
-            float v2 = v1 * g;
-            float lp = v2 + ic2;
-
-            // state update (simple)
-            ic1 = 2.0f * v1 - ic1;
-            ic2 = 2.0f * v2 - ic2;
-
-            return lp;
-        };
-
-        Sample out;
-        out.left  = proc(in.left,  ic1eqL, ic2eqL);
-        out.right = proc(in.right, ic1eqR, ic2eqR);
-
-        // mix wet/dry
-        out.left  = in.left  * (1.0f - mix) + out.left  * mix;
-        out.right = in.right * (1.0f - mix) + out.right * mix;
-
-        // level and panning
-        out.left  *= level;
-        out.right *= level;
-
-        float angle = (pan + 1.0f) * 0.25f * PI;
-        float l = cosf(angle);
-        float r = sinf(angle);
-
-        return { out.left * l, out.right * r };
+        // FINAL NaN GUARD — Serum does this
+        if (!std::isfinite(outL) || !std::isfinite(outR)) {
+            outL = outR = 0.0f;
+            reset();
+        }
     }
 };
