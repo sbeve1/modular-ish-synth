@@ -200,6 +200,30 @@ src/engine/Synth.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/Synth.cpp.s
 .PHONY : src/engine/Synth.cpp.s
 
+src/engine/voice/VoiceModulation.obj: src/engine/voice/VoiceModulation.cpp.obj
+.PHONY : src/engine/voice/VoiceModulation.obj
+
+# target to build an object file
+src/engine/voice/VoiceModulation.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj
+.PHONY : src/engine/voice/VoiceModulation.cpp.obj
+
+src/engine/voice/VoiceModulation.i: src/engine/voice/VoiceModulation.cpp.i
+.PHONY : src/engine/voice/VoiceModulation.i
+
+# target to preprocess a source file
+src/engine/voice/VoiceModulation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.i
+.PHONY : src/engine/voice/VoiceModulation.cpp.i
+
+src/engine/voice/VoiceModulation.s: src/engine/voice/VoiceModulation.cpp.s
+.PHONY : src/engine/voice/VoiceModulation.s
+
+# target to generate assembly for a file
+src/engine/voice/VoiceModulation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.s
+.PHONY : src/engine/voice/VoiceModulation.cpp.s
+
 src/main.obj: src/main.cpp.obj
 .PHONY : src/main.obj
 
@@ -290,6 +314,9 @@ help:
 	@echo ... src/engine/Synth.obj
 	@echo ... src/engine/Synth.i
 	@echo ... src/engine/Synth.s
+	@echo ... src/engine/voice/VoiceModulation.obj
+	@echo ... src/engine/voice/VoiceModulation.i
+	@echo ... src/engine/voice/VoiceModulation.s
 	@echo ... src/main.obj
 	@echo ... src/main.i
 	@echo ... src/main.s

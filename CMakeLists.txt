@@ -24,6 +24,10 @@ file(GLOB ENGINE_SRC
     "src/engine/*.cpp"
 )
 
+file(GLOB ENGINE_VOICE_SRC
+    "src/engine/voice/*.cpp"
+)
+
 file(GLOB AUDIO_SRC
     "src/audio/*.cpp"
 )
@@ -50,6 +54,7 @@ add_executable(Synth
     ${ROOT_SRC}
     ${CORE_SRC}
     ${ENGINE_SRC}
+    ${ENGINE_VOICE_SRC}
     ${AUDIO_SRC}
     ${MIDI_SRC}
     ${PLATFORM_SRC}

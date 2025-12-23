@@ -116,11 +116,26 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Synth.dir/src/engine/Synth.cpp.s"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\engine\Synth.cpp" -o CMakeFiles\Synth.dir\src\engine\Synth.cpp.s
 
+CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj: CMakeFiles/Synth.dir/flags.make
+CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj: CMakeFiles/Synth.dir/includes_CXX.rsp
+CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/engine/voice/VoiceModulation.cpp
+CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj: CMakeFiles/Synth.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj -MF CMakeFiles\Synth.dir\src\engine\voice\VoiceModulation.cpp.obj.d -o CMakeFiles\Synth.dir\src\engine\voice\VoiceModulation.cpp.obj -c "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\engine\voice\VoiceModulation.cpp"
+
+CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.i"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\engine\voice\VoiceModulation.cpp" > CMakeFiles\Synth.dir\src\engine\voice\VoiceModulation.cpp.i
+
+CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.s"
+	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\engine\voice\VoiceModulation.cpp" -o CMakeFiles\Synth.dir\src\engine\voice\VoiceModulation.cpp.s
+
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: CMakeFiles/Synth.dir/flags.make
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: CMakeFiles/Synth.dir/includes_CXX.rsp
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/midi/MIDIHandler.cpp
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: CMakeFiles/Synth.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj -MF CMakeFiles\Synth.dir\src\midi\MIDIHandler.cpp.obj.d -o CMakeFiles\Synth.dir\src\midi\MIDIHandler.cpp.obj -c "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\midi\MIDIHandler.cpp"
 
 CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.i: cmake_force
@@ -135,7 +150,7 @@ CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj: CMakeFiles/Synth.dir/flags.mak
 CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj: CMakeFiles/Synth.dir/includes_CXX.rsp
 CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/platform/RtMidi.cpp
 CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj: CMakeFiles/Synth.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj -MF CMakeFiles\Synth.dir\src\platform\RtMidi.cpp.obj.d -o CMakeFiles\Synth.dir\src\platform\RtMidi.cpp.obj -c "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\platform\RtMidi.cpp"
 
 CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.i: cmake_force
@@ -150,7 +165,7 @@ CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: CMakeFiles/Synth.dir/flags.make
 CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: CMakeFiles/Synth.dir/includes_CXX.rsp
 CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: C:/Users/tevin/Desktop/Developer/CRAZY\ PROJECT/src/control/LFO.cpp
 CMakeFiles/Synth.dir/src/control/LFO.cpp.obj: CMakeFiles/Synth.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/Synth.dir/src/control/LFO.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/Synth.dir/src/control/LFO.cpp.obj"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Synth.dir/src/control/LFO.cpp.obj -MF CMakeFiles\Synth.dir\src\control\LFO.cpp.obj.d -o CMakeFiles\Synth.dir\src\control\LFO.cpp.obj -c "C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\src\control\LFO.cpp"
 
 CMakeFiles/Synth.dir/src/control/LFO.cpp.i: cmake_force
@@ -166,6 +181,7 @@ Synth_OBJECTS = \
 "CMakeFiles/Synth.dir/src/main.cpp.obj" \
 "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj" \
 "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj" \
+"CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj" \
 "CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj" \
 "CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj" \
 "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj"
@@ -176,6 +192,7 @@ Synth_EXTERNAL_OBJECTS =
 Synth.exe: CMakeFiles/Synth.dir/src/main.cpp.obj
 Synth.exe: CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj
 Synth.exe: CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj
+Synth.exe: CMakeFiles/Synth.dir/src/engine/voice/VoiceModulation.cpp.obj
 Synth.exe: CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj
 Synth.exe: CMakeFiles/Synth.dir/src/platform/RtMidi.cpp.obj
 Synth.exe: CMakeFiles/Synth.dir/src/control/LFO.cpp.obj
@@ -183,7 +200,7 @@ Synth.exe: CMakeFiles/Synth.dir/build.make
 Synth.exe: CMakeFiles/Synth.dir/linkLibs.rsp
 Synth.exe: CMakeFiles/Synth.dir/objects1.rsp
 Synth.exe: CMakeFiles/Synth.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable Synth.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="C:\Users\tevin\Desktop\Developer\CRAZY PROJECT\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable Synth.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\Synth.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "engine/Voice.h"
+#include "engine/voice/Voice.h"
 #include "core/Sample.h"
 #include "audio/Wavetable.h"
 #include "audio/WavetableFactory.h"

@@ -141,12 +141,16 @@ public:
             auto& slot = targetSlots[i];
             if (!slot.modPtr) continue;
 
-            float out = slot.hasReplace ? slot.replaceAcc
-                                        : slot.addAcc;
+            float out = slot.base;
+
+            if (slot.hasReplace)
+                out = slot.replaceAcc;
+            else
+                out += slot.addAcc;
+
             out *= slot.multAcc;
             out *= slot.curveAcc;
 
-            // clamp using target-specific limits to avoid invalid DSP inputs
             out = std::clamp(out, slot.minVal, slot.maxVal);
             *slot.modPtr = out;
         }
