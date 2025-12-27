@@ -109,3 +109,17 @@ Sample Synth::process(float sr)
 
     return out;
 }
+
+void Synth::setSourceDest(SourceID src, SourceDest dest)
+{
+    for (auto& v : voices) {
+        RoutingController::setSourceDest(v.routing, src, dest);
+    }
+}
+
+void Synth::setSourceBusSend(SourceID src, BusID bus, float amount)
+{
+    for (auto& v : voices) {
+        RoutingController::setSourceBusSend(v.routing, src, bus, amount);
+    }
+}

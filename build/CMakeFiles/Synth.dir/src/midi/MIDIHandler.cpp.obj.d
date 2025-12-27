@@ -231,4 +231,6 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/shared_ptr_atomic.h \
  C:/msys64/mingw64/include/c++/14.2.0/backward/auto_ptr.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_memory_defs.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingController.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingIDs.h

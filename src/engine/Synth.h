@@ -7,6 +7,7 @@
 #include "audio/Wavetable.h"
 #include "audio/WavetableFactory.h"
 #include "audio/fx/FXChain.h"
+#include "routing/RoutingController.h"
 
 class Synth {
 public:
@@ -34,4 +35,6 @@ public:
     void noteOn(int note, float velocity);
     void noteOff(int note);
     Sample process(float sampleRate);
+    void setSourceDest(SourceID src, SourceDest dest);
+    void setSourceBusSend(SourceID src, BusID bus, float amount);
 };

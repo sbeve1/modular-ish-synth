@@ -454,6 +454,8 @@ CMakeFiles/Synth.dir/src/main.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/backward/auto_ptr.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_memory_defs.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingController.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingIDs.h \
  C:/msys64/mingw64/include/c++/14.2.0/thread \
  C:/msys64/mingw64/include/c++/14.2.0/bits/std_thread.h \
  C:/msys64/mingw64/include/c++/14.2.0/bits/this_thread_sleep.h \
