@@ -1,9 +1,16 @@
 #include "Synth.h"
 #include <limits>
 
+#include "audio/fx/ReverbFX.h"
+
+
 Synth::Synth()
 {
     basicWavetable = WavetableFactory::makeBasicShapes();
+
+    // TEMP: hardcode reverb on BUS1
+    bus1FX.clear();
+    bus1FX.add(std::make_unique<ReverbFX>(44100.0f));
 }
 
 void Synth::noteOn(int note, float velocity)

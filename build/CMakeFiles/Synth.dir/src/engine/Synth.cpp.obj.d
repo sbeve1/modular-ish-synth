@@ -187,4 +187,5 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h \
  C:/msys64/mingw64/include/c++/14.2.0/backward/auto_ptr.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_memory_defs.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/ReverbFX.h
