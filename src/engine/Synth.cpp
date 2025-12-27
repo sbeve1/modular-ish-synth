@@ -57,20 +57,48 @@ void Synth::noteOff(int note)
 
 Sample Synth::process(float sr)
 {
-    Sample mix{};
+    constexpr float VOICE_GAIN_NORM = 0.353553f; // 1/sqrt(8)
+    constexpr float MASTER_GAIN    = 0.7f;
+
+    Sample globalMain{};
+    Sample globalBus1{};
+    Sample globalBus2{};
+    Sample globalDirect{};
 
     for (auto& v : voices) {
         if (!v.state.active)
             continue;
 
-        Sample s = v.process(sr);
+        VoiceOutput vo = v.process(sr);
 
-        mix.left  += s.left  * VOICE_GAIN_NORM;
-        mix.right += s.right * VOICE_GAIN_NORM;
+        globalMain.left   += vo.main.left   * VOICE_GAIN_NORM;
+        globalMain.right  += vo.main.right  * VOICE_GAIN_NORM;
+
+        globalBus1.left   += vo.bus1.left   * VOICE_GAIN_NORM;
+        globalBus1.right  += vo.bus1.right  * VOICE_GAIN_NORM;
+
+        globalBus2.left   += vo.bus2.left   * VOICE_GAIN_NORM;
+        globalBus2.right  += vo.bus2.right  * VOICE_GAIN_NORM;
+
+        globalDirect.left += vo.direct.left * VOICE_GAIN_NORM;
+        globalDirect.right+= vo.direct.right* VOICE_GAIN_NORM;
     }
 
-    mix.left  *= MASTER_GAIN;
-    mix.right *= MASTER_GAIN;
+    // BUS FX
+    globalBus1 = bus1FX.process(globalBus1, sr);
+    globalBus2 = bus2FX.process(globalBus2, sr);
 
-    return mix;
+    // buses → main
+    globalMain.left  += globalBus1.left + globalBus2.left;
+    globalMain.right += globalBus1.right + globalBus2.right;
+
+    // MAIN FX
+    globalMain = mainFX.process(globalMain, sr);
+
+    // FINAL OUTPUT
+    Sample out;
+    out.left  = (globalMain.left  + globalDirect.left)  * MASTER_GAIN;
+    out.right = (globalMain.right + globalDirect.right) * MASTER_GAIN;
+
+    return out;
 }

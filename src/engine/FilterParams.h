@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/CONSTANTS.h"
+
 struct FilterParams {
     float cutoffBase = 1000.0f;
     float cutoffMod  = 0.0f;
@@ -16,7 +18,7 @@ struct FilterParams {
     float mixBase    = 1.0f;
     float mixMod     = 0.0f;
 
-    float levelBase  = 1.0f;
+    float levelBase  = dbToLin(-0.0f);
     float levelMod   = 0.0f;
 
     float panBase    = 0.0f;

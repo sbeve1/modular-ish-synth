@@ -87,7 +87,8 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_hermite.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/FilterParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
  C:/msys64/mingw64/include/c++/14.2.0/cstdio \
  C:/msys64/mingw64/include/stdio.h \
@@ -95,6 +96,11 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/msys64/mingw64/include/_mingw_off_t.h \
  C:/msys64/mingw64/include/swprintf.inl \
  C:/msys64/mingw64/include/sec_api/stdio_s.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceInit.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/OscParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/NoiseParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceResolve.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Wavetable.h \
  C:/msys64/mingw64/include/c++/14.2.0/vector \
  C:/msys64/mingw64/include/c++/14.2.0/bits/allocator.h \
@@ -120,17 +126,12 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/tuple \
  C:/msys64/mingw64/include/c++/14.2.0/cassert \
  C:/msys64/mingw64/include/assert.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceModulation.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceOutput.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Noise.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/NoiseParams.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/FilterParams.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceInit.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/OscParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/LFO.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceResolve.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceModulation.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModMatrix.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModSourceID.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/ModTargetID.h \
@@ -142,4 +143,48 @@ CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj: \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/AlternateModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerVoiceModule.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/performance/RandomPerNoteModule.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/WavetableFactory.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FXChain.h \
+ C:/msys64/mingw64/include/c++/14.2.0/memory \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stl_raw_storage_iter.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/align.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/unique_ptr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/shared_ptr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/iosfwd \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/stringfwd.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/postypes.h \
+ C:/msys64/mingw64/include/c++/14.2.0/cwchar \
+ C:/msys64/mingw64/include/wchar.h \
+ C:/msys64/mingw64/include/_mingw_stat64.h \
+ C:/msys64/mingw64/include/sec_api/wchar_s.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/shared_ptr_base.h \
+ C:/msys64/mingw64/include/c++/14.2.0/typeinfo \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/allocated_ptr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/ext/aligned_buffer.h \
+ C:/msys64/mingw64/include/c++/14.2.0/ext/atomicity.h \
+ C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/gthr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/gthr-default.h \
+ C:/msys64/mingw64/include/pthread.h \
+ C:/msys64/mingw64/include/sys/types.h \
+ C:/msys64/mingw64/include/process.h \
+ C:/msys64/mingw64/include/corecrt_startup.h \
+ C:/msys64/mingw64/include/signal.h \
+ C:/msys64/mingw64/include/pthread_signal.h \
+ C:/msys64/mingw64/include/time.h C:/msys64/mingw64/include/sys/timeb.h \
+ C:/msys64/mingw64/include/sec_api/sys/timeb_s.h \
+ C:/msys64/mingw64/include/_timeval.h \
+ C:/msys64/mingw64/include/pthread_time.h \
+ C:/msys64/mingw64/include/pthread_compat.h \
+ C:/msys64/mingw64/include/pthread_unistd.h \
+ C:/msys64/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/atomic_word.h \
+ C:/msys64/mingw64/include/c++/14.2.0/ext/concurrence.h \
+ C:/msys64/mingw64/include/c++/14.2.0/exception \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/exception_ptr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/cxxabi_init_exception.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/nested_exception.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/shared_ptr_atomic.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_base.h \
+ C:/msys64/mingw64/include/c++/14.2.0/bits/atomic_lockfree_defines.h \
+ C:/msys64/mingw64/include/c++/14.2.0/backward/auto_ptr.h \
+ C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_memory_defs.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h

@@ -52,7 +52,7 @@ constexpr float ENV_EXP_CURVE  = 5.0f;
 // Gain staging (engine-level)
 // ============================================================
 constexpr float VOICE_GAIN_NORM = 0.353553f;   // 8 voices → 1/sqrt(8)
-constexpr float MASTER_GAIN     = 1.00f;
+constexpr float MASTER_GAIN     = 0.3548134f; // -9 dB
 constexpr float DB_MINUS_10     = 0.31622777f;
 constexpr float DB_MINUS_20     = 0.1f;
 

@@ -28,4 +28,17 @@ void VoiceModulation::registerTargets(Voice& v) {
     v.registerNoiseTargets(v.noiseParams, {
         { ModTargetID::NOISE_LEVEL, &NoiseParams::levelMod, &NoiseParams::levelBase }
     });
+
+    v.mod.registerTarget(
+        ModTargetID::BUS1_SEND,
+        &v.routing.sources[0].bus1Send,
+        0.0f, 0.0f, 1.0f
+    );
+
+    v.mod.registerTarget(
+        ModTargetID::BUS2_SEND,
+        &v.routing.sources[0].bus2Send,
+        0.0f, 0.0f, 1.0f
+    );
+
 }

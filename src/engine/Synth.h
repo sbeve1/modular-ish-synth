@@ -6,17 +6,16 @@
 #include "core/Sample.h"
 #include "audio/Wavetable.h"
 #include "audio/WavetableFactory.h"
+#include "audio/fx/FXChain.h"
 
 class Synth {
 public:
     static constexpr int NUM_VOICES = 8;
-
     std::array<Voice, NUM_VOICES> voices;
 
-    // FIX: unique note instance counter for voice stealing / release
     int nextNoteId = 0;
 
-    // ---- GLOBAL PARAM BLOCKS (KEEP THESE) ----
+    // ---- GLOBAL PARAM BLOCKS ----
     OscParams oscAParams;
     OscParams oscBParams;
     OscParams oscCParams;
@@ -24,6 +23,11 @@ public:
     NoiseParams noiseParams;
 
     Wavetable basicWavetable;
+
+    // ===== GLOBAL FX =====
+    FXChain bus1FX;
+    FXChain bus2FX;
+    FXChain mainFX;
 
     Synth();
 

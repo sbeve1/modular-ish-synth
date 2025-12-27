@@ -1,31 +1,91 @@
 #pragma once
 
-#include <cstdlib>
-
+#include "engine/voice/VoiceRouting.h"
 #include "engine/OscParams.h"
 #include "engine/NoiseParams.h"
-#include "engine/FilterParams.h"
-#include "core/CONSTANTS.h"
-#include "audio/Wavetable.h"
-#include "control/Envelope.h"
-#include "control/LFO.h"
-#include "engine/voice/VoiceRouting.h"
 
 struct VoiceInit {
 
-    static inline void setSerumInitDefaults(VoiceRouting& routing)
+    static inline void setSerumInitDefaults(
+        VoiceRouting& routing,
+        OscParams& oscA,
+        OscParams& oscB,
+        OscParams& oscC,
+        OscParams& sub,
+        NoiseParams& noise)
     {
-        for (int i = 0; i < NUM_SOURCES; ++i) {
-            routing.sourceRoutes[i].dest = SourceDest::NONE;
-            routing.sourceRoutes[i].filterBlend = 0.0f;
-        }
+        // ============================
+        // SOURCE ROUTING DEFAULTS
+        // ============================
 
-        routing.sourceRoutes[0].dest = SourceDest::FILTER;
-        routing.sourceRoutes[0].filterBlend = 0.0f;
+        // OSC A
+        routing.sources[0].dest = SourceDest::FILTER;
+        routing.sources[0].filterBlend = 0.0f;   // 100% Filter0
+        routing.sources[0].bus1Send = 0.0f;
+        routing.sources[0].bus2Send = 0.0f;
 
-        routing.filter0Route = FilterRoute::TO_FX;
-        routing.filter1Route = FilterRoute::TO_FX;
+        // OSC B
+        routing.sources[1].dest = SourceDest::MAIN;
+        routing.sources[1].filterBlend = 0.0f;
+        routing.sources[1].bus1Send = 0.0f;
+        routing.sources[1].bus2Send = 0.0f;
 
-        routing.applyRoutingGraph();
+        // OSC C
+        routing.sources[2].dest = SourceDest::MAIN;
+        routing.sources[2].filterBlend = 0.0f;
+        routing.sources[2].bus1Send = 0.0f;
+        routing.sources[2].bus2Send = 0.0f;
+
+        // SUB
+        routing.sources[3].dest = SourceDest::MAIN;
+        routing.sources[3].filterBlend = 0.0f;
+        routing.sources[3].bus1Send = 0.0f;
+        routing.sources[3].bus2Send = 0.0f;
+
+        // NOISE
+        routing.sources[4].dest = SourceDest::MAIN;
+        routing.sources[4].filterBlend = 0.0f;
+        routing.sources[4].bus1Send = 0.0f;
+        routing.sources[4].bus2Send = 0.0f;
+
+        // ============================
+        // FILTER ROUTING DEFAULTS
+        // ============================
+
+        // Filter 0
+        routing.filter[0].route = FilterRoute::TO_MAIN;
+        routing.filter[0].bus1Send = 0.0f;
+        routing.filter[0].bus2Send = 0.0f;
+
+        // Filter 1
+        routing.filter[1].route = FilterRoute::TO_MAIN;
+        routing.filter[1].bus1Send = 0.0f;
+        routing.filter[1].bus2Send = 0.0f;
+
+        // ============================
+        // BUS ROUTING DEFAULTS
+        // ============================
+
+        routing.busRoute[0] = BusRoute::TO_MAIN; // BUS1 → MAIN
+        routing.busRoute[1] = BusRoute::TO_MAIN; // BUS2 → MAIN
+
+        // ============================
+        // AUDIBILITY / LEVEL DEFAULTS
+        // ============================
+
+        // OSC A audible
+        oscA.levelBase = 1.0f;
+
+        // Everything else muted (but routed)
+        oscB.levelBase = 0.0f;
+        oscC.levelBase = 0.0f;
+        sub.levelBase  = 0.0f;
+        noise.levelBase = 0.0f;
+
+        // ============================
+        // FREEZE GRAPH
+        // ============================
+
+        routing.compile();
     }
 };

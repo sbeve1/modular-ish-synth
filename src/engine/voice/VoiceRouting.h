@@ -1,117 +1,64 @@
 #pragma once
-
 #include <array>
 #include <algorithm>
 
 #include "routing/Routing.h"
 #include "engine/voice/VoiceGraph.h"
 
-// ============================
-// VoiceRouting
-// ============================
 struct VoiceRouting {
 
-    // Per-source routing table (bounded routes per source)
+    // Compiled
     std::array<SourceRouting, NUM_SOURCES> routing{};
-
-    // Per-voice routing buffers (filter inputs, FX, Direct)
     VoiceRoutingBuffers buffers;
 
-    // High-level graph config (UI / preset driven)
-    std::array<SourceRouteConfig, NUM_SOURCES> sourceRoutes{};
-    FilterRoute filter0Route = FilterRoute::TO_FX;
-    FilterRoute filter1Route = FilterRoute::TO_FX;
+    // Graph
+    std::array<SourceRouteConfig, NUM_SOURCES> sources{};
+    FilterRouteConfig filter[2]{};
 
-    // ----------------------------
-    // Graph → routing tables
-    // ----------------------------
-    inline void configureSourceRoutingFromGraph(int src)
+    BusRoute busRoute[2] = {
+        BusRoute::TO_MAIN,
+        BusRoute::TO_MAIN
+    };
+
+    inline void resolveCycles()
     {
-        routing[src].clear();
-        const auto& cfg = sourceRoutes[src];
+        if (filter[0].route == FilterRoute::TO_OTHER_FILTER &&
+            filter[1].route == FilterRoute::TO_OTHER_FILTER)
+            filter[1].route = FilterRoute::TO_MAIN;
 
-        switch (cfg.dest) {
-
-            case SourceDest::NONE:
-                break;
-
-            case SourceDest::DIRECT:
-                routing[src].add(LayerTarget::DIRECT, 1.0f);
-                break;
-
-            case SourceDest::FX:
-                routing[src].add(LayerTarget::FX, 1.0f);
-                break;
-
-            case SourceDest::FILTER:
-                routing[src].add(LayerTarget::FILTER0, 1.0f - cfg.filterBlend);
-                routing[src].add(LayerTarget::FILTER1, cfg.filterBlend);
-                break;
-        }
+        if (busRoute[0] == BusRoute::TO_OTHER_BUS &&
+            busRoute[1] == BusRoute::TO_OTHER_BUS)
+            busRoute[1] = BusRoute::TO_MAIN;
     }
 
-    inline void applyRoutingGraph()
+    inline void compile()
     {
+        resolveCycles();
+
+        for (auto& r : routing)
+            r.clear();
+
         for (int i = 0; i < NUM_SOURCES; ++i)
-            configureSourceRoutingFromGraph(i);
+            compileSource(i);
+    }
 
-        // prevent filter feedback loop
-        if (filter0Route == FilterRoute::TO_OTHER_FILTER &&
-            filter1Route == FilterRoute::TO_OTHER_FILTER)
-        {
-            filter1Route = FilterRoute::TO_FX;
+private:
+    inline void compileSource(int i)
+    {
+        auto& out = routing[i];
+        const auto& s = sources[i];
+
+        if (s.dest == SourceDest::FILTER) {
+            float b = std::clamp(s.filterBlend, 0.0f, 1.0f);
+            out.add(LayerTarget::FILTER0, 1.0f - b);
+            out.add(LayerTarget::FILTER1, b);
+        } else if (s.dest == SourceDest::MAIN) {
+            out.add(LayerTarget::MAIN, 1.0f);
+        } else if (s.dest == SourceDest::DIRECT) {
+            out.add(LayerTarget::DIRECT, 1.0f);
         }
-    }
 
-    // ----------------------------
-    // SOURCE ROUTING API
-    // ----------------------------
-    inline void setSourceOff(int src)
-    {
-        sourceRoutes[src].dest = SourceDest::NONE;
-        sourceRoutes[src].filterBlend = 0.0f;
-    }
-
-    inline void setSourceToFilter(int src, float blend)
-    {
-        sourceRoutes[src].dest = SourceDest::FILTER;
-        sourceRoutes[src].filterBlend = std::clamp(blend, 0.0f, 1.0f);
-    }
-
-    inline void setSourceToFX(int src)
-    {
-        sourceRoutes[src].dest = SourceDest::FX;
-    }
-
-    inline void setSourceToDirect(int src)
-    {
-        sourceRoutes[src].dest = SourceDest::DIRECT;
-    }
-
-    // ----------------------------
-    // FILTER ROUTING API
-    // ----------------------------
-    inline void setFilterOff(int idx)
-    {
-        (idx == 0) ? filter0Route = FilterRoute::NONE
-                   : filter1Route = FilterRoute::NONE;
-    }
-
-    inline void setFilterToFX(int idx)
-    {
-        (idx == 0) ? filter0Route = FilterRoute::TO_FX
-                   : filter1Route = FilterRoute::TO_FX;
-    }
-
-    inline void setFilterToDirect(int idx)
-    {
-        (idx == 0) ? filter0Route = FilterRoute::TO_DIRECT
-                   : filter1Route = FilterRoute::TO_DIRECT;
-    }
-
-    inline void chainFilterToOther(int idx)
-    {
-        (idx == 0) ? filter0Route = FilterRoute::TO_OTHER_FILTER
-                   : filter1Route = FilterRoute::TO_OTHER_FILTER;
+        out.add(LayerTarget::BUS1, std::clamp(s.bus1Send, 0.0f, 1.0f));
+        out.add(LayerTarget::BUS2, std::clamp(s.bus2Send, 0.0f, 1.0f));
     }
 };

@@ -1,33 +1,36 @@
 #pragma once
 
-// ============================
-// SOURCE → DESTINATION
-// ============================
-
 enum class SourceDest {
-    NONE,     // signal terminates
-    DIRECT,  // dry bypass
-    FX,      // main / FX path
-    FILTER   // goes into filter chain
+    NONE,
+    FILTER,
+    MAIN,
+    DIRECT
 };
-
-// Per-source routing config (UI / preset driven)
-struct SourceRouteConfig {
-    SourceDest dest = SourceDest::NONE;
-
-    // Only used when dest == FILTER
-    // 0.0 = 100% Filter0
-    // 1.0 = 100% Filter1
-    float filterBlend = 0.0f;
-};
-
-// ============================
-// FILTER → DESTINATION
-// ============================
 
 enum class FilterRoute {
-    NONE,            // terminate signal
-    TO_FX,
+    NONE,
+    TO_MAIN,
     TO_DIRECT,
     TO_OTHER_FILTER
+};
+
+enum class BusRoute {
+    NONE,
+    TO_MAIN,
+    TO_DIRECT,
+    TO_OTHER_BUS
+};
+
+struct SourceRouteConfig {
+    SourceDest dest = SourceDest::NONE;
+    float filterBlend = 0.0f;
+
+    float bus1Send = 0.0f;
+    float bus2Send = 0.0f;
+};
+
+struct FilterRouteConfig {
+    FilterRoute route = FilterRoute::TO_MAIN;
+    float bus1Send = 0.0f;
+    float bus2Send = 0.0f;
 };

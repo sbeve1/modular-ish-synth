@@ -6,6 +6,7 @@
 #include "engine/voice/VoiceInit.h"
 #include "engine/voice/VoiceResolve.h"
 #include "engine/voice/VoiceModulation.h"
+#include "engine/voice/VoiceOutput.h"
 
 #include "audio/Oscillator.h"
 #include "audio/Noise.h"
@@ -25,24 +26,34 @@
 
 struct Voice {
 
-    // -------- STATE --------
+    // ============================
+    // STATE
+    // ============================
     VoiceState state;
 
-    // -------- AUDIO --------
+    // ============================
+    // AUDIO
+    // ============================
     Oscillator oscA, oscB, oscC, sub;
     Noise noise;
     Filter filter0, filter1;
 
-    // -------- PARAMS --------
+    // ============================
+    // PARAMS
+    // ============================
     OscParams oscAParams, oscBParams, oscCParams, subParams;
     NoiseParams noiseParams;
     FilterParams filter0Params, filter1Params;
 
-    // -------- CONTROL --------
+    // ============================
+    // CONTROL
+    // ============================
     Envelope env1;
     LFO lfo1;
 
-    // -------- PERFORMANCE (PER VOICE) --------
+    // ============================
+    // PERFORMANCE (PER VOICE)
+    // ============================
     NoteModule           noteMod;
     VelocityModule       velocityMod;
     ModWheelModule       modWheelMod;
@@ -52,7 +63,9 @@ struct Voice {
     RandomPerVoiceModule randomVoiceMod;
     RandomPerNoteModule  randomNoteMod;
 
-    // -------- MOD / ROUTING --------
+    // ============================
+    // MOD / ROUTING
+    // ============================
     ModMatrix mod;
     VoiceRouting routing;
 
@@ -78,8 +91,9 @@ struct Voice {
         float NoiseParams::* basePtr;
     };
 
-    inline void registerOscTargets(OscParams& p,
-                                std::initializer_list<OscSpec> specs)
+    inline void registerOscTargets(
+        OscParams& p,
+        std::initializer_list<OscSpec> specs)
     {
         for (auto& s : specs) {
             float* modAddr = &(p.*(s.modPtr));
@@ -88,8 +102,9 @@ struct Voice {
         }
     }
 
-    inline void registerFilterTargets(FilterParams& p,
-                                    std::initializer_list<FilterSpec> specs)
+    inline void registerFilterTargets(
+        FilterParams& p,
+        std::initializer_list<FilterSpec> specs)
     {
         for (auto& s : specs) {
             float* modAddr = &(p.*(s.modPtr));
@@ -98,8 +113,9 @@ struct Voice {
         }
     }
 
-    inline void registerNoiseTargets(NoiseParams& p,
-                                    std::initializer_list<NoiseSpec> specs)
+    inline void registerNoiseTargets(
+        NoiseParams& p,
+        std::initializer_list<NoiseSpec> specs)
     {
         for (auto& s : specs) {
             float* modAddr = &(p.*(s.modPtr));
@@ -108,8 +124,10 @@ struct Voice {
         }
     }
 
+    // ============================
+    // API
+    // ============================
 
-    // -------- API --------
     void start(int note, float velocity, const Wavetable* wt)
     {
         state.noteOn(note);
@@ -129,7 +147,14 @@ struct Voice {
 
         VoiceModulation::registerSources(*this);
         VoiceModulation::registerTargets(*this);
-        VoiceInit::setSerumInitDefaults(routing);
+        VoiceInit::setSerumInitDefaults(
+            routing,
+            oscAParams,
+            oscBParams,
+            oscCParams,
+            subParams,
+            noiseParams
+        );
     }
 
     void stop()
@@ -138,10 +163,12 @@ struct Voice {
         env1.noteOff();
     }
 
+    // ============================
+    // AUDIO PROCESS
+    // ============================
 
-    Sample process(float sr)
+    VoiceOutput process(float sr)
     {
-
         state.samplesSinceNoteOn++;
         if (state.released)
             state.samplesSinceNoteOff++;
@@ -149,6 +176,7 @@ struct Voice {
         if (!state.active)
             return {};
 
+        // clear all routing buffers
         routing.buffers.clear();
 
         // ---- CONTROL ----
@@ -156,62 +184,84 @@ struct Voice {
         lfo1.process(sr);
         mod.process(sr);
 
-        // ---- AUDIO SOURCES ----
+        // ---- SOURCES ----
         for (int i = 0; i < NUM_SOURCES; ++i) {
 
             Sample s{};
 
             switch (i) {
-                case 0: // OSC A
-                    s = oscA.process(sr, VoiceResolve::resolveOsc(oscAParams, sr));
-                    break;
-
-                case 1: // OSC B
-                    s = oscB.process(sr, VoiceResolve::resolveOsc(oscBParams, sr));
-                    break;
-
-                case 2: // OSC C
-                    s = oscC.process(sr, VoiceResolve::resolveOsc(oscCParams, sr));
-                    break;
-
-                case 3: // SUB
-                    s = sub.process(sr, VoiceResolve::resolveOsc(subParams, sr));
-                    break;
-
-                case 4: // NOISE
-                    s = noise.process(sr, noiseParams);
-                    break;
+                case 0: s = oscA.process(sr, VoiceResolve::resolveOsc(oscAParams, sr)); break;
+                case 1: s = oscB.process(sr, VoiceResolve::resolveOsc(oscBParams, sr)); break;
+                case 2: s = oscC.process(sr, VoiceResolve::resolveOsc(oscCParams, sr)); break;
+                case 3: s = sub.process (sr, VoiceResolve::resolveOsc(subParams,  sr)); break;
+                case 4: s = noise.process(sr, noiseParams); break;
             }
 
-            // Serum-style amp envelope BEFORE routing
+            // amp envelope BEFORE routing
             s.left  *= env;
             s.right *= env;
 
-            // Route according to graph (or to nowhere)
             routeSource(s, routing.routing[i], routing.buffers);
         }
 
-        // ---- FILTERS ----
-        VoiceDSP::processFilter(
-            filter0, filter0Params,
-            0, routing.filter0Route,
-            routing.buffers, sr
+        // ---- FILTER 0 ----
+        Sample f0 = VoiceDSP::processFilter(
+            filter0,
+            filter0Params,
+            0,
+            routing.filter[0].route,
+            routing.buffers,
+            sr
         );
 
-        VoiceDSP::processFilter(
-            filter1, filter1Params,
-            1, routing.filter1Route,
-            routing.buffers, sr
+        routing.buffers.bus1.left  += f0.left  * routing.filter[0].bus1Send;
+        routing.buffers.bus1.right += f0.right * routing.filter[0].bus1Send;
+
+        routing.buffers.bus2.left  += f0.left  * routing.filter[0].bus2Send;
+        routing.buffers.bus2.right += f0.right * routing.filter[0].bus2Send;
+
+        // ---- FILTER 1 ----
+        Sample f1 = VoiceDSP::processFilter(
+            filter1,
+            filter1Params,
+            1,
+            routing.filter[1].route,
+            routing.buffers,
+            sr
         );
 
-        Sample out;
-        out.left  = routing.buffers.fx.left  + routing.buffers.direct.left;
-        out.right = routing.buffers.fx.right + routing.buffers.direct.right;
+        routing.buffers.bus1.left  += f1.left  * routing.filter[1].bus1Send;
+        routing.buffers.bus1.right += f1.right * routing.filter[1].bus1Send;
+
+        routing.buffers.bus2.left  += f1.left  * routing.filter[1].bus2Send;
+        routing.buffers.bus2.right += f1.right * routing.filter[1].bus2Send;
+
+        // ---- BUS PROCESSING ----
+        VoiceDSP::processBus(
+            routing.buffers.bus1,
+            0,
+            routing.busRoute[0],
+            routing.buffers
+        );
+
+        VoiceDSP::processBus(
+            routing.buffers.bus2,
+            1,
+            routing.busRoute[1],
+            routing.buffers
+        );
+
+        // ---- OUTPUT ----
+        VoiceOutput out;
+        out.main   = routing.buffers.main;
+        out.bus1   = routing.buffers.bus1;
+        out.bus2   = routing.buffers.bus2;
+        out.direct = routing.buffers.direct;
 
         if (!env1.isActive())
             state.active = false;
 
         return out;
+
     }
 };
-

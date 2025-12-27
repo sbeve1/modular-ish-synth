@@ -15,7 +15,7 @@ struct OscParams {
     // ------------------------
     // AMP / STEREO
     // ------------------------
-    float levelBase    = 1.0f;
+    float levelBase    = dbToLin(-5.0f);
     float levelMod     = 0.0f;
 
     float panBase      = 0.0f;
