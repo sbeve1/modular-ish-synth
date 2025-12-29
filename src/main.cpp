@@ -48,6 +48,16 @@ int main()
     initDSPTables();
     initLFOShape();
 
+    // PRETEND UI STATE
+    synth.setSourceEnabled(SourceID::NOISE, true);
+    synth.oscAParams.wtPosBase = 1.0f; // wavetable is on square
+
+
+
+
+
+
+
     // IMPORTANT: wire MIDI → synth
     midi.synth = &synth;
     midi.setQueue(&gMidiQueue); // send events into queue

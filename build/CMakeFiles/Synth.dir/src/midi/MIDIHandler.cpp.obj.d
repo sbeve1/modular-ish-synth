@@ -190,18 +190,19 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/poly_laguerre.tcc \
  C:/msys64/mingw64/include/c++/14.2.0/tr1/riemann_zeta.tcc \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Filter.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/FilterParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Params/FilterParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/core/CONSTANTS.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceInit.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/OscParams.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/NoiseParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Params/OscParams.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/Params/NoiseParams.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceResolve.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/Resolved.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceModulation.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceOutput.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Oscillator.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Wavetable.h \
  C:/msys64/mingw64/include/c++/14.2.0/cassert \
  C:/msys64/mingw64/include/assert.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceModulation.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/engine/voice/VoiceOutput.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/Noise.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/Envelope.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/control/ControlModule.h \
@@ -231,6 +232,6 @@ CMakeFiles/Synth.dir/src/midi/MIDIHandler.cpp.obj: \
  C:/msys64/mingw64/include/c++/14.2.0/bits/shared_ptr_atomic.h \
  C:/msys64/mingw64/include/c++/14.2.0/backward/auto_ptr.h \
  C:/msys64/mingw64/include/c++/14.2.0/pstl/glue_memory_defs.h \
- C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/fx/FX.h \
+ C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/audio/FX/FX.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingController.h \
  C:/Users/tevin/Desktop/DEVELO~1/CRAZYP~1/src/routing/RoutingIDs.h

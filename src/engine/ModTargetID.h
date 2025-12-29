@@ -66,7 +66,7 @@ enum class ModTargetID : int {
     // ========================
     // FILTER 0
     // ========================
-    FILTER0_CUTOFF = 0,
+    FILTER0_CUTOFF,
     FILTER0_RES,
     FILTER0_DRIVE,
     FILTER0_FAT,
@@ -95,6 +95,44 @@ enum class ModTargetID : int {
     FILTER1_BUS1_SEND,
     FILTER1_BUS2_SEND,
 
+    FX_WET,
+
+    // ========================
+    // REVERB (GLOBAL FX)
+    // ========================
+    REVERB_SIZE,
+    REVERB_PREDELAY,
+    REVERB_LOW_CUT,
+    REVERB_HIGH_CUT,
+
+    // ---- PLATE ----
+    REVERB_PLATE_DAMP,
+    REVERB_PLATE_WIDTH,
+
+    // ---- HALL ----
+    REVERB_HALL_DECAY,
+    REVERB_HALL_SPIN_RATE,
+    REVERB_HALL_SPIN_DEPTH,
+
+    // ---- VINTAGE ----
+    REVERB_VINTAGE_ER_SIZE,
+    REVERB_VINTAGE_DAMP,
+    REVERB_VINTAGE_DIFF_A,
+    REVERB_VINTAGE_DIFF_B,
+    REVERB_VINTAGE_CHORUS_RATE,
+    REVERB_VINTAGE_CHORUS_DEPTH,
+
+    // ---- NITROUS ----
+    REVERB_NITROUS_DIFFUSION,
+    REVERB_NITROUS_FEEDBACK,
+    REVERB_NITROUS_MODE,
+    REVERB_NITROUS_CHORUS_RATE,
+    REVERB_NITROUS_CHORUS_DEPTH,
+
+    // ---- BASIN ----
+    REVERB_BASIN_FEEDBACK,
+    REVERB_BASIN_CHORUS_RATE,
+    REVERB_BASIN_CHORUS_DEPTH,
 
     COUNT
 };

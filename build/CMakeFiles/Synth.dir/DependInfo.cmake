@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/audio/FX/ReverbFX.cpp" "CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/control/LFO.cpp" "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/core/CONSTANTS.cpp" "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj.d"
   "C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/src/engine/Synth.cpp" "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj" "gcc" "CMakeFiles/Synth.dir/src/engine/Synth.cpp.obj.d"

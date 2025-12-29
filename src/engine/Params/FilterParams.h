@@ -2,7 +2,15 @@
 
 #include "core/CONSTANTS.h"
 
+enum class FilterMode : uint8_t {
+    LP = 0,
+    BP = 1,
+    HP = 2
+};
+
 struct FilterParams {
+    FilterMode mode = FilterMode::LP;
+    
     float cutoffBase = 1000.0f;
     float cutoffMod  = 0.0f;
 

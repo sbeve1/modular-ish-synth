@@ -2,6 +2,9 @@
 #include <cmath>
 #include <cstdio>
 
+constexpr int NUM_VOICES = 8;
+constexpr int MAX_UNISON = 8; // or 16, your choice
+
 // ============================================================
 // Math constants
 // ============================================================

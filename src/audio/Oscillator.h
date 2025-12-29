@@ -3,34 +3,25 @@
 #include <cmath>
 #include <array>
 #include <algorithm>
+#include <cstdlib>
 
 #include "core/CONSTANTS.h"
 #include "core/Sample.h"
 #include "audio/Wavetable.h"
-
-// ============================
-// Resolved oscillator params
-// (Voice owns modulation; osc consumes)
-// ============================
-// Resolved oscillator params
-struct OscResolved {
-    float freq = 440.0f;        // Hz
-    float wtPos = 0.0f;         // 0..1
-    float level = 1.0f;         // linear
-    float detune = 0.0f;        // cents
-    float stereoSpread = 0.0f;  // amount unison spreads
-    float pan = 0.0f;           // -1..1 explicit per-osc pan (center = 0)
-    float phaseSpread = 0.0f;   // optional per-osc phase spread (0..1)
-    int   unison = 1;           // 1..MAX_UNISON
-};
-
+#include "engine/voice/Resolved.h"
+#include "engine/Params/OscParams.h"
 
 class Oscillator {
 public:
     static constexpr int MAX_UNISON = 8;
 
+    // ============================
+    // STATE
+    // ============================
     std::array<float, MAX_UNISON> phase{};
     const Wavetable* wavetable = nullptr;
+
+    OscMode lastMode = OscMode::WAVETABLE;
 
     // ============================
     // PHASE RESET
@@ -45,20 +36,47 @@ public:
     }
 
     // ============================
-    // PROCESS (Serum-style)
+    // PROCESS
     // ============================
     inline Sample process(float sr, const OscResolved& r)
     {
         Sample out{};
 
-        if (!wavetable || wavetable->numFrames == 0 || sr <= 0.0f)
+        if (sr <= 0.0f)
+            return out;
+
+        // ---------------------------------
+        // MODE CHANGE → RESET STATE
+        // ---------------------------------
+        if (r.mode != lastMode) {
+            resetPhase(true);
+            lastMode = r.mode;
+        }
+
+        // ---------------------------------
+        // SIMPLE SINE OSC (cheap algorithm)
+        // ---------------------------------
+        if (r.mode == OscMode::SINE) {
+            float s = std::sin(phase[0]);
+
+            phase[0] += TWO_PI * r.freq / sr;
+            if (phase[0] >= TWO_PI)
+                phase[0] -= TWO_PI;
+
+            out.left  = s * r.level;
+            out.right = s * r.level;
+            return out;
+        }
+
+        // ---------------------------------
+        // WAVETABLE OSC
+        // ---------------------------------
+        if (!wavetable || wavetable->numFrames == 0)
             return out;
 
         int voices = std::clamp(r.unison, 1, MAX_UNISON);
 
-        // ----------------------------
-        // WAVETABLE POSITION
-        // ----------------------------
+        // ----- Wavetable frame interpolation -----
         float wtPos = std::clamp(r.wtPos, 0.0f, 1.0f);
         float framePos = wtPos * (wavetable->numFrames - 1);
         int f0 = (int)framePos;
@@ -68,21 +86,24 @@ public:
         float outL = 0.0f;
         float outR = 0.0f;
 
-        // ----------------------------
+        // ---------------------------------
         // UNISON LOOP
-        // ----------------------------
+        // ---------------------------------
         for (int i = 0; i < voices; ++i) {
 
             float spread = (voices == 1)
                 ? 0.0f
                 : (float(i) / (voices - 1) * 2.0f - 1.0f);
 
-            float detuneRatio = std::pow(2.0f, (spread * r.detune) / 1200.0f);
+            float detuneRatio =
+                std::pow(2.0f, (spread * r.detune) / 1200.0f);
+
             float freq = r.freq * detuneRatio;
 
             // phase → table index
             float ph = phase[i] * INV_2PI;
             float idx = ph * wavetable->tableSize;
+
             int i0 = (int)idx & (wavetable->tableSize - 1);
             int i1 = (i0 + 1) & (wavetable->tableSize - 1);
             float frac = idx - i0;
@@ -100,19 +121,23 @@ public:
             if (phase[i] >= TWO_PI)
                 phase[i] -= TWO_PI;
 
-            // explicit per-osc pan + per-voice spread offset (combined)
+            // ---- Stereo placement ----
             float explicitPan = std::clamp(r.pan, -1.0f, 1.0f);
-            float spreadOffset = (r.unison == 1) ? 0.0f : (spread * r.stereoSpread);
+            float spreadOffset =
+                (voices == 1) ? 0.0f : (spread * r.stereoSpread);
 
-            // combine and clamp
-            float pan = std::clamp(explicitPan + spreadOffset, -1.0f, 1.0f);
+            float pan = std::clamp(
+                explicitPan + spreadOffset,
+                -1.0f, 1.0f
+            );
+
             float ang = (pan + 1.0f) * 0.25f * PI;
-
 
             outL += s * std::cos(ang);
             outR += s * std::sin(ang);
         }
 
+        // ---- Normalize unison gain ----
         float norm = 1.0f / std::sqrt((float)voices);
 
         out.left  = outL * r.level * norm;

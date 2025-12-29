@@ -128,6 +128,30 @@ Synth/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/build
 .PHONY : Synth/fast
 
+src/audio/FX/ReverbFX.obj: src/audio/FX/ReverbFX.cpp.obj
+.PHONY : src/audio/FX/ReverbFX.obj
+
+# target to build an object file
+src/audio/FX/ReverbFX.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.obj
+.PHONY : src/audio/FX/ReverbFX.cpp.obj
+
+src/audio/FX/ReverbFX.i: src/audio/FX/ReverbFX.cpp.i
+.PHONY : src/audio/FX/ReverbFX.i
+
+# target to preprocess a source file
+src/audio/FX/ReverbFX.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.i
+.PHONY : src/audio/FX/ReverbFX.cpp.i
+
+src/audio/FX/ReverbFX.s: src/audio/FX/ReverbFX.cpp.s
+.PHONY : src/audio/FX/ReverbFX.s
+
+# target to generate assembly for a file
+src/audio/FX/ReverbFX.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Synth.dir\build.make CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.s
+.PHONY : src/audio/FX/ReverbFX.cpp.s
+
 src/control/LFO.obj: src/control/LFO.cpp.obj
 .PHONY : src/control/LFO.obj
 
@@ -305,6 +329,9 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... Synth
+	@echo ... src/audio/FX/ReverbFX.obj
+	@echo ... src/audio/FX/ReverbFX.i
+	@echo ... src/audio/FX/ReverbFX.s
 	@echo ... src/control/LFO.obj
 	@echo ... src/control/LFO.i
 	@echo ... src/control/LFO.s

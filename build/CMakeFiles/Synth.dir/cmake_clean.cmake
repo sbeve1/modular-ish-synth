@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.obj"
+  "CMakeFiles/Synth.dir/src/audio/FX/ReverbFX.cpp.obj.d"
   "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj"
   "CMakeFiles/Synth.dir/src/control/LFO.cpp.obj.d"
   "CMakeFiles/Synth.dir/src/core/CONSTANTS.cpp.obj"

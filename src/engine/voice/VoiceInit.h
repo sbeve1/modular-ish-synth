@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/voice/VoiceRouting.h"
-#include "engine/OscParams.h"
-#include "engine/NoiseParams.h"
+#include "engine/Params/OscParams.h"
+#include "engine/Params/NoiseParams.h"
 
 struct VoiceInit {
 
@@ -14,6 +14,7 @@ struct VoiceInit {
         OscParams& sub,
         NoiseParams& noise)
     {
+        
         // ============================
         // SOURCE ROUTING DEFAULTS
         // ============================
@@ -73,15 +74,16 @@ struct VoiceInit {
         // AUDIBILITY / LEVEL DEFAULTS
         // ============================
 
-        // OSC A audible
-        oscA.levelBase = 1.0f;
+            /*
+            // OSC A audible
+            oscA.levelBase = 0.75f;
 
-        // Everything else muted (but routed)
-        oscB.levelBase = 0.0f;
-        oscC.levelBase = 0.0f;
-        sub.levelBase  = 0.0f;
-        noise.levelBase = 0.0f;
-
+            // Everything else muted (but routed) (remember to enable)
+            oscB.levelBase = 0.75f;
+            oscC.levelBase = 0.75f;
+            sub.levelBase  = 0.75f;
+            noise.levelBase = dbToLin(-24.0f);
+            */
         // ============================
         // FREEZE GRAPH
         // ============================

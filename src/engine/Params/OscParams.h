@@ -1,6 +1,12 @@
 #pragma once
 
+enum class OscMode : uint8_t {
+    WAVETABLE = 0,
+    SINE = 1
+};
+
 struct OscParams {
+    OscMode mode = OscMode::WAVETABLE;
     // ------------------------
     // PITCH
     // ------------------------

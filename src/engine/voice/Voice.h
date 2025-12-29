@@ -26,6 +26,13 @@
 
 struct Voice {
 
+    Voice() {
+        // Default enabled sources
+        routing.sources[0].enabled = true; // OSC A
+        routing.filter[0].enabled  = true; // Filter 0
+    }
+
+
     // ============================
     // STATE
     // ============================
@@ -179,6 +186,22 @@ struct Voice {
         // clear all routing buffers
         routing.buffers.clear();
 
+
+        // small helper for debugging invalid / huge samples
+        auto checkSampleVal = [](float v)->bool {
+            if (!std::isfinite(v)) return false;
+            // sanity clamp for debug; adjust threshold as needed
+            return std::fabs(v) <= 1e3f;
+        };
+
+        auto debugCheck = [&](const Sample& s, const char* tag){
+            if (!checkSampleVal(s.left) || !checkSampleVal(s.right)) {
+                printf("[VOICE DEBUG] %s L=%f R=%f\n", tag, s.left, s.right);
+            }
+        };
+
+
+
         // ---- CONTROL ----
         float env = env1.process(sr);
         lfo1.process(sr);
@@ -187,14 +210,16 @@ struct Voice {
         // ---- SOURCES ----
         for (int i = 0; i < NUM_SOURCES; ++i) {
 
-            Sample s{};
+            if (!routing.sources[i].enabled)
+                continue;
 
+            Sample s{};
             switch (i) {
                 case 0: s = oscA.process(sr, VoiceResolve::resolveOsc(oscAParams, sr)); break;
                 case 1: s = oscB.process(sr, VoiceResolve::resolveOsc(oscBParams, sr)); break;
                 case 2: s = oscC.process(sr, VoiceResolve::resolveOsc(oscCParams, sr)); break;
                 case 3: s = sub.process (sr, VoiceResolve::resolveOsc(subParams,  sr)); break;
-                case 4: s = noise.process(sr, noiseParams); break;
+                case 4: s = noise.process(sr, VoiceResolve::resolveNoise(noiseParams)); break;
             }
 
             // amp envelope BEFORE routing
@@ -205,14 +230,22 @@ struct Voice {
         }
 
         // ---- FILTER 0 ----
-        Sample f0 = VoiceDSP::processFilter(
-            filter0,
-            filter0Params,
-            0,
-            routing.filter[0].route,
-            routing.buffers,
-            sr
-        );
+        Sample f0{};
+        if (routing.filter[0].enabled) {
+            f0 = VoiceDSP::processFilter(
+                filter0,
+                filter0Params,
+                0,
+                routing.filter[0].route,
+                routing.buffers,
+                sr
+            );
+        } else {
+            // FILTER BYPASS: passthrough input
+            f0 = routing.buffers.filterInput[0];
+            routing.buffers.filterInput[0] = {};
+        }
+
 
         routing.buffers.bus1.left  += f0.left  * routing.filter[0].bus1Send;
         routing.buffers.bus1.right += f0.right * routing.filter[0].bus1Send;
@@ -221,14 +254,22 @@ struct Voice {
         routing.buffers.bus2.right += f0.right * routing.filter[0].bus2Send;
 
         // ---- FILTER 1 ----
-        Sample f1 = VoiceDSP::processFilter(
-            filter1,
-            filter1Params,
-            1,
-            routing.filter[1].route,
-            routing.buffers,
-            sr
-        );
+        Sample f1{};
+        if (routing.filter[1].enabled) {
+            f1 = VoiceDSP::processFilter(
+                filter1,
+                filter1Params,
+                1,
+                routing.filter[1].route,
+                routing.buffers,
+                sr
+            );
+        } else {
+            // FILTER BYPASS: passthrough input
+            f1 = routing.buffers.filterInput[1];
+            routing.buffers.filterInput[1] = {};
+        }
+
 
         routing.buffers.bus1.left  += f1.left  * routing.filter[1].bus1Send;
         routing.buffers.bus1.right += f1.right * routing.filter[1].bus1Send;
@@ -250,9 +291,9 @@ struct Voice {
             routing.busRoute[1],
             routing.buffers
         );
-
+        
         // ---- OUTPUT ----
-        VoiceOutput out;
+        VoiceOutput out{};
         out.main   = routing.buffers.main;
         out.bus1   = routing.buffers.bus1;
         out.bus2   = routing.buffers.bus2;

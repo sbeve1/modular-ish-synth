@@ -22,6 +22,7 @@ enum class BusRoute {
 };
 
 struct SourceRouteConfig {
+    bool enabled = false;
     SourceDest dest = SourceDest::NONE;
     float filterBlend = 0.0f;
 
@@ -30,6 +31,7 @@ struct SourceRouteConfig {
 };
 
 struct FilterRouteConfig {
+    bool enabled = false;
     FilterRoute route = FilterRoute::TO_MAIN;
     float bus1Send = 0.0f;
     float bus2Send = 0.0f;

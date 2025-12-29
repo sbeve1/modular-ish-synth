@@ -41,6 +41,11 @@ file(GLOB PLATFORM_SRC
     "external/*.cpp"
 )
 
+file(GLOB_RECURSE AUDIO_SRC
+    "src/audio/*.cpp"
+)
+
+
 # IMPORTANT: control sources (LFO.cpp lives here)
 file(GLOB CONTROL_SRC
     "src/control/*.cpp"

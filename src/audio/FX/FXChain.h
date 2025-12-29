@@ -1,41 +1,43 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include "audio/fx/FX.h"
+#include "audio/FX/FX.h"
+
 
 struct FXChain {
     std::vector<std::unique_ptr<FX>> chain;
-    float wet = 1.0f;   // global wet/dry mix for chain
     bool bypass = false;
 
-    inline Sample process(Sample s, float sr) {
-        if (bypass || chain.empty()) {
-            // wet=0 → passthrough; wet=1 → full processed
-            if (wet >= 1.0f) return s;
-            // dry/wet mix (no processing)
-            Sample out;
-            out.left  = s.left  * (1.0f - wet);
-            out.right = s.right * (1.0f - wet);
-            return out;
-        }
+    inline Sample process(Sample in, float sr)
+    {
+        if (bypass || chain.empty())
+            return in;
 
-        Sample processed = s;
-        for (auto& fxptr : chain) {
-            if (fxptr)
-                processed = fxptr->process(processed, sr);
-        }
+        for (auto& fx : chain)
+            in = fx->process(in, sr);
 
-        // mix processed and dry using wet parameter
-        Sample out;
-        out.left  = processed.left  * wet + s.left  * (1.0f - wet);
-        out.right = processed.right * wet + s.right * (1.0f - wet);
-        return out;
+        return in;
     }
 
-    inline void clear() { chain.clear(); }
+    inline void clear()
+    {
+        chain.clear();
+    }
 
-    // take ownership
-    inline void add(std::unique_ptr<FX> fx) {
+    inline void add(std::unique_ptr<FX> fx)
+    {
         chain.push_back(std::move(fx));
+    }
+
+    void registerModTargets(ModMatrix& mod)
+    {
+        for (auto& fx : chain)
+            fx->registerModTargets(mod);
+    }
+
+    void getAvailableModTargets(std::vector<ModTargetID>& out) const
+    {
+        for (auto& fx : chain)
+            fx->getAvailableModTargets(out);
     }
 };

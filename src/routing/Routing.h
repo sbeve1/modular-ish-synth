@@ -25,6 +25,10 @@ struct SourceRouting {
 
     inline void clear() { count = 0; }
 
+    inline bool isEmpty() const {
+        return count == 0;
+    }
+
     inline void add(LayerTarget t, float g) {
         if (count < (int)routes.size() && g > 0.0f)
             routes[count++] = { t, g };

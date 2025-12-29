@@ -8,10 +8,12 @@
 #include "audio/WavetableFactory.h"
 #include "audio/fx/FXChain.h"
 #include "routing/RoutingController.h"
+#include "core/CONSTANTS.h"
 
 class Synth {
 public:
-    static constexpr int NUM_VOICES = 8;
+    ModMatrix fxMod;
+
     std::array<Voice, NUM_VOICES> voices;
 
     int nextNoteId = 0;
@@ -37,4 +39,8 @@ public:
     Sample process(float sampleRate);
     void setSourceDest(SourceID src, SourceDest dest);
     void setSourceBusSend(SourceID src, BusID bus, float amount);
+    void setSourceEnabled(SourceID src, bool enabled);
+    void setFilterEnabled(int filterIndex, bool enabled);
+    void rebuildFXModulation();
+
 };

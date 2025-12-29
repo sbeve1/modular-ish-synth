@@ -1,61 +1,60 @@
 #pragma once
-
-#include <cstdint>
 #include <cmath>
-#include <algorithm>
-
+#include <cstdint>
 #include "core/Sample.h"
-#include "engine/NoiseParams.h"
-#include "core/CONSTANTS.h"
+#include "engine/voice/Resolved.h"
 
-// Simple, efficient per-voice noise source with pitch tilt/pan/level
-class Noise {
-public:
-    // ============================
-    // DSP STATE ONLY
-    // ============================
-    uint32_t seed = 2166136261u; // non-zero default
+struct Noise
+{
+    uint32_t seed = 0x12345678u;
+    float humPhase = 0.0f;
 
-    // ============================
-    // PROCESS (PURE SOURCE)
-    // ============================
-    Sample process(float /*sr*/, const NoiseParams& p)
+    inline float rand01()
     {
-        // LCG - deterministic per-voice RNG
         seed = seed * 1664525u + 1013904223u;
-
-        // 15-bit random centered -1..+1
-        float n = (float)((seed >> 16) & 0x7FFF) / 16384.0f - 1.0f;
-
-        // ----------------------------
-        // PITCH (spectral tilt)
-        // treat pitch as semitones; small tilt
-        // ----------------------------
-        float pitchSemi = p.pitchBase + p.pitchMod;
-        float pitchRatio = powf(2.0f, pitchSemi / 12.0f);
-        n *= pitchRatio;
-
-        // ----------------------------
-        // LEVEL (base + mod) then clamp
-        // ----------------------------
-        float level = std::max(0.0f, p.levelBase + p.levelMod);
-        n *= level;
-
-        // ----------------------------
-        // PAN (-1 .. +1), equal-power
-        // ----------------------------
-        float pan = std::clamp(p.panBase + p.panMod, -1.0f, 1.0f);
-        float angle = (pan + 1.0f) * 0.25f * PI; // -1..1 -> 0..pi/2
-        float l = cosf(angle);
-        float r = sinf(angle);
-
-        return { n * l, n * r };
+        return ((seed >> 9) & 0x007FFFFF) * (1.0f / 8388607.0f);
     }
 
-    // reset per-voice RNG seed (call from Voice::start)
-    void reset(uint32_t voiceSeed)
+    inline Sample process(float sr, const NoiseResolved& r)
     {
-        // avoid zero seed for LCG
-        seed = (voiceSeed == 0u) ? 2166136261u : voiceSeed;
+        if (r.level <= 1e-6f)
+            return {};
+
+        float n = 0.0f;
+
+        switch (r.mode) {
+            case NoiseMode::WHITE:
+                n = rand01() * 2.0f - 1.0f;
+                break;
+
+            case NoiseMode::AC_HUM: {
+                float baseHz = 60.0f * r.pitch;
+                float inc = TWO_PI * baseHz / sr;
+
+                humPhase += inc;
+                if (humPhase >= TWO_PI)
+                    humPhase -= TWO_PI;
+
+                n =
+                    1.0f * std::sin(humPhase) +
+                    0.5f * std::sin(2.0f * humPhase) +
+                    0.25f * std::sin(3.0f * humPhase);
+                break;
+            }
+        }
+
+        n *= r.level;
+
+        float angle = (r.pan + 1.0f) * 0.25f * PI;
+        return {
+            n * std::cos(angle),
+            n * std::sin(angle)
+        };
+    }
+
+    inline void reset()
+    {
+        seed = 0x12345678u;
+        humPhase = 0.0f;
     }
 };

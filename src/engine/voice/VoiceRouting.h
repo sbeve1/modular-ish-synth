@@ -48,17 +48,28 @@ private:
         auto& out = routing[i];
         const auto& s = sources[i];
 
+        if (s.dest == SourceDest::NONE) {
+            return; // routing[i] stays empty
+        }
+
         if (s.dest == SourceDest::FILTER) {
             float b = std::clamp(s.filterBlend, 0.0f, 1.0f);
             out.add(LayerTarget::FILTER0, 1.0f - b);
             out.add(LayerTarget::FILTER1, b);
-        } else if (s.dest == SourceDest::MAIN) {
+        }
+        else if (s.dest == SourceDest::MAIN) {
             out.add(LayerTarget::MAIN, 1.0f);
-        } else if (s.dest == SourceDest::DIRECT) {
+        }
+        else if (s.dest == SourceDest::DIRECT) {
             out.add(LayerTarget::DIRECT, 1.0f);
         }
 
-        out.add(LayerTarget::BUS1, std::clamp(s.bus1Send, 0.0f, 1.0f));
-        out.add(LayerTarget::BUS2, std::clamp(s.bus2Send, 0.0f, 1.0f));
+        // ✅ bus sends only if source exists
+        if (s.bus1Send > 0.0f)
+            out.add(LayerTarget::BUS1, std::clamp(s.bus1Send, 0.0f, 1.0f));
+
+        if (s.bus2Send > 0.0f)
+            out.add(LayerTarget::BUS2, std::clamp(s.bus2Send, 0.0f, 1.0f));
     }
+
 };
