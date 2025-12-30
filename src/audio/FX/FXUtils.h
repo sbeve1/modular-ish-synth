@@ -20,6 +20,6 @@ inline float killDenorm(float x)
 
 
 // global constants for Serum-style behavior
-constexpr float SERUM_FX_SEND_GAIN = 0.18f; // ~ -15dB, hard-coded "quiet" send
+constexpr float SERUM_FX_SEND_GAIN = 0.12f; // ~ -18.4 dB
 constexpr float SERUM_BUS_PRE_SAT   = 0.95f; // slight attenuation before bus sat
 constexpr float SERUM_MASTER_GAIN   = 0.85f; // reasonable master headroom

@@ -1,13 +1,26 @@
 #include "Synth.h"
 #include <limits>
+#include <cmath>
 
 #include "audio/FX/ReverbFX.h"
 #include "audio/FX/DelayFX.h"
 #include "audio/FX/FXUtils.h"
 
 Synth::Synth()
-{   
+{
     basicWavetable = WavetableFactory::makeBasicShapes();
+
+    // ----------------------------
+    // FX CHAINS
+    // ----------------------------
+    bus1FX.clear();
+    bus1FX.add(std::make_unique<ReverbFX>(44100.0f));
+
+    bus2FX.clear();
+    // bus2FX.add(std::make_unique<DelayFX>(44100.0f)); // optional
+
+    mainFX.clear();
+    mainFX.add(std::make_unique<ReverbFX>(44100.0f));
 }
 
 void Synth::noteOn(int note, float velocity)
@@ -36,7 +49,7 @@ void Synth::noteOn(int note, float velocity)
 
     chosen->state.noteId = nextNoteId++;
     chosen->start(note, velocity, &basicWavetable);
-    
+
     chosen->oscAParams = oscAParams;
     chosen->oscBParams = oscBParams;
     chosen->oscCParams = oscCParams;
@@ -69,25 +82,22 @@ void Synth::noteOff(int note)
 
 Sample Synth::process(float sr)
 {
-    constexpr float VOICE_GAIN = 0.353553f;
+    constexpr float VOICE_GAIN  = 0.353553f;
     constexpr float MASTER_GAIN = 0.7f;
-    constexpr float FX_RETURN_GAIN = 1.0f;
 
     fxMod.process(sr);
 
+    // ----------------------------
+    // BUS ACCUMULATORS
+    // ----------------------------
     Sample main{};
+    Sample bus1{};
+    Sample bus2{};
     Sample direct{};
-    Sample bus1In{};
-    Sample bus2In{};
 
     // ----------------------------
-    // COUNT ACTIVE VOICES
+    // VOICE SUMMING
     // ----------------------------
-    int activeVoices = 0;
-    for (auto& v : voices)
-        if (v.state.active)
-            activeVoices++;
-
     for (auto& v : voices) {
         if (!v.state.active) continue;
 
@@ -99,37 +109,67 @@ Sample Synth::process(float sr)
         direct.left  += vo.direct.left  * VOICE_GAIN;
         direct.right += vo.direct.right * VOICE_GAIN;
 
-        bus1In.left  += vo.bus1.left  * VOICE_GAIN * SERUM_FX_SEND_GAIN;
-        bus1In.right += vo.bus1.right * VOICE_GAIN * SERUM_FX_SEND_GAIN;
+        bus1.left  += vo.bus1.left  * VOICE_GAIN * SERUM_FX_SEND_GAIN;
+        bus1.right += vo.bus1.right * VOICE_GAIN * SERUM_FX_SEND_GAIN;
 
-        bus2In.left  += vo.bus2.left  * VOICE_GAIN * SERUM_FX_SEND_GAIN;
-        bus2In.right += vo.bus2.right * VOICE_GAIN * SERUM_FX_SEND_GAIN;
+        bus2.left  += vo.bus2.left  * VOICE_GAIN * SERUM_FX_SEND_GAIN;
+        bus2.right += vo.bus2.right * VOICE_GAIN * SERUM_FX_SEND_GAIN;
+    }
+
+    // ============================================================
+    // BUS 1 FX (SNAPSHOT → FX → ADD BACK)
+    // ============================================================
+    {
+        Sample bus1FXIn = bus1;                    // snapshot
+        Sample bus1Wet  = bus1FX.process(bus1FXIn, sr);
+
+        bus1Wet.left  = serumSat(bus1Wet.left);
+        bus1Wet.right = serumSat(bus1Wet.right);
+
+        bus1.left  += bus1Wet.left;
+        bus1.right += bus1Wet.right;
+    }
+
+    // ============================================================
+    // BUS 2 FX (SNAPSHOT → FX → ADD BACK)
+    // ============================================================
+    {
+        Sample bus2FXIn = bus2;                    // snapshot
+        Sample bus2Wet  = bus2FX.process(bus2FXIn, sr);
+
+        bus2Wet.left  = serumSat(bus2Wet.left);
+        bus2Wet.right = serumSat(bus2Wet.right);
+
+        bus2.left  += bus2Wet.left;
+        bus2.right += bus2Wet.right;
     }
 
     // ----------------------------
-    // FX ALWAYS RUN
+    // ROUTE BUSES INTO MAIN
     // ----------------------------
-    Sample bus1Out = bus1FX.process(bus1In, sr);
-    Sample bus2Out = bus2FX.process(bus2In, sr);
+    main.left  += bus1.left + bus2.left;
+    main.right += bus1.right + bus2.right;
 
-    bus1Out.left  = serumSat(bus1Out.left);
-    bus1Out.right = serumSat(bus1Out.right);
-    bus2Out.left  = serumSat(bus2Out.left);
-    bus2Out.right = serumSat(bus2Out.right);
+    // ============================================================
+    // MAIN FX (SNAPSHOT → FX → ADD BACK)
+    // ============================================================
+    {
+        Sample mainFXIn = main;                    // snapshot
+        Sample mainWet  = mainFX.process(mainFXIn, sr);
 
-    main.left  += (bus1Out.left  + bus2Out.left)  * FX_RETURN_GAIN;
-    main.right += (bus1Out.right + bus2Out.right) * FX_RETURN_GAIN;
+        main.left  += mainWet.left;
+        main.right += mainWet.right;
+    }
 
-    main = mainFX.process(main, sr);
-
-    if (fabs(main.left)  > 1e-6f) main.left  = serumLimiter(main.left);
-    if (fabs(main.right) > 1e-6f) main.right = serumLimiter(main.right);
-
+    // ----------------------------
+    // MASTER
+    // ----------------------------
+    main.left  = serumLimiter(main.left);
+    main.right = serumLimiter(main.right);
 
     Sample out{};
     out.left  = (main.left  + direct.left)  * MASTER_GAIN;
     out.right = (main.right + direct.right) * MASTER_GAIN;
-    
     return out;
 }
 
@@ -160,9 +200,6 @@ void Synth::setSourceBusSend(SourceID src, BusID bus, float amount)
 void Synth::rebuildFXModulation()
 {
     fxMod.clearAll();
-
-    // (optional) register macro / global sources here later
-
     bus1FX.registerModTargets(fxMod);
     bus2FX.registerModTargets(fxMod);
     mainFX.registerModTargets(fxMod);
