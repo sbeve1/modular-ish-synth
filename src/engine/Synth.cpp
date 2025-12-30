@@ -17,7 +17,7 @@ Synth::Synth()
     bus1FX.add(std::make_unique<ReverbFX>(44100.0f));
 
     bus2FX.clear();
-    // bus2FX.add(std::make_unique<DelayFX>(44100.0f)); // optional
+    bus2FX.add(std::make_unique<DelayFX>(44100.0f));
 
     mainFX.clear();
     mainFX.add(std::make_unique<ReverbFX>(44100.0f));
@@ -150,16 +150,22 @@ Sample Synth::process(float sr)
     main.left  += bus1.left + bus2.left;
     main.right += bus1.right + bus2.right;
 
-    // ============================================================
-    // MAIN FX (SNAPSHOT → FX → ADD BACK)
-    // ============================================================
+    // MAIN FX — SERUM STYLE SEND
     {
-        Sample mainFXIn = main;                    // snapshot
-        Sample mainWet  = mainFX.process(mainFXIn, sr);
+        Sample mainFXIn = main;
+
+        mainFXIn.left  *= SERUM_FX_SEND_GAIN;
+        mainFXIn.right *= SERUM_FX_SEND_GAIN;
+
+        Sample mainWet = mainFX.process(mainFXIn, sr);
+
+        mainWet.left  = serumSat(mainWet.left);
+        mainWet.right = serumSat(mainWet.right);
 
         main.left  += mainWet.left;
         main.right += mainWet.right;
     }
+
 
     // ----------------------------
     // MASTER

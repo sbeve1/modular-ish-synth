@@ -18,7 +18,7 @@ public:
 
     // Public settings (can be modulated via ModMatrix)
     bool bypass = false;     // global bypass for the whole unit
-    float wetBase = 1.0f;    // base wet amount (0.0 .. 1.0)
+    float wetBase = 0.25f;    // base wet amount (0.0 .. 1.0)
     float wetMod  = 0.0f;    // modulated wet delta (added to wetBase when computing wet)
 
     // Subclasses must implement this and return 100% wet output based on the input.

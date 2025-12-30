@@ -49,7 +49,7 @@ int main()
     initLFOShape();
 
     // PRETEND UI STATE
-    synth.setSourceEnabled(SourceID::NOISE, true);
+    // synth.setSourceEnabled(SourceID::NOISE, true);
     synth.oscAParams.wtPosBase = 1.0f; // wavetable is on square
 
 

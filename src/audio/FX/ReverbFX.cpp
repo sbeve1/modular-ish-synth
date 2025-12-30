@@ -6,8 +6,13 @@
 // ------------------------------------------------------------
 float ReverbFX::Comb::process(float x)
 {
+    constexpr float MAX_FEEDBACK = 0.78f;
+
     float y = buf[idx];
-    buf[idx] = x + y * feedback;
+    
+    float fb = std::min(feedback, MAX_FEEDBACK);
+    buf[idx] = x + y * fb;
+
     idx = (idx + 1) % buf.size();
     return y;
 }
@@ -77,15 +82,20 @@ Sample ReverbFX::processByMode(const Sample& in)
 // Plate
 // ------------------------------------------------------------
 Sample ReverbFX::processPlate(const Sample& in)
-{
-    float inL = in.left  * 2.0f;
-    float inR = in.right * 2.0f;
+{   
+    constexpr float REVERB_INPUT_GAIN = 0.35f;
+    constexpr float REVERB_OUT_GAIN = 0.35f;
+
+    float inL = in.left  * REVERB_INPUT_GAIN;
+    float inR = in.right * REVERB_INPUT_GAIN;
+
 
     float accL = 0.0f;
     float accR = 0.0f;
 
-    for (auto& c : combL) accL += c.process(inL);
-    for (auto& c : combR) accR += c.process(inR);
+    for (auto& c : combL) accL += c.process(inL) * 0.85f;
+
+    for (auto& c : combR) accR += c.process(inR) * 0.85f;
 
     accL *= (1.0f / combL.size());
     accR *= (1.0f / combR.size());
@@ -94,8 +104,10 @@ Sample ReverbFX::processPlate(const Sample& in)
     for (auto& ap : apR) accR = ap.process(accR);
 
     Sample out{};
-    out.left  = accL * 0.6f;
-    out.right = accR * 0.6f;
+
+    out.left  = accL * REVERB_OUT_GAIN;
+    out.right = accR * REVERB_OUT_GAIN;
+
     return out;
 }
 
