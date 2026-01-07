@@ -40,10 +40,10 @@ public:
     // =========================
     // Plate
     // =========================
-    float plateDampBase  = 0.3f;
+    float plateDampBase  = 0.25f;
     float plateDampMod   = 0.0f;
 
-    float plateWidthBase = 0.7f;
+    float plateWidthBase = 0.4f;
     float plateWidthMod  = 0.0f;
 
     // =========================

@@ -20,7 +20,7 @@ struct VoiceInit {
         // ============================
 
         // OSC A
-        routing.sources[0].dest = SourceDest::FILTER;
+        routing.sources[0].dest = SourceDest::MAIN;
         routing.sources[0].filterBlend = 0.0f;   // 100% Filter0
         routing.sources[0].bus1Send = 0.0f;
         routing.sources[0].bus2Send = 0.0f;
