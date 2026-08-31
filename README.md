@@ -1,8 +1,8 @@
 # Real-Time Software Synthesizer (C++)
 
-A real-time polyphonic software synthesizer written in modern C++, built as a portfolio / university DSP project. It focuses on DSP fundamentals, real-time engine architecture, and audio-thread constraints rather than UI polish or product completeness — the goal is to demonstrate a correctly engineered signal path from MIDI input to audio output, not to build a feature-complete commercial instrument.
+A real-time polyphonic software synthesizer written in modern C++, built as a portfolio / university DSP project. It focuses on DSP fundamentals, real-time engine architecture, and audio-thread constraints rather than UI polish or product completeness. The goal is to demonstrate a correctly engineered signal path from MIDI input to audio output, not to build a feature-complete commercial instrument.
 
-Author: [Tevin Nguyen] — [tevinsynguyen@gmail.com]
+Author: [Tevin Nguyen] - [tevinsynguyen@gmail.com]
 
 ---
 
