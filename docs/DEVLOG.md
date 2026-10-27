@@ -75,6 +75,27 @@ design, miniaudio, RtMidi, the WAV render approach.
   replaced with neutral near-black, white text, one green accent for values
   and white for modulation.
 
+### Round 2: instrument features
+- **Arpeggiator** on the audio thread, stepped per control block (16 samples,
+  0.33 ms) so timing doesn't depend on the UI. Physical keys and arp notes take
+  separate voice paths, so mono/legato fallback and the sustain pedal don't
+  interfere with arp notes. Test: Up mode at 1/16, 120 BPM plays 60-64-67 in
+  order at the right rate.
+- **Second filter** with series/parallel routing (test: LP 400 Hz into HP 4 kHz
+  cuts to silence in series, passes in parallel).
+- **Drawable LFO shapes**: breakpoints with per-segment curves, rendered to a
+  256-point table on the UI thread and published with the same epoch-based
+  pointer swap as wavetables (the manager became `ResourceManager`).
+- **Effects**: 3-band EQ (RBJ biquads), compressor (stereo-linked, soft knee,
+  gain reduction shown in the UI), 6-stage phaser, flanger. The rack order is a
+  single atomic, one nibble per slot, so reordering is lock-free and saved in
+  presets.
+- **Undo/redo**: snapshot history that commits once changes settle (mouse up,
+  nothing moving for 350 ms), so a knob drag, a MIDI CC sweep or a preset load
+  is one step no matter what caused it.
+- Zero-allocation test now runs with everything on: arp, both filters, custom
+  LFO, all 8 effects in reversed order.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX
@@ -82,4 +103,5 @@ design, miniaudio, RtMidi, the WAV render approach.
 - [x] GUI: synth, matrix, FX, global pages; 3D wavetables; editors
 - [x] Presets, wavetable editor
 - [x] Self-test, benchmark, README
+- [x] Arpeggiator, second filter, drawable LFO, EQ/compressor/phaser/flanger, undo/redo
 - [ ] Browser build (needs the Emscripten toolchain installed)

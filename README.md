@@ -15,14 +15,17 @@ and a headless tool for rendering, benchmarking and self-testing.
   generate shapes or harmonics, morph-fill between frames
 - Unison up to 16 voices per oscillator (detune, blend, stereo width), 5 warp
   modes (bend, PWM, sync, mirror, fold), a sub oscillator, and noise (white, pink, brown)
-- Multimode zero-delay-feedback filter: LP/BP/HP at 12 and 24 dB, notch, peak,
-  drive, key tracking
-- 3 envelopes with curve control and 4 LFOs (7 shapes, free/retrigger/one-shot,
-  tempo sync, rise, smoothing)
+- Two multimode zero-delay-feedback filters (LP/BP/HP at 12 and 24 dB, notch,
+  peak, drive, key tracking), in series or parallel
+- 3 envelopes with curve control and 4 LFOs (7 shapes plus a custom shape you
+  draw; free/retrigger/one-shot, tempo sync, rise, smoothing)
 - Mod matrix with 32 slots: any source to any parameter, with aux scaling,
   Add/Multiply modes and response curves
-- Effects: distortion (5 modes), chorus, ping-pong delay, 8-line FDN reverb,
-  output limiter
+- Effects rack with 8 effects in any order (drag to reorder): distortion (5
+  modes), phaser, flanger, chorus, ping-pong delay, 8-line FDN reverb, 3-band
+  EQ, compressor; plus an output limiter
+- Arpeggiator: Up, Down, Up/Down, Random, As Played, Chord; tempo-synced rate,
+  1-4 octaves, gate, swing, hold
 - Up to 16 voices, poly/mono/legato, glide, sustain pedal
 - 16 factory presets; user presets are saved as readable text files
 
@@ -38,8 +41,10 @@ and a headless tool for rendering, benchmarking and self-testing.
 - 3D wavetable view (drag to rotate) that follows the playing position
 - Knobs show modulation rings and the live modulated value. Drag a mod source
   onto any knob to route it; Alt+drag sets the depth
-- Envelope editor with draggable points and curves, LFO view with a live phase
-  marker, draggable filter response curve
+- Envelope editor with draggable points and curves; LFO view with a live phase
+  marker, editable as a drawn shape; draggable filter and EQ response curves;
+  compressor transfer curve with a gain-reduction meter
+- Undo/redo for everything (Ctrl+Z, Ctrl+Y)
 - Oscilloscope, spectrum analyzer, level meters and a CPU graph
 
 ## Build (Windows)
@@ -92,14 +97,17 @@ build/vs/app/Release/nullwave_cli.exe bench
    knobs ─────► ParamStore ◄──────── MIDI learn (CC -> param)
                 (atomic floats)
    keys/piano ► SPSC ring            notes/CC ────► SPSC ring
-   wavetables ► atomic pointer swap (freed after 2 audio callbacks)
+   wavetables,
+   LFO curves ► atomic pointer swap (freed after 2 audio callbacks)
+   FX order   ► one atomic (a nibble per rack slot)
                         │
                         ▼
               Audio thread (miniaudio callback)
               snapshot params + mod slots (once per block)
               voices: osc A/B + sub + noise ─► filter ─► amp
               mod matrix every 16 samples
-              distortion ─► chorus ─► delay ─► reverb ─► master ─► limiter
+              arpeggiator steps every 16 samples on the same thread
+              FX rack in user order (8 effects) ─► master ─► limiter
                         │
                         ▼
               Telemetry (atomics): scope, meters, newest voice's

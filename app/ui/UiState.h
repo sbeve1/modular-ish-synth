@@ -6,6 +6,7 @@
 #include "engine/Instrument.h"
 #include "engine/Presets.h"
 #include "engine/ResourceManager.h"
+#include "ui/Undo.h"
 
 class MidiHost;
 class AudioHost;
@@ -23,7 +24,10 @@ struct UiState {
     // pages
     enum Page { PageSynth, PageMatrix, PageFx, PageGlobal };
     int page = PageSynth;
-    int envTab = 0, lfoTab = 0;
+    int envTab = 0, lfoTab = 0, filterTab = 0;
+    int fxSelected = 0;           // FxId shown in the FX editor
+
+    UndoHistory undo;
 
     // presets
     std::vector<Preset> factory;

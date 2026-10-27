@@ -50,15 +50,25 @@ static bool writeBmp(const char* path, int w, int h)
 int main(int argc, char** argv)
 {
     // dev options: --screenshot out.bmp [--page N] [--preset N] [--demo] [--wtedit]
+    //              [--set key=value]... [--fx N] [--lfotab N] [--filtertab N]
     const char* shotPath = nullptr;
-    int page = 0, preset = -1;
+    int page = 0, preset = -1, fxSel = -1, lfoTab = 0, filterTab = 0;
     bool demo = false, wtEditor = false;
+    std::vector<std::pair<std::string, float>> sets;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--screenshot") && i + 1 < argc) shotPath = argv[++i];
         else if (!std::strcmp(argv[i], "--page") && i + 1 < argc) page = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--preset") && i + 1 < argc) preset = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--demo")) demo = true;
         else if (!std::strcmp(argv[i], "--wtedit")) wtEditor = true;
+        else if (!std::strcmp(argv[i], "--fx") && i + 1 < argc) fxSel = std::atoi(argv[++i]);
+        else if (!std::strcmp(argv[i], "--lfotab") && i + 1 < argc) lfoTab = std::atoi(argv[++i]);
+        else if (!std::strcmp(argv[i], "--filtertab") && i + 1 < argc) filterTab = std::atoi(argv[++i]);
+        else if (!std::strcmp(argv[i], "--set") && i + 1 < argc) {
+            std::string kv = argv[++i];
+            size_t eq = kv.find('=');
+            if (eq != std::string::npos) sets.push_back({ kv.substr(0, eq), (float)std::atof(kv.c_str() + eq + 1) });
+        }
     }
 
     if (!glfwInit()) return 1;
@@ -68,7 +78,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
     GLFWwindow* window = glfwCreateWindow(1480, 920, "Nullwave", nullptr, nullptr);
     if (!window) { glfwTerminate(); return 1; }
-    glfwSetWindowSizeLimits(window, 1300, 820, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowSizeLimits(window, 1400, 820, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);   // vsync: the UI never needs more than the display rate
 
@@ -102,6 +112,13 @@ int main(int argc, char** argv)
     ui.page = page;
     ui.wtEditorOpen = wtEditor;
     if (preset >= 0) app::loadPreset(ui, preset);
+    for (auto& [key, v] : sets) {
+        int p = findParam(key.c_str());
+        if (p >= 0) shared->params.setValue((P)p, v);
+    }
+    if (fxSel >= 0) ui.fxSelected = fxSel;
+    ui.lfoTab = lfoTab;
+    ui.filterTab = filterTab;
     int frameCount = 0;
 
     while (!glfwWindowShouldClose(window)) {

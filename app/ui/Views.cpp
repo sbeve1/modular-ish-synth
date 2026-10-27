@@ -320,12 +320,12 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
 // ---------------------------------------------------------------------
 // LFO
 // ---------------------------------------------------------------------
-void LfoShapeIcon(ImDrawList* dl, int shape, ImVec2 a, ImVec2 b, ImU32 col)
+void LfoShapeIcon(UiState& ui, int lfo, ImDrawList* dl, int shape, ImVec2 a, ImVec2 b, ImU32 col)
 {
     ImVec2 pts[24];
     for (int i = 0; i < 24; ++i) {
         float p = i / 23.0f;
-        float v = lfoShapePreview((LfoShape)shape, p);
+        float v = shape == (int)LfoShape::Custom ? evalLfoCurve(ui.wt.lfoCurve(lfo), p) : lfoShapePreview((LfoShape)shape, p);
         pts[i] = ImVec2(a.x + (b.x - a.x) * p, (a.y + b.y) * 0.5f - v * (b.y - a.y) * 0.45f);
     }
     dl->AddPolyline(pts, 24, col, 0, 1.5f);
@@ -334,36 +334,123 @@ void LfoShapeIcon(ImDrawList* dl, int shape, ImVec2 a, ImVec2 b, ImU32 col)
 void LfoGraph(UiState& ui, int lfo, ImVec2 size)
 {
     ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::PushID(lfo + 34000);
     ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
-    ImGui::Dummy(size);
+    auto shape = (LfoShape)(int)ui.s.params.value(lfoParam(lfo, P::LFO1_SHAPE));
+    const bool custom = shape == LfoShape::Custom;
+    ImGui::InvisibleButton("##lfo", size);
+    const bool hovered = ImGui::IsItemHovered(), active = ImGui::IsItemActive();
     frameBg(dl, a, b);
 
-    auto shape = (LfoShape)(int)ui.s.params.value(lfoParam(lfo, P::LFO1_SHAPE));
-    const float pad = 8.0f, mid = (a.y + b.y) * 0.5f, amp = (size.y - pad * 2) * 0.45f;
-    dl->AddLine(ImVec2(a.x + pad, mid), ImVec2(b.x - pad, mid), theme::rgba(33, 33, 34));
+    const float pad = 10.0f, mid = (a.y + b.y) * 0.5f, amp = (size.y - pad * 2) * 0.45f;
+    const float x0 = a.x + pad, w = size.x - pad * 2;
+    auto toScreen = [&](float x, float y) { return ImVec2(x0 + x * w, mid - y * amp); };
+    dl->AddLine(ImVec2(x0, mid), ImVec2(x0 + w, mid), theme::rgba(30, 30, 33));
     for (int q = 1; q < 4; ++q) {
-        float x = a.x + pad + (size.x - pad * 2) * q / 4.0f;
-        dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::rgba(26, 26, 27));
+        float x = x0 + w * q / 4.0f;
+        dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::rgba(22, 22, 25));
     }
 
-    const int N = 160;
-    ImVec2 pts[N];
+    // ---- custom shape editing ----
+    std::vector<LfoPoint> pts = ui.wt.lfoCurve(lfo);
+    int hoverPt = -1, hoverSeg = -1;
+    if (custom) {
+        float bestD = 10.0f * 10.0f;
+        for (int i = 0; i < (int)pts.size(); ++i) {
+            ImVec2 p = toScreen(pts[i].x, pts[i].y);
+            float d = (p.x - io.MousePos.x) * (p.x - io.MousePos.x) + (p.y - io.MousePos.y) * (p.y - io.MousePos.y);
+            if (d < bestD) { bestD = d; hoverPt = i; }
+        }
+        if (hoverPt < 0) {
+            for (int i = 0; i + 1 < (int)pts.size(); ++i) {
+                float mx = 0.5f * (pts[i].x + pts[i + 1].x);
+                ImVec2 p = toScreen(mx, evalLfoCurve(pts, mx));
+                float d = (p.x - io.MousePos.x) * (p.x - io.MousePos.x) + (p.y - io.MousePos.y) * (p.y - io.MousePos.y);
+                if (d < bestD) { bestD = d; hoverSeg = i; }
+            }
+        }
+
+        ImGuiStorage* st = ImGui::GetStateStorage();
+        ImGuiID idPt = ImGui::GetID("pt"), idSeg = ImGui::GetID("seg");
+        bool changed = false;
+        float mx = std::clamp((io.MousePos.x - x0) / w, 0.0f, 1.0f);
+        float my = std::clamp((mid - io.MousePos.y) / amp, -1.0f, 1.0f);
+
+        if (ImGui::IsItemActivated()) {
+            if (hoverPt >= 0)       { st->SetInt(idPt, hoverPt); st->SetInt(idSeg, -1); }
+            else if (hoverSeg >= 0) { st->SetInt(idPt, -1); st->SetInt(idSeg, hoverSeg); }
+            else {                  // add a point and start dragging it
+                LfoPoint np{ mx, my, 0.0f };
+                int at = 0;
+                while (at < (int)pts.size() && pts[at].x < mx) ++at;
+                if (at == 0) at = 1;
+                if (at >= (int)pts.size()) at = (int)pts.size() - 1;
+                pts.insert(pts.begin() + at, np);
+                st->SetInt(idPt, at); st->SetInt(idSeg, -1);
+                changed = true;
+            }
+        }
+        if (active && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
+            int pi = st->GetInt(idPt, -1), si = st->GetInt(idSeg, -1);
+            if (pi >= 0 && pi < (int)pts.size()) {
+                bool end = pi == 0 || pi == (int)pts.size() - 1;
+                if (!end) pts[pi].x = std::clamp(mx, pts[pi - 1].x + 0.001f, pts[pi + 1].x - 0.001f);
+                pts[pi].y = my;
+                changed = true;
+            } else if (si >= 0 && si + 1 < (int)pts.size()) {
+                float dir = pts[si + 1].y >= pts[si].y ? 1.0f : -1.0f;
+                pts[si].curve = std::clamp(pts[si].curve + io.MouseDelta.y * 0.012f * dir, -1.0f, 1.0f);
+                changed = true;
+            }
+        }
+        if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+            if (hoverPt > 0 && hoverPt < (int)pts.size() - 1) { pts.erase(pts.begin() + hoverPt); changed = true; }
+            else if (hoverSeg >= 0) { pts[hoverSeg].curve = 0.0f; changed = true; }
+        }
+        if (changed) { ui.wt.setLfoCurve(lfo, pts); pts = ui.wt.lfoCurve(lfo); ui.presetDirty = true; }
+        if (hovered && !active && ImGui::GetCurrentContext()->HoveredIdTimer > 0.8f)
+            ImGui::SetTooltip("Click: add point   Drag: move point / bend segment\nRight-click: delete point / straighten segment");
+    }
+
+    // ---- curve ----
+    const int N = 200;
+    ImVec2 line[N];
     for (int i = 0; i < N; ++i) {
         float p = (float)i / (N - 1);
-        pts[i] = ImVec2(a.x + pad + (size.x - pad * 2) * p, mid - lfoShapePreview(shape, p) * amp);
+        float y = custom ? evalLfoCurve(pts, p) : lfoShapePreview(shape, p);
+        line[i] = toScreen(p, y);
     }
-    { NoAAFill noaa(dl);
-    for (int i = 1; i < N; ++i)
-        dl->AddQuadFilled(pts[i - 1], pts[i], ImVec2(pts[i].x, mid), ImVec2(pts[i - 1].x, mid), theme::withAlpha(theme::mod, 0.10f)); }
-    dl->AddPolyline(pts, N, theme::mod, 0, 2.0f);
+    {
+        NoAAFill noaa(dl);
+        for (int i = 1; i < N; ++i)
+            dl->AddQuadFilled(line[i - 1], line[i], ImVec2(line[i].x, mid), ImVec2(line[i - 1].x, mid), theme::withAlpha(theme::mod, 0.08f));
+    }
+    dl->AddPolyline(line, N, theme::mod, 0, 2.0f);
 
+    if (custom) {
+        for (int i = 0; i + 1 < (int)pts.size(); ++i) {
+            float mx = 0.5f * (pts[i].x + pts[i + 1].x);
+            ImVec2 p = toScreen(mx, evalLfoCurve(pts, mx));
+            dl->AddCircle(p, i == hoverSeg ? 5.0f : 3.5f, theme::withAlpha(theme::mod, i == hoverSeg ? 1.0f : 0.45f), 12, 1.5f);
+        }
+        for (int i = 0; i < (int)pts.size(); ++i) {
+            ImVec2 p = toScreen(pts[i].x, pts[i].y);
+            float r = i == hoverPt ? 6.0f : 4.5f;
+            dl->AddCircleFilled(p, r, theme::rgba(11, 11, 12));
+            dl->AddCircle(p, r, theme::mod, 16, 2.0f);
+        }
+    }
+
+    // ---- live phase ----
     float ph = frac01(ui.s.telemetry.lfoPhase[lfo].load(std::memory_order_relaxed));
     float v = ui.s.telemetry.srcValue[(int)ModSrc::Lfo1 + lfo].load(std::memory_order_relaxed);
-    float x = a.x + pad + (size.x - pad * 2) * ph;
-    dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::withAlpha(theme::mod, 0.35f));
+    float x = x0 + w * ph;
+    dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::withAlpha(theme::mod, 0.3f));
     ImVec2 dot(x, mid - std::clamp(v, -1.0f, 1.0f) * amp);
-    dl->AddCircleFilled(dot, 7.0f, theme::withAlpha(theme::mod, 0.3f));
-    dl->AddCircleFilled(dot, 3.5f, IM_COL32_WHITE);
+    dl->AddCircleFilled(dot, 7.0f, theme::withAlpha(theme::mod, 0.25f));
+    dl->AddCircleFilled(dot, 3.5f, theme::accent);
+    ImGui::PopID();
 }
 
 // ---------------------------------------------------------------------
@@ -386,40 +473,42 @@ static float filterMagDb(int type, float f, float cutoff, float res)
     return 20.0f * std::log10(std::max(m, 1e-6f));
 }
 
-void FilterResponse(UiState& ui, ImVec2 size)
+void FilterResponse(UiState& ui, int filter, ImVec2 size)
 {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImGuiIO& io = ImGui::GetIO();
+    ImGui::PushID(filter + 33000);
     ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
     ImGui::InvisibleButton("##flt", size);
     bool active = ImGui::IsItemActive();
     frameBg(dl, a, b);
 
+    auto fp = [&](P p) { return fltParam(filter, p); };
     const float fMin = 20.0f, fMax = 20000.0f, dbTop = 24.0f, dbBot = -36.0f;
     auto xOf = [&](float f) { return a.x + size.x * std::log(f / fMin) / std::log(fMax / fMin); };
     auto yOf = [&](float db) { return a.y + size.y * (dbTop - std::clamp(db, dbBot, dbTop)) / (dbTop - dbBot); };
 
     if (active && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
         float t = std::clamp((io.MousePos.x - a.x) / size.x, 0.0f, 1.0f);
-        ui.s.params.setValue(P::FLT_CUTOFF, fMin * std::pow(fMax / fMin, t));
-        ui.s.params.setValue(P::FLT_RES, std::clamp(1.0f - (io.MousePos.y - a.y) / size.y, 0.0f, 1.0f));
+        ui.s.params.setValue(fp(P::FLT_CUTOFF), fMin * std::pow(fMax / fMin, t));
+        ui.s.params.setValue(fp(P::FLT_RES), std::clamp(1.0f - (io.MousePos.y - a.y) / size.y, 0.0f, 1.0f));
         ui.presetDirty = true;
     }
     if (ImGui::IsItemHovered() && !active && ImGui::GetCurrentContext()->HoveredIdTimer > 0.8f)
         ImGui::SetTooltip("Drag: left/right = cutoff, up/down = resonance");
 
-    for (float f : { 100.0f, 1000.0f, 10000.0f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(30, 30, 31));
-    for (float f : { 50.f, 200.f, 500.f, 2000.f, 5000.f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(22, 22, 23));
-    dl->AddLine(ImVec2(a.x, yOf(0.0f)), ImVec2(b.x, yOf(0.0f)), theme::rgba(40, 40, 41));
+    for (float f : { 100.0f, 1000.0f, 10000.0f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(30, 30, 33));
+    for (float f : { 50.f, 200.f, 500.f, 2000.f, 5000.f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(22, 22, 25));
+    dl->AddLine(ImVec2(a.x, yOf(0.0f)), ImVec2(b.x, yOf(0.0f)), theme::rgba(40, 40, 44));
 
-    int type = (int)ui.s.params.value(P::FLT_TYPE);
-    bool on = ui.s.params.value(P::FLT_ON) > 0.5f;
-    auto draw = [&](float cutoff, float res, ImU32 col, float thick, bool fill) {
+    auto draw = [&](int f, float cutoff, float res, ImU32 col, float thick, bool fill) {
+        int type = (int)ui.s.params.value(fltParam(f, P::FLT_TYPE));
+        bool on = ui.s.params.value(fltParam(f, P::FLT_ON)) > 0.5f;
         const int N = 140;
         ImVec2 pts[N];
         for (int i = 0; i < N; ++i) {
-            float f = fMin * std::pow(fMax / fMin, (float)i / (N - 1));
-            pts[i] = ImVec2(xOf(f), yOf(on ? filterMagDb(type, f, cutoff, res) : 0.0f));
+            float fr = fMin * std::pow(fMax / fMin, (float)i / (N - 1));
+            pts[i] = ImVec2(xOf(fr), yOf(on ? filterMagDb(type, fr, cutoff, res) : 0.0f));
         }
         if (fill) {
             NoAAFill noaa(dl);
@@ -429,23 +518,32 @@ void FilterResponse(UiState& ui, ImVec2 size)
         dl->AddPolyline(pts, N, col, 0, thick);
     };
 
-    float cutoff = ui.s.params.value(P::FLT_CUTOFF), res = ui.s.params.value(P::FLT_RES);
-    draw(cutoff, res, theme::accent, 2.0f, true);
+    // the other filter, dimmed, for context
+    int other = 1 - filter;
+    if (ui.s.params.value(fltParam(other, P::FLT_ON)) > 0.5f)
+        draw(other, ui.s.params.value(fltParam(other, P::FLT_CUTOFF)), ui.s.params.value(fltParam(other, P::FLT_RES)),
+             theme::withAlpha(theme::text, 0.25f), 1.2f, false);
+
+    float cutoff = ui.s.params.value(fp(P::FLT_CUTOFF)), res = ui.s.params.value(fp(P::FLT_RES));
+    draw(filter, cutoff, res, theme::accent, 2.0f, true);
 
     bool live = ui.s.telemetry.displayVoiceActive.load(std::memory_order_relaxed);
-    float lc = paramInfo(P::FLT_CUTOFF).toValue(ui.s.telemetry.modNorm[(int)P::FLT_CUTOFF].load(std::memory_order_relaxed));
-    float lr = paramInfo(P::FLT_RES).toValue(ui.s.telemetry.modNorm[(int)P::FLT_RES].load(std::memory_order_relaxed));
+    float lc = paramInfo(fp(P::FLT_CUTOFF)).toValue(ui.s.telemetry.modNorm[(int)fp(P::FLT_CUTOFF)].load(std::memory_order_relaxed));
+    float lr = paramInfo(fp(P::FLT_RES)).toValue(ui.s.telemetry.modNorm[(int)fp(P::FLT_RES)].load(std::memory_order_relaxed));
+    bool on = ui.s.params.value(fp(P::FLT_ON)) > 0.5f;
     if (live && on && (std::fabs(lc - cutoff) > 1.0f || std::fabs(lr - res) > 0.005f))
-        draw(lc, lr, theme::mod, 1.6f, false);
+        draw(filter, lc, lr, theme::mod, 1.6f, false);
 
+    int type = (int)ui.s.params.value(fp(P::FLT_TYPE));
     ImVec2 handle(xOf(cutoff), yOf(on ? filterMagDb(type, cutoff, cutoff, res) : 0.0f));
-    dl->AddCircleFilled(handle, 5.0f, theme::rgba(14, 14, 15));
+    dl->AddCircleFilled(handle, 5.0f, theme::rgba(11, 11, 12));
     dl->AddCircle(handle, 5.0f, theme::accent, 16, 2.0f);
 
     ImGui::PushFont(theme::fontSmall);
     for (auto [f, l] : { std::pair{ 100.0f, "100" }, { 1000.0f, "1k" }, { 10000.0f, "10k" } })
         dl->AddText(ImVec2(xOf(f) + 3, b.y - 15), theme::textFaint, l);
     ImGui::PopFont();
+    ImGui::PopID();
 }
 
 // ---------------------------------------------------------------------
