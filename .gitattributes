@@ -1,0 +1,5 @@
+# Third-party libraries (miniaudio, RtMidi): leave out of GitHub's language stats
+src/platform/** linguist-vendored
+
+# All headers in this project are C++
+*.h linguist-language=C++
