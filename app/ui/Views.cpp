@@ -32,10 +32,10 @@ static void frameBg(ImDrawList* dl, ImVec2 a, ImVec2 b)
 // ---------------------------------------------------------------------
 // Wavetable view
 //
-// Top: the 8 frames in an oblique 3D stack (frame 1 at the front), numbered,
-// fading with distance from the playing position, which is filled and marked
-// on a depth rail. Bottom: a 2D strip of the exact waveform being played,
-// with warp applied, like Serum's 2D view.
+// Top: the frames as a shaded oblique 3D stack (frame 1 at the front), fading
+// with distance from the playing position, which is drawn bright and filled.
+// Bottom: a 2D strip of the exact waveform being played, with warp applied,
+// like Serum's 2D view.
 // ---------------------------------------------------------------------
 namespace {
 constexpr int PTS = 128;    // per frame in the 3D stack
@@ -184,13 +184,6 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         edge(bx0, 1, by0, bx0, 1, by1); edge(bx1, 1, by0, bx1, 1, by1);
         edge(bx0, 0, by0, bx0, 1, by0); edge(bx1, 0, by0, bx1, 1, by0);
 
-        // depth rail on the right, with the position marker
-        ImVec2 r0 = project(1.12f, 0.0f, 0.0f), r1 = project(1.12f, 1.0f, 0.0f);
-        dl->AddLine(r0, r1, theme::withAlpha(green, 0.25f), 1.0f);
-        for (int f = 0; f < WT_FRAMES; ++f) {
-            ImVec2 t = project(1.12f, (float)f / (WT_FRAMES - 1), 0.0f);
-            dl->AddLine(ImVec2(t.x - 3, t.y), ImVec2(t.x + 3, t.y), theme::withAlpha(green, 0.35f));
-        }
 
         // Dense slices (the 8 frames plus 4 interpolated between each pair), back to
         // front. Each gets a very light fill to its zero line, so together they read
@@ -236,8 +229,6 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         }
         dl->AddPolyline(pts, PTS, theme::withAlpha(green, 0.25f), 0, 7.0f);
         dl->AddPolyline(pts, PTS, green, 0, 2.4f);
-        ImVec2 m = project(1.12f, pos, 0.0f);
-        dl->AddCircleFilled(m, 4.5f, green);
 
         // front edges of the box (drawn over the frames)
         edge(bx0, 0, by0, bx1, 0, by0); edge(bx0, 0, by1, bx1, 0, by1);
