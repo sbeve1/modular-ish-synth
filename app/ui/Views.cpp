@@ -47,8 +47,9 @@ struct WtCache {
 };
 WtCache gCache[3];
 
-// zx/zy: screen direction of the depth axis; turn: rotation of the waveform axis
-struct WtViewState { float zx = 0.34f, zy = 0.52f, turn = 0.13f; bool flat = false; };
+// yaw: box turned around its vertical axis (clockwise seen from above, so a
+// corner faces the viewer); pitch: how far we look down onto it
+struct WtViewState { float yaw = 0.63f, pitch = 0.6f; bool flat = false; };
 WtViewState gView[3];
 
 void buildCache(WtCache& c, const WavetableSet* wt)
@@ -101,8 +102,8 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
     int vi = overrideTable ? 2 : osc;
     WtViewState& vs = gView[vi];
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 1.0f)) {
-        vs.turn = std::clamp(vs.turn + ImGui::GetIO().MouseDelta.x * 0.004f, -0.6f, 0.6f);
-        vs.zy = std::clamp(vs.zy + ImGui::GetIO().MouseDelta.y * 0.004f, 0.3f, 1.1f);
+        vs.yaw = std::clamp(vs.yaw + ImGui::GetIO().MouseDelta.x * 0.005f, -1.2f, 1.2f);
+        vs.pitch = std::clamp(vs.pitch + ImGui::GetIO().MouseDelta.y * 0.004f, 0.2f, 1.2f);
     }
     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) vs.flat = !vs.flat;
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && ImGui::GetCurrentContext()->HoveredIdTimer > 0.8f)
@@ -148,12 +149,16 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         const float top = a.y + 20.0f, H = stackH;
         const float bx0 = -1.08f, bx1 = 1.2f, by0 = -1.2f, by1 = 1.2f;   // box extents
 
-        // Model space: x along the waveform (turned so the front corner faces the
-        // viewer), z into the depth, y = amplitude. Scale and offset are fitted so
-        // the whole box always fills the area.
-        const float amp = 0.21f;
-        const ImVec2 X(std::cos(vs.turn), std::sin(vs.turn)), Z(vs.zx, -vs.zy);
-        auto model = [&](float x, float z, float y) { return ImVec2(x * X.x + z * Z.x, x * X.y + z * Z.y - y * amp); };
+        // 3D: x along the waveform, z into the depth (length D), y = amplitude.
+        // Turn around the vertical axis (yaw), look down by pitch, project
+        // orthographically. Scale and offset are fitted so the box fills the area.
+        const float D = 1.6f, A = 0.27f;
+        const float cy = std::cos(vs.yaw), sy = std::sin(vs.yaw), cp = std::cos(vs.pitch), sp = std::sin(vs.pitch);
+        auto model = [&](float x, float z, float y) {
+            float zc = (z - 0.5f) * D;
+            float xr = x * cy + zc * sy, zr = -x * sy + zc * cy;
+            return ImVec2(xr, -y * A * cp - zr * sp);
+        };
         float mnx = 1e9f, mny = 1e9f, mxx = -1e9f, mxy = -1e9f;
         for (float x : { bx0, bx1 }) for (float z : { 0.0f, 1.0f }) for (float y : { by0, by1 }) {
             ImVec2 m = model(x, z, y);
@@ -190,13 +195,29 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
             dl->AddLine(ImVec2(t.x - 3, t.y), ImVec2(t.x + 3, t.y), theme::withAlpha(green, 0.35f));
         }
 
-        // frames, back to front, fading with distance from the playing position
-        for (int f = WT_FRAMES - 1; f >= 0; --f) {
-            float z = (float)f / (WT_FRAMES - 1);
+        // Dense slices (the 8 frames plus 4 interpolated between each pair), back to
+        // front. Each gets a very light fill to its zero line, so together they read
+        // as one translucent surface; real frames are a little brighter.
+        constexpr int SUB = 5, SLICES = (WT_FRAMES - 1) * SUB + 1;
+        float slice[PTS];
+        for (int k = SLICES - 1; k >= 0; --k) {
+            float z = (float)k / (SLICES - 1);
+            int f0 = k / SUB, f1 = std::min(f0 + 1, WT_FRAMES - 1);
+            float t = (float)(k % SUB) / SUB;
+            for (int i = 0; i < PTS; ++i) slice[i] = c.frames[f0][i] + (c.frames[f1][i] - c.frames[f0][i]) * t;
+            framePts(slice, z);
+            {
+                NoAAFill noaa(dl);
+                for (int i = 1; i < PTS; ++i) {
+                    ImVec2 z0 = project((float)(i - 1) / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
+                    ImVec2 z1 = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
+                    dl->AddQuadFilled(pts[i - 1], pts[i], z1, z0, theme::withAlpha(green, 0.025f));
+                }
+            }
+            bool isFrame = k % SUB == 0;
             float near = std::max(0.0f, 1.0f - std::fabs(z - pos) * 2.5f);
-            float alpha = 0.16f + 0.5f * near;
-            framePts(c.frames[f], z);
-            dl->AddPolyline(pts, PTS, theme::withAlpha(green, alpha), 0, 1.3f);
+            float alpha = (isFrame ? 0.30f : 0.13f) + 0.35f * near;
+            dl->AddPolyline(pts, PTS, theme::withAlpha(green, alpha), 0, isFrame ? 1.2f : 1.0f);
         }
 
         // playing position: interpolated frame, filled, on top
