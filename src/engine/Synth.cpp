@@ -26,6 +26,32 @@ void Synth::prepare(float sampleRate)
     mainFX.add(std::make_unique<ReverbFX>(sampleRate));
 }
 
+// Oscillator/noise params are copied into a voice at note-on; filter,
+// envelope and routing live on each voice, so set them on all of them.
+// Allocation-free, so it can run on the audio thread.
+void Synth::applyPatch(const Patch& patch)
+{
+    oscAParams  = patch.oscA;
+    oscBParams  = patch.oscB;
+    oscCParams  = patch.oscC;
+    subParams   = patch.sub;
+    noiseParams = patch.noise;
+
+    for (auto& v : voices) {
+        v.filter0Params = patch.filter0;
+
+        v.env1.attack  = patch.attack;
+        v.env1.decay   = patch.decay;
+        v.env1.sustain = patch.sustain;
+        v.env1.release = patch.release;
+
+        for (int i = 0; i < NUM_SOURCES; ++i)
+            v.routing.sources[i] = patch.sources[i];
+        v.routing.filter[0] = patch.filter0Route;
+        v.routing.compile();
+    }
+}
+
 void Synth::noteOn(int note, float velocity)
 {
     Voice* chosen = nullptr;

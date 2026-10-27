@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstring>
 
-enum class MidiEventType { NOTE_ON, NOTE_OFF };
+enum class MidiEventType { NOTE_ON, NOTE_OFF, PROGRAM_CHANGE }; // PROGRAM_CHANGE: note = preset index
 
 struct MidiEvent {
     MidiEventType type;

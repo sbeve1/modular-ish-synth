@@ -7,6 +7,7 @@
 #include "audio/Wavetable.h"
 #include "audio/WavetableFactory.h"
 #include "audio/fx/FXChain.h"
+#include "engine/Patch.h"
 #include "routing/RoutingController.h"
 #include "core/CONSTANTS.h"
 
@@ -34,6 +35,7 @@ public:
 
     Synth();
     void prepare(float sampleRate);
+    void applyPatch(const Patch& patch);
 
     void noteOn(int note, float velocity);
     void noteOff(int note);

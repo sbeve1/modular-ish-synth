@@ -49,6 +49,10 @@ file(GLOB_RECURSE AUDIO_SRC
 )
 
 
+file(GLOB INPUT_SRC
+    "src/input/*.cpp"
+)
+
 file(GLOB RENDER_SRC
     "src/render/*.cpp"
 )
@@ -72,6 +76,7 @@ add_executable(Synth
     ${PLATFORM_SRC}
     ${CONTROL_SRC}
     ${RENDER_SRC}
+    ${INPUT_SRC}
 )
 
 # --------------------------------------------------
