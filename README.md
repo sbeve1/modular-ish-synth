@@ -10,9 +10,14 @@ and a headless tool for rendering, benchmarking and self-testing.
 
 ![modular_synth](docs/screenshot.png)
 
-**Watch:** [docs/demo.mp4](docs/demo.mp4) (2 min, played live on a MIDI keyboard).
+**Watch:** 
 
-**Listen:** [docs/demo.wav](docs/demo.wav) (29 s): a pad, a supersaw lead,
+https://github.com/user-attachments/assets/94a4db34-b260-4eda-b8c1-21ef8c875e62
+
+ (2 min, played live on a MIDI keyboard).
+
+**Listen:** [demo.wav](https://github.com/user-attachments/files/34009179/demo.wav)
+ (29 s): a pad, a supersaw lead,
 a sub bass line, the arpeggiator and a glass pad, all factory presets.
 The clip is rendered offline by the engine itself
 (`modular_synth_cli showcase docs/demo.wav`), so it is reproducible.
