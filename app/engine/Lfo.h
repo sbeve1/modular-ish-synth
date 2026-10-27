@@ -40,6 +40,10 @@ struct LfoState {
     }
 };
 
+// S&H and Drift pick a new random value when the LFO's own cycle wraps, so a
+// phase offset would read them out of step with that; they ignore it.
+inline bool lfoIsRandom(LfoShape s) { return s == LfoShape::SampleHold || s == LfoShape::Drift; }
+
 // Bipolar (-1..1) shape value at phase p. curve: table for the Custom shape.
 inline float lfoShapeValue(LfoShape shape, float p, const LfoState& st, const LfoCurveTable* curve = nullptr)
 {

@@ -61,6 +61,8 @@ public:
     float currentPitch() const { return pitch; }
     const Envelope& env(int i) const { return envs[i]; }
     float lfoPhase(int i, const VoiceContext& ctx) const;
+    float lfoRate(int i) const { return lfoRateHz[i]; }
+    const LfoState& lfoState(int i) const { return lfo[i]; }
     float wtPos(int osc) const { return oscState[osc].pos; }
 
 private:
@@ -81,6 +83,7 @@ private:
 
     Envelope envs[3];
     LfoState lfo[4];
+    float lfoRateHz[4] = {};
     OscState oscState[2];
 
     float subPhase = 0.0f;

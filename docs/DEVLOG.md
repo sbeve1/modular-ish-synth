@@ -195,6 +195,19 @@ Bugs found by the audit and fixed:
   audio thread records the min/max each modulated parameter swept between UI
   frames; knobs draw that range as a bright band plus the current-value dot.
 
+- **LFO graph accuracy (round 2).** The real cause: S&H and Drift graphs drew
+  a fixed 8-step pattern per cycle while the engine (correctly) picks one new
+  value per cycle, so the picture promised 8x the speed and the dot (the real
+  value) couldn't follow the line. Now the graph draws this cycle's actual
+  values (published by the audio thread), and the dot is extrapolated every
+  frame from the published phase, rate and a timestamp, placed on the curve,
+  so it moves at the true speed instead of jumping between per-buffer samples.
+  Also fixed an engine bug: with a Phase offset, S&H/Drift read their random
+  values out of step with the cycle that picks them (Drift could jump); random
+  shapes now ignore the offset. New self-test: the engine's LFO value matches
+  the drawn curve at the reported phase 99.6% of the time across all shapes,
+  with and without offset (the rest are samples at sharp edges).
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX

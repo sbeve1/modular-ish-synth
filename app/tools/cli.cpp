@@ -543,6 +543,47 @@ static int cmdSelftest()
         CHECK(rf > 0.01 && rd < rf * 0.01, "drawn curve drives modulation (flat 0: %.4f, flat -1: %.6f)", rf, rd);
     }
 
+    std::printf("LFO display matches the sound\n");
+    {
+        // the value the engine uses vs the value the graph draws at the reported phase
+        int worstShape = -1;
+        double worst = 1.0;
+        for (int sh = 0; sh < 8; ++sh) {
+            for (float offset : { 0.0f, 0.3f }) {
+                Engine e;
+                Preset p;
+                p.set(P::LFO1_SHAPE, (float)sh);
+                p.set(P::LFO1_RATE, 3.0f);
+                p.set(P::LFO1_PHASE, offset);
+                p.set(P::ENV1_SUS, 1.0f);
+                e.load(p);
+                std::vector<float> L(64), R(64);
+                e.inst->process(L.data(), R.data(), 64);
+                e.shared->uiEvents.push({ EventType::NoteOn, 60, 100 });
+                int good = 0, total = 0;
+                auto curve = defaultLfoCurve();
+                for (int b = 0; b < 1500; ++b) {   // 2 s in 64-sample buffers
+                    e.inst->process(L.data(), R.data(), 64);
+                    const Telemetry& t = e.shared->telemetry;
+                    float ph = t.lfoPhase[0].load(), v = t.srcValue[(int)ModSrc::Lfo1].load();
+                    float pv = t.lfoPrev[0].load(), nx = t.lfoNext[0].load();
+                    float drawn;
+                    auto shape = (LfoShape)sh;
+                    if (shape == LfoShape::SampleHold) drawn = pv;
+                    else if (shape == LfoShape::Drift) { float u = ph * ph * (3 - 2 * ph); drawn = pv + (nx - pv) * u; }
+                    else if (shape == LfoShape::Custom) drawn = evalLfoCurve(curve, ph);
+                    else drawn = lfoShapePreview(shape, ph);
+                    ++total;
+                    if (std::fabs(drawn - v) < 0.05f) ++good;
+                }
+                double frac = (double)good / total;
+                if (frac < worst) { worst = frac; worstShape = sh; }
+            }
+        }
+        CHECK(worst > 0.97, "all 8 shapes, with and without phase offset: value matches the drawn curve %.1f%% of the time (worst: shape %d)",
+              worst * 100.0, worstShape);
+    }
+
     std::printf("Preset files\n");
     {
         Preset p = all[5];

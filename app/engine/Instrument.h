@@ -61,6 +61,7 @@ private:
 
     VoiceContext ctx;
     LfoState freeLfo[4];
+    float freeRate[4] = {};
 
     // performance state
     float noteVel[128] = {};

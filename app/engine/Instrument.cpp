@@ -382,6 +382,7 @@ void Instrument::advanceFreeLfos(int n)
         bool sync = value[(int)lfoParam(l, P::LFO1_SYNC)] > 0.5f;
         float rate = sync ? (ctx.tempo / 60.0f) / kSyncDivBeats[std::clamp((int)value[(int)lfoParam(l, P::LFO1_DIV)], 0, 14)]
                           : value[(int)lfoParam(l, P::LFO1_RATE)];
+        freeRate[l] = rate;
         freeLfo[l].advance(rate * n / sr, LfoMode::Free);
     }
 }
@@ -577,7 +578,19 @@ void Instrument::publish(const float* l, const float* r, int n, double busySecon
     for (int k = 0; k < numGlobalSlots; ++k) { gMin[globalSlots[k].target] = 2.0f; gMax[globalSlots[k].target] = -1.0f; }
 
     for (int l = 0; l < 4; ++l)
+    {
         t.lfoPhase[l].store(has ? voices[displayVoice].lfoPhase(l, ctx) : freeLfo[l].phase, std::memory_order_relaxed);
+        auto mode = (LfoMode)(int)value[(int)lfoParam(l, P::LFO1_MODE)];
+        bool useVoice = has && mode != LfoMode::Free;
+        const LfoState& st = useVoice ? voices[displayVoice].lfoState(l) : freeLfo[l];
+        float rate = useVoice ? voices[displayVoice].lfoRate(l) : freeRate[l];
+        if (st.done) rate = 0.0f;
+        t.lfoRate[l].store(rate, std::memory_order_relaxed);
+        t.lfoPrev[l].store(st.prev, std::memory_order_relaxed);
+        t.lfoNext[l].store(st.next, std::memory_order_relaxed);
+    }
+    t.lfoTime.store(std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count(),
+                    std::memory_order_relaxed);
     for (int e = 0; e < 3; ++e) {
         t.envStage[e].store(has ? voices[displayVoice].env(e).stageIndex() : 0, std::memory_order_relaxed);
         t.envStageTime[e].store(has ? voices[displayVoice].env(e).stageTime() : 0.0f, std::memory_order_relaxed);

@@ -104,7 +104,8 @@ void Voice::release()
 
 float Voice::lfoPhase(int i, const VoiceContext& ctx) const
 {
-    float offset = eff(ctx, lfoParam(i, P::LFO1_PHASE));
+    auto shape = (LfoShape)(int)eff(ctx, lfoParam(i, P::LFO1_SHAPE));
+    float offset = lfoIsRandom(shape) ? 0.0f : eff(ctx, lfoParam(i, P::LFO1_PHASE));
     auto mode = (LfoMode)(int)eff(ctx, lfoParam(i, P::LFO1_MODE));
     float ph = mode == LfoMode::Free ? ctx.freeLfo[i].phase : lfo[i].phase;
     return frac01(std::min(ph, 0.99999f) + offset);
@@ -171,7 +172,8 @@ void Voice::updateSources(const VoiceContext& ctx, int n)
         bool sync   = eff(ctx, lfoParam(l, P::LFO1_SYNC)) > 0.5f;
         float rate  = sync ? syncHz(ctx.tempo, (int)eff(ctx, lfoParam(l, P::LFO1_DIV)))
                            : eff(ctx, lfoParam(l, P::LFO1_RATE));
-        float off   = eff(ctx, lfoParam(l, P::LFO1_PHASE));
+        float off   = lfoIsRandom(shape) ? 0.0f : eff(ctx, lfoParam(l, P::LFO1_PHASE));
+        lfoRateHz[l] = rate;
         float rise  = eff(ctx, lfoParam(l, P::LFO1_RISE));
         float smooth= eff(ctx, lfoParam(l, P::LFO1_SMOOTH));
 

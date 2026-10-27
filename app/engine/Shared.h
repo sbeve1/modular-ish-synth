@@ -181,6 +181,10 @@ struct Telemetry {
     std::atomic<float> modMin[NUM_PARAMS]{}, modMax[NUM_PARAMS]{};
     std::atomic<uint32_t> modRangeRead{ 0 };         // UI bumps this after reading the ranges
     std::atomic<float> lfoPhase[4]{};
+    // so the UI can move the LFO dot at the true speed between audio updates
+    std::atomic<float> lfoRate[4]{};                 // Hz (0 when a one-shot has finished)
+    std::atomic<float> lfoPrev[4]{}, lfoNext[4]{};   // S&H / Drift values for this cycle
+    std::atomic<double> lfoTime{ 0.0 };              // steady_clock seconds when published
     std::atomic<int>   envStage[3]{};                // 0 idle, 1 A, 2 H, 3 D, 4 S, 5 R
     std::atomic<float> envStageTime[3]{};
     std::atomic<float> oscPos[2]{};                  // modulated WT position

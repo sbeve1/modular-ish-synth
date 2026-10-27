@@ -1,6 +1,7 @@
 #include "ui/Views.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <vector>
@@ -452,6 +453,17 @@ void LfoGraph(UiState& ui, int lfo, ImVec2 size)
         dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::rgba(22, 22, 25));
     }
 
+    // S&H and Drift: draw this cycle's actual values (published by the audio
+    // thread), not a made-up pattern, so the picture matches what you hear
+    const Telemetry& tel = ui.s.telemetry;
+    const float rPrev = tel.lfoPrev[lfo].load(std::memory_order_relaxed);
+    const float rNext = tel.lfoNext[lfo].load(std::memory_order_relaxed);
+    auto liveShape = [&](float p) {
+        if (shape == LfoShape::SampleHold) return rPrev;
+        if (shape == LfoShape::Drift) { float t = p * p * (3.0f - 2.0f * p); return rPrev + (rNext - rPrev) * t; }
+        return lfoShapePreview(shape, p);
+    };
+
     // ---- custom shape editing ----
     static std::vector<LfoPoint> pts;   // reused buffer: assignment keeps its capacity
     pts = ui.wt.lfoCurve(lfo);
@@ -519,7 +531,7 @@ void LfoGraph(UiState& ui, int lfo, ImVec2 size)
     ImVec2 line[N];
     for (int i = 0; i < N; ++i) {
         float p = (float)i / (N - 1);
-        float y = custom ? evalLfoCurve(pts, p) : lfoShapePreview(shape, p);
+        float y = custom ? evalLfoCurve(pts, p) : liveShape(p);
         line[i] = toScreen(p, y);
     }
     {
@@ -544,8 +556,16 @@ void LfoGraph(UiState& ui, int lfo, ImVec2 size)
     }
 
     // ---- live phase ----
-    float ph = frac01(ui.s.telemetry.lfoPhase[lfo].load(std::memory_order_relaxed));
-    float v = ui.s.telemetry.srcValue[(int)ModSrc::Lfo1 + lfo].load(std::memory_order_relaxed);
+    // The audio thread reports phase, rate and a timestamp once per buffer; move
+    // the dot forward from there every frame so it travels at the true speed,
+    // and put it on the drawn curve.
+    double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    double since = std::clamp(now - tel.lfoTime.load(std::memory_order_relaxed), 0.0, 0.25);
+    float rate = tel.lfoRate[lfo].load(std::memory_order_relaxed);
+    float ph0 = tel.lfoPhase[lfo].load(std::memory_order_relaxed);
+    bool oneShot = (int)ui.s.params.value(lfoParam(lfo, P::LFO1_MODE)) == (int)LfoMode::Envelope;
+    float ph = oneShot ? std::min(ph0 + rate * (float)since, 0.99999f) : frac01(ph0 + rate * (float)since);
+    float v = custom ? evalLfoCurve(pts, ph) : liveShape(ph);
     float x = x0 + w * ph;
     dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::withAlpha(theme::mod, 0.3f));
     ImVec2 dot(x, mid - std::clamp(v, -1.0f, 1.0f) * amp);
