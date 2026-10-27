@@ -297,7 +297,7 @@ bool Choice(UiState& ui, P p, float width)
     std::string preview = info.format((float)cur);
     bool changed = false;
     ImGui::SetNextItemWidth(width);
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::ColorConvertU32ToFloat4(theme::rgba(30, 36, 48)));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::ColorConvertU32ToFloat4(theme::rgba(30, 30, 31)));
     if (ImGui::BeginCombo("##c", preview.c_str(), ImGuiComboFlags_HeightLarge)) {
         for (int v = (int)info.min; v <= (int)info.max; ++v) {
             bool sel = v == cur;
@@ -342,7 +342,7 @@ bool Stepper(UiState& ui, P p, float width, const char* label)
     if (hovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) { ui.s.params.setValue(p, info.def); changed = true; }
     if (changed) ui.presetDirty = true;
 
-    dl->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + h), hovered || active ? theme::rgba(40, 47, 63) : theme::rgba(30, 36, 48), 4.0f);
+    dl->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + h), hovered || active ? theme::rgba(39, 39, 40) : theme::rgba(30, 30, 31), 4.0f);
     std::string v = info.format(ui.s.params.value(p));
     if (info.unit == Unit::Oct || info.unit == Unit::Semi) {   // compact: "+1" not "+1 oct"
         char b[16]; std::snprintf(b, sizeof b, "%+.0f", ui.s.params.value(p)); v = b;
@@ -376,7 +376,7 @@ void ModSourceHandle(UiState& ui, ModSrc src, float width, const char* label)
 
     float v = ui.s.telemetry.srcValue[(int)src].load(std::memory_order_relaxed);
     bool bip = modSrcBipolar(src);
-    dl->AddRectFilled(pos, ImVec2(pos.x + wd, pos.y + h), hovered ? theme::rgba(52, 40, 80) : theme::rgba(38, 31, 58), h * 0.5f);
+    dl->AddRectFilled(pos, ImVec2(pos.x + wd, pos.y + h), hovered ? theme::rgba(34, 38, 34) : theme::rgba(20, 22, 20), h * 0.5f);
     // live activity fill
     float fill = bip ? std::fabs(v) : std::clamp(v, 0.0f, 1.0f);
     if (fill > 0.001f)
@@ -412,7 +412,7 @@ bool PanelBegin(UiState& ui, const char* id, const char* title, ImVec2 size, int
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 wp = ImGui::GetWindowPos(), ws = ImGui::GetWindowSize();
-    dl->AddRectFilledMultiColor(wp, ImVec2(wp.x + ws.x, wp.y + 28), theme::panelHi, theme::panelHi, theme::panel, theme::panel);
+    dl->AddRectFilled(wp, ImVec2(wp.x + ws.x, wp.y + 28), theme::panelHi);
     dl->AddLine(ImVec2(wp.x + 1, wp.y + 28), ImVec2(wp.x + ws.x - 1, wp.y + 28), theme::border);
 
     bool on = true;
@@ -445,7 +445,7 @@ void LevelMeter(float level, ImVec2 size)
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 pos = ImGui::GetCursorScreenPos();
     ImGui::Dummy(size);
-    dl->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), theme::rgba(16, 19, 26), 2.0f);
+    dl->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), theme::rgba(16, 16, 17), 2.0f);
     float db = 20.0f * std::log10(std::max(level, 1e-5f));
     float t = std::clamp((db + 48.0f) / 48.0f, 0.0f, 1.0f);
     float top = pos.y + size.y * (1.0f - t);

@@ -13,8 +13,12 @@ public:
     ~AudioHost();
 
     // periodMs: requested buffer length; the backend may round it.
-    bool start(Instrument& inst, int periodMs = 5);
+    bool start(Instrument& inst, int periodMs = 5, bool exclusive = false);
     void stop();
+    bool restart(int periodMs, bool exclusive);   // same instrument, new buffer settings
+
+    int  requestedPeriodMs() const { return reqPeriod; }
+    bool exclusiveMode() const { return exclusive; }
 
     bool running() const { return isRunning; }
     unsigned sampleRate() const { return rate; }
@@ -27,6 +31,9 @@ public:
 
 private:
     Impl* impl;
+    Instrument* instrument = nullptr;
+    int reqPeriod = 5;
+    bool exclusive = false;
     bool isRunning = false;
     unsigned rate = 0, period = 0;
     std::string name, backend, lastError;

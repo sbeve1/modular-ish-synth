@@ -34,10 +34,14 @@ static void dataCallback(ma_device* dev, void* out, const void*, ma_uint32 frame
 AudioHost::AudioHost() : impl(new Impl) {}
 AudioHost::~AudioHost() { stop(); delete impl; }
 
-bool AudioHost::start(Instrument& inst, int periodMs)
+bool AudioHost::start(Instrument& inst, int periodMs, bool exclusiveMode)
 {
     stop();
     impl->inst = &inst;
+    instrument = &inst;
+    reqPeriod = periodMs;
+    exclusive = exclusiveMode;
+    lastError.clear();
 
     ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
     cfg.playback.format = ma_format_f32;
@@ -45,12 +49,20 @@ bool AudioHost::start(Instrument& inst, int periodMs)
     cfg.sampleRate = 0;                       // device native rate
     cfg.periodSizeInMilliseconds = (ma_uint32)periodMs;
     cfg.performanceProfile = ma_performance_profile_low_latency;
+    cfg.playback.shareMode = exclusiveMode ? ma_share_mode_exclusive : ma_share_mode_shared;
     cfg.dataCallback = dataCallback;
     cfg.pUserData = impl;
 
     if (ma_device_init(nullptr, &cfg, &impl->device) != MA_SUCCESS) {
-        lastError = "Could not open the audio device";
-        return false;
+        if (!exclusiveMode) { lastError = "Could not open the audio device"; return false; }
+        // exclusive mode refused (device busy or unsupported): fall back to shared
+        cfg.playback.shareMode = ma_share_mode_shared;
+        exclusive = false;
+        if (ma_device_init(nullptr, &cfg, &impl->device) != MA_SUCCESS) {
+            lastError = "Could not open the audio device";
+            return false;
+        }
+        lastError = "Exclusive mode unavailable; using shared mode";
     }
     impl->initialized = true;
 
@@ -69,6 +81,12 @@ bool AudioHost::start(Instrument& inst, int periodMs)
     }
     isRunning = true;
     return true;
+}
+
+bool AudioHost::restart(int periodMs, bool exclusiveMode)
+{
+    if (!instrument) return false;
+    return start(*instrument, periodMs, exclusiveMode);
 }
 
 void AudioHost::stop()

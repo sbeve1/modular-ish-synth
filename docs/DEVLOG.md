@@ -18,7 +18,7 @@ not just the feature.
 | `f26da4a` | **Fixed a mod-matrix bug that doubled every modulated parameter** | The matrix wrote `base + modulation` into fields that the resolvers then added to `base` again: osc level ran +6 dB hot and filter cutoff at 2x with zero routes. Also: routing was reset on every note-on, so bus sends could never stick |
 | `f6c4e05` | Computer-keyboard input, patch struct, 4 presets | Second SPSC queue for keyboard events, because the MIDI queue already has the RtMidi thread as its only producer; preset changes applied on the audio thread |
 
-## Phase 2: GUI instrument "Halcyon" (branch `feature/gui-synth`, worktree `CRAZY PROJECT-gui`)
+## Phase 2: GUI instrument "Nullwave" (branch `feature/gui-synth`, worktree `CRAZY PROJECT-gui`)
 
 Goal: turn the engine into a complete, playable synthesizer with a modern
 (Serum-2-inspired, original design) interface. Desktop first; browser build
@@ -29,7 +29,7 @@ Goal: turn the engine into a complete, playable synthesizer with a modern
 - **Desktop app in C++ with Dear ImGui (GLFW + OpenGL 3).** Reuses the engine,
   miniaudio and RtMidi directly; native audio latency; UI rendering on its own
   thread, never in the audio callback.
-- **Engine library (`halcyon_engine`) has no GUI or device code**, so the same
+- **Engine library (`nullwave_engine`) has no GUI or device code**, so the same
   code can be compiled to WebAssembly later and driven by a headless CLI for
   tests and benchmarks.
 - **Lock-free UI ↔ audio bridge.**
@@ -52,11 +52,34 @@ Goal: turn the engine into a complete, playable synthesizer with a modern
 `Envelope` (curved ADSR), the ZDF state-variable filter math, the SPSC ring
 design, miniaudio, RtMidi, the WAV render approach.
 
+### Measured
+- Engine benchmark (48 kHz, 2 osc x 8 unison + sub + noise + 24 dB filter, all FX):
+  16 voices render at 12.9x realtime (~8% of one core); 1 voice at 95x.
+- Self-test: 0 heap allocations across 400 audio blocks with notes, FX and
+  parameter changes; all 16 factory presets render finite, in range, and
+  release every voice.
+- GUI at idle with 5 voices sounding: ~2% engine load (WASAPI, 10 ms buffer).
+
+### Bugs found and fixed while building
+- RtMidi lives in `rt::midi` (forward declaration mismatch).
+- Filled curves looked hatched: overlapping anti-aliased quads; fills now
+  draw without AA.
+- On-screen pitch wheel spring-back would have overridden the hardware wheel;
+  it now springs back only when the on-screen wheel is released.
+
+### Design iterations
+- 3D wavetable: started as a rotated perspective view (frames looked flat),
+  then an oblique projection with hidden-line fills (frames hid each other),
+  then transparent line slices with only the playing slice filled.
+- Visual identity: renamed Halcyon -> **Nullwave**; teal/violet palette
+  replaced with neutral near-black, white text, one green accent for values
+  and white for modulation.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
-- [ ] Engine: params, wavetables, voices, mod matrix, FX
-- [ ] Audio/MIDI hosts
-- [ ] GUI
-- [ ] Presets, wavetable editor
-- [ ] Tests, benchmark, docs
-- [ ] Browser build
+- [x] Engine: params, wavetables, voices, mod matrix, FX
+- [x] Audio/MIDI hosts (latency selector, exclusive mode)
+- [x] GUI: synth, matrix, FX, global pages; 3D wavetables; editors
+- [x] Presets, wavetable editor
+- [x] Self-test, benchmark, README
+- [ ] Browser build (needs the Emscripten toolchain installed)

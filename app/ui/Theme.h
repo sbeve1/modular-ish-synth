@@ -2,32 +2,32 @@
 
 #include "imgui.h"
 
-// Halcyon visual language: deep blue-black panels, cyan for values,
-// violet for modulation, amber for warnings.
+// Nullwave visual language: near-black neutrals, white text, one green
+// accent for values, white for modulation. Flat and minimal.
 namespace theme {
 
 inline ImU32 rgba(int r, int g, int b, int a = 255) { return IM_COL32(r, g, b, a); }
 
-inline const ImU32 bg          = rgba(11, 13, 19);
-inline const ImU32 panel       = rgba(20, 24, 33);
-inline const ImU32 panelHi     = rgba(27, 32, 44);
-inline const ImU32 border      = rgba(40, 47, 63);
-inline const ImU32 track       = rgba(38, 44, 58);
-inline const ImU32 knobBody    = rgba(30, 35, 47);
-inline const ImU32 knobBodyHi  = rgba(44, 51, 68);
-inline const ImU32 text        = rgba(214, 222, 235);
-inline const ImU32 textDim     = rgba(128, 140, 160);
-inline const ImU32 textFaint   = rgba(80, 90, 108);
-inline const ImU32 accent      = rgba(64, 224, 208);    // cyan
-inline const ImU32 accentDim   = rgba(64, 224, 208, 90);
-inline const ImU32 accentFaint = rgba(64, 224, 208, 28);
-inline const ImU32 mod         = rgba(176, 124, 255);   // violet
-inline const ImU32 modDim      = rgba(176, 124, 255, 110);
-inline const ImU32 modFaint    = rgba(176, 124, 255, 30);
-inline const ImU32 warn        = rgba(255, 181, 71);
-inline const ImU32 hot         = rgba(255, 92, 110);
-inline const ImU32 keyWhite    = rgba(222, 226, 234);
-inline const ImU32 keyBlack    = rgba(24, 27, 36);
+inline const ImU32 bg          = rgba(8, 8, 9);
+inline const ImU32 panel       = rgba(14, 14, 15);
+inline const ImU32 panelHi     = rgba(18, 18, 20);
+inline const ImU32 border      = rgba(36, 36, 39);
+inline const ImU32 track       = rgba(38, 38, 41);
+inline const ImU32 knobBody    = rgba(22, 22, 24);
+inline const ImU32 knobBodyHi  = rgba(32, 32, 35);
+inline const ImU32 text        = rgba(236, 236, 238);
+inline const ImU32 textDim     = rgba(138, 138, 144);
+inline const ImU32 textFaint   = rgba(78, 78, 84);
+inline const ImU32 accent      = rgba(88, 245, 140);     // green accent: values
+inline const ImU32 accentDim   = rgba(88, 245, 140, 90);
+inline const ImU32 accentFaint = rgba(88, 245, 140, 24);
+inline const ImU32 mod         = rgba(245, 245, 245);    // white: modulation
+inline const ImU32 modDim      = rgba(245, 245, 245, 120);
+inline const ImU32 modFaint    = rgba(245, 245, 245, 28);
+inline const ImU32 warn        = rgba(255, 255, 255);
+inline const ImU32 hot         = rgba(255, 255, 255);
+inline const ImU32 keyWhite    = rgba(226, 226, 230);
+inline const ImU32 keyBlack    = rgba(12, 12, 14);
 
 inline ImU32 withAlpha(ImU32 c, float a)
 {

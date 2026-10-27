@@ -31,6 +31,6 @@ void applyPreset(const Preset& p, SharedState& s, WavetableManager& wt);
 bool savePresetFile(const Preset& p, const std::string& path);
 bool loadPresetFile(Preset& p, const std::string& path);
 
-// Folder for user presets (%APPDATA%\Halcyon\Presets), created on demand.
+// Folder for user presets (%APPDATA%\Nullwave\Presets), created on demand.
 std::string userPresetDir();
 std::vector<std::string> listUserPresets();   // full paths, sorted

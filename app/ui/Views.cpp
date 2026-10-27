@@ -25,8 +25,8 @@ struct NoAAFill {
 
 static void frameBg(ImDrawList* dl, ImVec2 a, ImVec2 b)
 {
-    dl->AddRectFilled(a, b, theme::rgba(13, 16, 23), 5.0f);
-    dl->AddRect(a, b, theme::rgba(34, 40, 54), 5.0f);
+    dl->AddRectFilled(a, b, theme::rgba(14, 14, 15), 5.0f);
+    dl->AddRect(a, b, theme::rgba(33, 33, 34), 5.0f);
 }
 
 // ---------------------------------------------------------------------
@@ -118,7 +118,7 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         }
         for (int i = 0; i < PTS; ++i)
             pts[i] = ImVec2(a.x + 8 + (W - 16) * i / (PTS - 1), ctr.y - cur[i] * H * 0.38f);
-        dl->AddLine(ImVec2(a.x, ctr.y), ImVec2(b.x, ctr.y), theme::rgba(40, 48, 64));
+        dl->AddLine(ImVec2(a.x, ctr.y), ImVec2(b.x, ctr.y), theme::rgba(40, 40, 41));
         dl->AddPolyline(pts, PTS, theme::withAlpha(theme::accent, 0.25f), 0, 6.0f);
         dl->AddPolyline(pts, PTS, theme::accent, 0, 2.0f);
     } else {
@@ -133,19 +133,18 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
             return ImVec2(origin.x + x * sx + z * dx, origin.y - y * ampY - z * dy);
         };
 
-        const ImU32 fillCol = theme::rgba(13, 16, 23);
-        auto drawSlice = [&](const float* data, float z, ImU32 lineCol, float thick) {
+        // Slices are lines only, so every frame stays visible through the others;
+        // the playing slice alone gets a faint translucent fill to its zero line.
+        auto drawSlice = [&](const float* data, float z, ImU32 lineCol, float thick, bool fill) {
             for (int i = 0; i < PTS; ++i) pts[i] = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, data[i]);
-            ImVec2 base0 = project(-1.0f, z, -1.05f), base1 = project(1.0f, z, -1.05f);
-            const ImDrawListFlags saved = dl->Flags;
-            dl->Flags &= ~ImDrawListFlags_AntiAliasedFill;
-            for (int i = 1; i < PTS; ++i) {
-                float t0 = (float)(i - 1) / (PTS - 1), t1 = (float)i / (PTS - 1);
-                ImVec2 b0(base0.x + (base1.x - base0.x) * t0, base0.y + (base1.y - base0.y) * t0);
-                ImVec2 b1(base0.x + (base1.x - base0.x) * t1, base0.y + (base1.y - base0.y) * t1);
-                dl->AddQuadFilled(pts[i - 1], pts[i], b1, b0, fillCol);
+            if (fill) {
+                NoAAFill noaa(dl);
+                for (int i = 1; i < PTS; ++i) {
+                    ImVec2 z0 = project((float)(i - 1) / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
+                    ImVec2 z1 = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
+                    dl->AddQuadFilled(pts[i - 1], pts[i], z1, z0, theme::withAlpha(theme::accent, 0.07f));
+                }
             }
-            dl->Flags = saved;
             dl->AddPolyline(pts, PTS, lineCol, 0, thick);
         };
 
@@ -153,16 +152,10 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
             float z = (float)k / (SLICES - 1);
             bool isFrame = k % 4 == 0;
             float near = 1.0f - std::fabs(z - pos) * 2.0f;
-            float alpha = 0.16f + (isFrame ? 0.22f : 0.0f) + std::max(near, 0.0f) * 0.3f;
-            drawSlice(c.slice[k], z, theme::withAlpha(theme::accent, alpha), isFrame ? 1.4f : 1.0f);
-            // the playing position sits between slices: draw it in depth order
-            float zNext = (float)(k - 1) / (SLICES - 1);
-            if (pos <= z && (k == 0 || pos > zNext)) {
-                drawSlice(cur, pos, theme::rgba(150, 255, 245), 2.2f);
-                for (int i = 0; i < PTS; ++i) pts[i] = project((float)i / (PTS - 1) * 2.0f - 1.0f, pos, cur[i]);
-                dl->AddPolyline(pts, PTS, theme::withAlpha(theme::accent, 0.25f), 0, 7.0f);
-            }
+            float alpha = 0.10f + (isFrame ? 0.18f : 0.0f) + std::max(near, 0.0f) * 0.22f;
+            drawSlice(c.slice[k], z, theme::withAlpha(theme::text, alpha), isFrame ? 1.2f : 1.0f, false);
         }
+        drawSlice(cur, pos, theme::accent, 2.2f, true);   // playing position, on top
     }
 
     // labels
@@ -217,8 +210,8 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
     auto yOf = [&](float lv) { return bottom - lv * (bottom - top); };
 
     // grid
-    for (int g = 1; g < 4; ++g) dl->AddLine(ImVec2(left, top + (bottom - top) * g / 4), ImVec2(right, top + (bottom - top) * g / 4), theme::rgba(26, 31, 42));
-    dl->AddLine(ImVec2(left, bottom), ImVec2(right, bottom), theme::rgba(40, 48, 64));
+    for (int g = 1; g < 4; ++g) dl->AddLine(ImVec2(left, top + (bottom - top) * g / 4), ImVec2(right, top + (bottom - top) * g / 4), theme::rgba(26, 26, 27));
+    dl->AddLine(ImVec2(left, bottom), ImVec2(right, bottom), theme::rgba(40, 40, 41));
 
     // curve points
     std::vector<ImVec2> pts;
@@ -287,7 +280,7 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
         bool near = hovered && hdx * hdx + hdy * hdy < 14.0f * 14.0f;
         if (isCurve) dl->AddCircle(h.p, isHot || near ? 5.0f : 3.5f, theme::withAlpha(theme::accent, isHot || near ? 1.0f : 0.5f), 12, 1.5f);
         else {
-            dl->AddCircleFilled(h.p, isHot || near ? 6.0f : 4.5f, theme::rgba(13, 16, 23));
+            dl->AddCircleFilled(h.p, isHot || near ? 6.0f : 4.5f, theme::rgba(14, 14, 15));
             dl->AddCircle(h.p, isHot || near ? 6.0f : 4.5f, theme::accent, 16, 2.0f);
         }
     }
@@ -347,10 +340,10 @@ void LfoGraph(UiState& ui, int lfo, ImVec2 size)
 
     auto shape = (LfoShape)(int)ui.s.params.value(lfoParam(lfo, P::LFO1_SHAPE));
     const float pad = 8.0f, mid = (a.y + b.y) * 0.5f, amp = (size.y - pad * 2) * 0.45f;
-    dl->AddLine(ImVec2(a.x + pad, mid), ImVec2(b.x - pad, mid), theme::rgba(34, 40, 54));
+    dl->AddLine(ImVec2(a.x + pad, mid), ImVec2(b.x - pad, mid), theme::rgba(33, 33, 34));
     for (int q = 1; q < 4; ++q) {
         float x = a.x + pad + (size.x - pad * 2) * q / 4.0f;
-        dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::rgba(26, 31, 42));
+        dl->AddLine(ImVec2(x, a.y + pad), ImVec2(x, b.y - pad), theme::rgba(26, 26, 27));
     }
 
     const int N = 160;
@@ -415,9 +408,9 @@ void FilterResponse(UiState& ui, ImVec2 size)
     if (ImGui::IsItemHovered() && !active && ImGui::GetCurrentContext()->HoveredIdTimer > 0.8f)
         ImGui::SetTooltip("Drag: left/right = cutoff, up/down = resonance");
 
-    for (float f : { 100.0f, 1000.0f, 10000.0f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(30, 36, 48));
-    for (float f : { 50.f, 200.f, 500.f, 2000.f, 5000.f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(22, 27, 36));
-    dl->AddLine(ImVec2(a.x, yOf(0.0f)), ImVec2(b.x, yOf(0.0f)), theme::rgba(40, 48, 64));
+    for (float f : { 100.0f, 1000.0f, 10000.0f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(30, 30, 31));
+    for (float f : { 50.f, 200.f, 500.f, 2000.f, 5000.f }) dl->AddLine(ImVec2(xOf(f), a.y), ImVec2(xOf(f), b.y), theme::rgba(22, 22, 23));
+    dl->AddLine(ImVec2(a.x, yOf(0.0f)), ImVec2(b.x, yOf(0.0f)), theme::rgba(40, 40, 41));
 
     int type = (int)ui.s.params.value(P::FLT_TYPE);
     bool on = ui.s.params.value(P::FLT_ON) > 0.5f;
@@ -446,7 +439,7 @@ void FilterResponse(UiState& ui, ImVec2 size)
         draw(lc, lr, theme::mod, 1.6f, false);
 
     ImVec2 handle(xOf(cutoff), yOf(on ? filterMagDb(type, cutoff, cutoff, res) : 0.0f));
-    dl->AddCircleFilled(handle, 5.0f, theme::rgba(13, 16, 23));
+    dl->AddCircleFilled(handle, 5.0f, theme::rgba(14, 14, 15));
     dl->AddCircle(handle, 5.0f, theme::accent, 16, 2.0f);
 
     ImGui::PushFont(theme::fontSmall);
@@ -471,7 +464,7 @@ void Oscilloscope(UiState& ui, ImVec2 size)
     ImGui::Dummy(size);
     frameBg(dl, a, b);
     float mid = (a.y + b.y) * 0.5f;
-    dl->AddLine(ImVec2(a.x, mid), ImVec2(b.x, mid), theme::rgba(30, 36, 48));
+    dl->AddLine(ImVec2(a.x, mid), ImVec2(b.x, mid), theme::rgba(30, 30, 31));
 
     static float buf[2048];
     copyRecent(ui.s.telemetry, buf, 2048);
@@ -586,27 +579,27 @@ void Piano(UiState& ui, ImVec2 size, int lo, int hi)
         bool held = t.noteHeld(n) || n == mouseNote;
         ImVec2 p0(x + 1, a.y), p1(x + ww - 1, a.y + size.y);
         dl->AddRectFilledMultiColor(p0, p1, held ? theme::accent : theme::keyWhite, held ? theme::accent : theme::keyWhite,
-                                    held ? theme::rgba(40, 170, 160) : theme::rgba(190, 196, 208), held ? theme::rgba(40, 170, 160) : theme::rgba(190, 196, 208));
+                                    held ? theme::rgba(0, 170, 45) : theme::rgba(176, 180, 176), held ? theme::rgba(0, 170, 45) : theme::rgba(176, 180, 176));
         if (n % 12 == 0) {
             char b[8]; std::snprintf(b, sizeof b, "C%d", n / 12 - 1);
-            dl->AddText(ImVec2(x + 4, a.y + size.y - 16), theme::rgba(90, 100, 118), b);
+            dl->AddText(ImVec2(x + 4, a.y + size.y - 16), theme::rgba(80, 80, 81), b);
         }
         int k = n - kbLo;
         if (k >= 0 && k < 16) {
             char c[2] = { kKeys[k], 0 };
-            dl->AddText(ImVec2(x + ww * 0.5f - 3, a.y + size.y - 32), theme::rgba(64, 160, 152), c);
+            dl->AddText(ImVec2(x + ww * 0.5f - 3, a.y + size.y - 32), theme::rgba(0, 150, 40), c);
         }
     }
     for (int n = lo; n <= hi; ++n) {
         if (!isBlack(n)) continue;
         float x = whiteX(n) - bw * 0.5f;
         bool held = t.noteHeld(n) || n == mouseNote;
-        dl->AddRectFilled(ImVec2(x, a.y), ImVec2(x + bw, a.y + bh), held ? theme::rgba(48, 200, 186) : theme::keyBlack, 2.0f);
-        if (!held) dl->AddRectFilled(ImVec2(x + 2, a.y), ImVec2(x + bw - 2, a.y + bh * 0.9f), theme::rgba(36, 40, 52), 2.0f);
+        dl->AddRectFilled(ImVec2(x, a.y), ImVec2(x + bw, a.y + bh), held ? theme::rgba(0, 210, 55) : theme::keyBlack, 2.0f);
+        if (!held) dl->AddRectFilled(ImVec2(x + 2, a.y), ImVec2(x + bw - 2, a.y + bh * 0.9f), theme::rgba(33, 33, 34), 2.0f);
         int k = n - kbLo;
         if (k >= 0 && k < 16) {
             char c[2] = { kKeys[k], 0 };
-            dl->AddText(ImVec2(x + bw * 0.5f - 3, a.y + bh - 18), theme::rgba(64, 160, 152), c);
+            dl->AddText(ImVec2(x + bw * 0.5f - 3, a.y + bh - 18), theme::rgba(0, 150, 40), c);
         }
     }
     ImGui::PopFont();
@@ -630,8 +623,8 @@ static bool wheel(const char* id, ImVec2 size, float& v, bool bipolar, bool spri
         v = 0.0f;   // spring back only after the user lets go of the on-screen wheel
         changed = true;
     }
-    dl->AddRectFilled(a, b, theme::rgba(16, 19, 26), 5.0f);
-    dl->AddRect(a, b, theme::rgba(40, 47, 63), 5.0f);
+    dl->AddRectFilled(a, b, theme::rgba(16, 16, 17), 5.0f);
+    dl->AddRect(a, b, theme::rgba(39, 39, 40), 5.0f);
     float t = bipolar ? (v + 1.0f) * 0.5f : v;
     float y = b.y - t * size.y;
     float y0 = bipolar ? (a.y + b.y) * 0.5f : b.y;

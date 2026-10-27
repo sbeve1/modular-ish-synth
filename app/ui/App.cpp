@@ -71,7 +71,7 @@ static void savePresetAs(UiState& ui, const char* name)
     std::string safe;
     for (const char* c = name; *c; ++c) safe += (std::isalnum((unsigned char)*c) || *c == ' ' || *c == '-' || *c == '_') ? *c : '_';
     if (safe.empty()) safe = "Untitled";
-    std::string path = (fs::path(userPresetDir()) / (safe + ".hcp")).string();
+    std::string path = (fs::path(userPresetDir()) / (safe + ".nwp")).string();
     if (savePresetFile(p, path)) {
         ui.userFiles = listUserPresets();
         for (size_t i = 0; i < ui.userFiles.size(); ++i)
@@ -141,8 +141,8 @@ static bool tabButton(const char* label, bool selected, float width, float heigh
     ImVec2 a = ImGui::GetCursorScreenPos();
     bool clicked = ImGui::InvisibleButton(label, ImVec2(width, height));
     bool hov = ImGui::IsItemHovered();
-    if (selected) dl->AddRectFilled(a, ImVec2(a.x + width, a.y + height), theme::rgba(36, 43, 58), 4.0f);
-    else if (hov) dl->AddRectFilled(a, ImVec2(a.x + width, a.y + height), theme::rgba(30, 35, 47), 4.0f);
+    if (selected) dl->AddRectFilled(a, ImVec2(a.x + width, a.y + height), theme::rgba(36, 36, 37), 4.0f);
+    else if (hov) dl->AddRectFilled(a, ImVec2(a.x + width, a.y + height), theme::rgba(29, 29, 30), 4.0f);
     ImGui::PushFont(theme::fontBold);
     ImVec2 ts = ImGui::CalcTextSize(label, nullptr, true);
     dl->AddText(ImVec2(a.x + (width - ts.x) * 0.5f, a.y + (height - ts.y) * 0.5f),
@@ -160,13 +160,13 @@ static void drawHeader(UiState& ui, float width)
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 o = ImGui::GetCursorScreenPos();
     const float H = 58.0f;
-    dl->AddRectFilledMultiColor(o, ImVec2(o.x + width, o.y + H), theme::rgba(22, 26, 36), theme::rgba(22, 26, 36), theme::rgba(15, 18, 25), theme::rgba(15, 18, 25));
+    dl->AddRectFilled(o, ImVec2(o.x + width, o.y + H), theme::panel);
     dl->AddLine(ImVec2(o.x, o.y + H), ImVec2(o.x + width, o.y + H), theme::border);
 
     // logo
     ImGui::SetCursorScreenPos(ImVec2(o.x + 16, o.y + 9));
     ImGui::PushFont(theme::fontTitle);
-    ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::accent), "HALCYON");
+    ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::accent), "NULLWAVE");
     ImGui::PopFont();
     ImGui::SetCursorScreenPos(ImVec2(o.x + 17, o.y + 35));
     ImGui::PushFont(theme::fontSmall);
@@ -249,7 +249,7 @@ static void drawHeader(UiState& ui, float width)
     if (act != lastAct) { lastAct = act; actTime = ImGui::GetTime(); }
     float led = (float)std::max(0.0, 1.0 - (ImGui::GetTime() - actTime) * 6.0);
     ImVec2 lc(rx - 326, o.y + 46);
-    dl->AddCircleFilled(lc, 3.5f, theme::lerpColor(theme::rgba(40, 48, 64), theme::accent, led));
+    dl->AddCircleFilled(lc, 3.5f, theme::lerpColor(theme::rgba(40, 40, 41), theme::accent, led));
     dl->AddText(ImVec2(rx - 318, o.y + 39), theme::textFaint, ui.midi.openPort() >= 0 ? "MIDI" : "NO MIDI");
     ImGui::PopFont();
 
@@ -334,7 +334,7 @@ static void filterPanel(UiState& ui, ImVec2 size)
         ImGui::PushFont(theme::fontSmall);
         ImGui::TextDisabled("ZDF state-variable, drag graph to edit");
         ImGui::PopFont();
-        views::FilterResponse(ui, ImVec2(cw, std::max(150.0f, size.y - 36 - 30 - 110)));
+        views::FilterResponse(ui, ImVec2(cw, std::max(150.0f, size.y - 36 - 30 - 132)));
         ImGui::Dummy(ImVec2(0, 4));
         knobRow(ui, { P::FLT_CUTOFF, P::FLT_RES, P::FLT_DRIVE, P::FLT_KEYTRK, P::FLT_MIX }, 20.0f);
         ImGui::Dummy(ImVec2(0, 2));
@@ -401,7 +401,7 @@ static void lfoPanel(UiState& ui, ImVec2 size)
                 ui.presetDirty = true;
             }
             bool hov = ImGui::IsItemHovered();
-            dl->AddRectFilled(a, ImVec2(a.x + 34, a.y + 22), s == shape ? theme::modFaint : (hov ? theme::rgba(34, 40, 54) : theme::rgba(26, 31, 42)), 4.0f);
+            dl->AddRectFilled(a, ImVec2(a.x + 34, a.y + 22), s == shape ? theme::modFaint : (hov ? theme::rgba(33, 33, 34) : theme::rgba(26, 26, 27)), 4.0f);
             if (s == shape) dl->AddRect(a, ImVec2(a.x + 34, a.y + 22), theme::modDim, 4.0f);
             views::LfoShapeIcon(dl, s, ImVec2(a.x + 6, a.y + 4), ImVec2(a.x + 28, a.y + 18), s == shape ? theme::mod : theme::textDim);
             if (hov) ImGui::SetTooltip("%s", kLfoShapes[s]);
@@ -618,7 +618,7 @@ static void matrixPage(UiState& ui, ImVec2 avail)
             ImVec2 a = ImGui::GetCursorScreenPos();
             float bw = 170, bh = 20;
             ImGui::Dummy(ImVec2(bw, bh));
-            dl->AddRectFilled(a, ImVec2(a.x + bw, a.y + bh), theme::rgba(16, 19, 26), 3.0f);
+            dl->AddRectFilled(a, ImVec2(a.x + bw, a.y + bh), theme::rgba(16, 16, 17), 3.0f);
             bool bip = modSrcBipolar(s);
             float x0 = bip ? a.x + bw * 0.5f : a.x;
             float x1 = bip ? a.x + bw * 0.5f * (1.0f + std::clamp(v, -1.0f, 1.0f)) : a.x + bw * std::clamp(v, 0.0f, 1.0f);
@@ -636,9 +636,9 @@ static void distCurve(UiState& ui, ImVec2 size)
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
     ImGui::Dummy(size);
-    dl->AddRectFilled(a, b, theme::rgba(13, 16, 23), 5.0f);
-    dl->AddLine(ImVec2(a.x, (a.y + b.y) * 0.5f), ImVec2(b.x, (a.y + b.y) * 0.5f), theme::rgba(30, 36, 48));
-    dl->AddLine(ImVec2((a.x + b.x) * 0.5f, a.y), ImVec2((a.x + b.x) * 0.5f, b.y), theme::rgba(30, 36, 48));
+    dl->AddRectFilled(a, b, theme::rgba(14, 14, 15), 5.0f);
+    dl->AddLine(ImVec2(a.x, (a.y + b.y) * 0.5f), ImVec2(b.x, (a.y + b.y) * 0.5f), theme::rgba(30, 30, 31));
+    dl->AddLine(ImVec2((a.x + b.x) * 0.5f, a.y), ImVec2((a.x + b.x) * 0.5f, b.y), theme::rgba(30, 30, 31));
     int mode = (int)ui.s.params.value(P::DIST_MODE);
     float g = dsp::dbToGain(ui.s.params.value(P::DIST_DRIVE) * 36.0f);
     float bits = 16.0f - ui.s.params.value(P::DIST_DRIVE) * 13.0f, q = std::exp2(bits - 1.0f);
@@ -658,6 +658,114 @@ static void distCurve(UiState& ui, ImVec2 size)
     dl->AddPolyline(pts, N, theme::accent, 0, 2.0f);
 }
 
+static void vizFrame(ImDrawList* dl, ImVec2 a, ImVec2 b)
+{
+    dl->AddRectFilled(a, b, theme::rgba(14, 14, 15), 5.0f);
+    dl->AddRect(a, b, theme::rgba(33, 33, 34), 5.0f);
+}
+
+// Echo taps: dry hit, then each repeat scaled by feedback; ping-pong alternates sides.
+static void delayViz(UiState& ui, ImVec2 size)
+{
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
+    ImGui::Dummy(size);
+    vizFrame(dl, a, b);
+    bool sync = ui.s.params.value(P::DLY_SYNC) > 0.5f;
+    float tempo = ui.s.params.value(P::TEMPO);
+    float t = sync ? (60.0f / tempo) * kSyncDivBeats[std::clamp((int)ui.s.params.value(P::DLY_DIV), 0, 14)]
+                   : ui.s.params.value(P::DLY_TIME) * 0.001f;
+    float fb = ui.s.params.value(P::DLY_FB), mix = ui.s.params.value(P::DLY_MIX), tone = ui.s.params.value(P::DLY_TONE);
+    bool ping = ui.s.params.value(P::DLY_PING) > 0.5f;
+    const float window = std::max(2.0f, t * 6.0f);
+    float mid = (a.y + b.y) * 0.5f, amp = size.y * 0.42f;
+    dl->AddLine(ImVec2(a.x, mid), ImVec2(b.x, mid), theme::rgba(30, 30, 31));
+    auto xOf = [&](float sec) { return a.x + 10 + (size.x - 20) * sec / window; };
+    for (float beat = 0; beat < window; beat += 60.0f / tempo)
+        dl->AddLine(ImVec2(xOf(beat), a.y + 4), ImVec2(xOf(beat), b.y - 4), theme::rgba(22, 22, 23));
+    dl->AddLine(ImVec2(xOf(0), mid - amp), ImVec2(xOf(0), mid + amp), theme::accent, 3.0f);
+    float g = 0.85f;   // taps shown relative to the first echo; mix is printed
+    for (int k = 1; k * t < window && g > 0.01f; ++k) {
+        float x = xOf(k * t), h = std::min(g, 1.0f) * amp;
+        ImU32 col = theme::lerpColor(theme::mod, theme::rgba(110, 116, 110), std::min(1.0f, (k - 1) * (1.0f - tone) * 0.5f));
+        if (ping) {
+            bool left = (k % 2) == 1;
+            dl->AddLine(ImVec2(x, mid), ImVec2(x, left ? mid - h : mid + h), col, 3.0f);
+        } else {
+            dl->AddLine(ImVec2(x, mid - h), ImVec2(x, mid + h), col, 3.0f);
+        }
+        g *= fb;
+    }
+    ImGui::PushFont(theme::fontSmall);
+    char buf[64];
+    std::snprintf(buf, sizeof buf, "%.0f ms   mix %.0f%%%s", t * 1000.0f, mix * 100.0f, ping ? "   L above / R below" : "");
+    dl->AddText(ImVec2(a.x + 8, a.y + 5), theme::textDim, buf);
+    ImGui::PopFont();
+}
+
+// Reverb: pre-delay gap, then a dense tail decaying 60 dB over the decay time.
+static void reverbViz(UiState& ui, ImVec2 size)
+{
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
+    ImGui::Dummy(size);
+    vizFrame(dl, a, b);
+    float decay = ui.s.params.value(P::REV_DECAY), pre = ui.s.params.value(P::REV_PREDLY) * 0.001f;
+    float width = ui.s.params.value(P::REV_WIDTH), damp = ui.s.params.value(P::REV_DAMP), size01 = ui.s.params.value(P::REV_SIZE);
+    float window = std::max(1.0f, (pre + decay) * 1.1f);
+    float mid = (a.y + b.y) * 0.5f, amp = size.y * 0.42f;
+    auto xOf = [&](float sec) { return a.x + 10 + (size.x - 20) * sec / window; };
+    dl->AddLine(ImVec2(xOf(0), mid - amp), ImVec2(xOf(0), mid + amp), theme::accent, 3.0f);
+    uint32_t h = 12345u;
+    int n = (int)(size.x - 20);
+    for (int i = 0; i < n; ++i) {
+        float sec = window * i / n;
+        if (sec < pre) continue;
+        float env = std::pow(10.0f, -3.0f * (sec - pre) / decay);
+        float density = std::min(1.0f, (sec - pre) / (0.02f + 0.06f * size01));
+        h = h * 1664525u + 1013904223u;
+        float r1 = ((h >> 8) & 0xFFFF) / 65535.0f;
+        h = h * 1664525u + 1013904223u;
+        float r2 = ((h >> 8) & 0xFFFF) / 65535.0f;
+        float up = env * density * (0.35f + 0.65f * r1) * amp;
+        float dn = env * density * (0.35f + 0.65f * (width * r2 + (1.0f - width) * r1)) * amp;
+        ImU32 col = theme::lerpColor(theme::mod, theme::rgba(90, 96, 90), std::min(1.0f, damp * (sec - pre) / decay * 2.0f));
+        float x = a.x + 10 + i;
+        dl->AddLine(ImVec2(x, mid - up), ImVec2(x, mid + dn), theme::withAlpha(col, 0.75f));
+    }
+    ImGui::PushFont(theme::fontSmall);
+    char buf[64];
+    std::snprintf(buf, sizeof buf, "RT60 %.1f s   pre-delay %.0f ms", decay, pre * 1000.0f);
+    dl->AddText(ImVec2(a.x + 8, a.y + 5), theme::textDim, buf);
+    ImGui::PopFont();
+}
+
+// Chorus: the two modulated delay times (L and R, 90 degrees apart).
+static void chorusViz(UiState& ui, ImVec2 size)
+{
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
+    ImGui::Dummy(size);
+    vizFrame(dl, a, b);
+    float depth = ui.s.params.value(P::CHO_DEPTH), rate = ui.s.params.value(P::CHO_RATE);
+    float mid = (a.y + b.y) * 0.5f, amp = size.y * 0.4f * (0.1f + 0.9f * depth);
+    float phase0 = (float)ImGui::GetTime() * rate;
+    const int N = 160;
+    ImVec2 l[N], r[N];
+    for (int i = 0; i < N; ++i) {
+        float p = (float)i / (N - 1) * 2.0f;   // two cycles
+        float x = a.x + 10 + (size.x - 20) * i / (N - 1);
+        l[i] = ImVec2(x, mid - std::sin(dsp::TWO_PI * (p + phase0)) * amp);
+        r[i] = ImVec2(x, mid - std::sin(dsp::TWO_PI * (p + phase0 + 0.25f)) * amp);
+    }
+    dl->AddPolyline(l, N, theme::accent, 0, 2.0f);
+    dl->AddPolyline(r, N, theme::mod, 0, 2.0f);
+    ImGui::PushFont(theme::fontSmall);
+    dl->AddText(ImVec2(a.x + 8, a.y + 5), theme::accent, "L delay");
+    dl->AddText(ImVec2(a.x + 64, a.y + 5), theme::mod, "R delay");
+    ImGui::PopFont();
+}
+
 static void fxPage(UiState& ui, ImVec2 avail)
 {
     const float gap = 8.0f;
@@ -668,8 +776,8 @@ static void fxPage(UiState& ui, ImVec2 avail)
     ImGui::BeginGroup();
     if (w::PanelBegin(ui, "dist", "DISTORTION", ImVec2(colW, rowH), (int)P::DIST_ON)) {
         w::Choice(ui, P::DIST_MODE, 120);
-        distCurve(ui, ImVec2(colW - 20, rowH - 36 - 30 - 80));
-        knobRow(ui, { P::DIST_DRIVE, P::DIST_TONE, P::DIST_MIX }, 22.0f);
+        distCurve(ui, ImVec2(colW - 20, rowH - 36 - 30 - 88));
+        knobRow(ui, { P::DIST_DRIVE, P::DIST_TONE, P::DIST_MIX }, 24.0f);
     }
     w::PanelEnd();
     ImGui::SameLine(0, gap);
@@ -677,7 +785,7 @@ static void fxPage(UiState& ui, ImVec2 avail)
         ImGui::PushFont(theme::fontSmall);
         ImGui::TextDisabled("Stereo modulated delay, LFOs 90 degrees apart");
         ImGui::PopFont();
-        ImGui::Dummy(ImVec2(0, 20));
+        chorusViz(ui, ImVec2(colW - 20, rowH - 36 - 24 - 84));
         knobRow(ui, { P::CHO_RATE, P::CHO_DEPTH, P::CHO_FB, P::CHO_MIX }, 24.0f);
     }
     w::PanelEnd();
@@ -688,9 +796,10 @@ static void fxPage(UiState& ui, ImVec2 avail)
         w::Toggle(ui, P::DLY_SYNC, "Tempo sync"); ImGui::SameLine(0, 16);
         w::Toggle(ui, P::DLY_PING, "Ping-pong");
         if (sync) { w::Choice(ui, P::DLY_DIV, 90); ImGui::SameLine(); ImGui::TextDisabled("at %.0f BPM", ui.s.params.value(P::TEMPO)); }
-        ImGui::Dummy(ImVec2(0, 10));
-        if (!sync) { w::Knob(ui, P::DLY_TIME, nullptr, 22.0f); ImGui::SameLine(0, 4); }
-        knobRow(ui, { P::DLY_FB, P::DLY_TONE, P::DLY_MIX }, 22.0f);
+        else ImGui::Dummy(ImVec2(0, 22));
+        delayViz(ui, ImVec2(colW - 20, rowH - 36 - 24 - 32 - 84));
+        if (!sync) { w::Knob(ui, P::DLY_TIME, nullptr, 24.0f); ImGui::SameLine(0, 4); }
+        knobRow(ui, { P::DLY_FB, P::DLY_TONE, P::DLY_MIX }, 24.0f);
     }
     w::PanelEnd();
     ImGui::SameLine(0, gap);
@@ -698,9 +807,8 @@ static void fxPage(UiState& ui, ImVec2 avail)
         ImGui::PushFont(theme::fontSmall);
         ImGui::TextDisabled("8-line feedback delay network with diffusion and damping");
         ImGui::PopFont();
-        ImGui::Dummy(ImVec2(0, 10));
-        knobRow(ui, { P::REV_SIZE, P::REV_DECAY, P::REV_DAMP }, 22.0f);
-        knobRow(ui, { P::REV_PREDLY, P::REV_WIDTH, P::REV_MIX }, 22.0f);
+        reverbViz(ui, ImVec2(colW - 20, rowH - 36 - 24 - 84));
+        knobRow(ui, { P::REV_SIZE, P::REV_DECAY, P::REV_DAMP, P::REV_PREDLY, P::REV_WIDTH, P::REV_MIX }, 22.0f);
     }
     w::PanelEnd();
     ImGui::EndGroup();
@@ -759,7 +867,46 @@ static void globalPage(UiState& ui, ImVec2 avail)
         } else {
             ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::hot), "Audio not running: %s", ui.audio.error().c_str());
         }
-        ImGui::TextDisabled("Engine load %.1f%%", ui.s.telemetry.cpuLoad.load() * 100.0f);
+        {
+            static const int periods[] = { 3, 5, 10, 20 };
+            int cur = ui.audio.requestedPeriodMs();
+            char prev[32];
+            std::snprintf(prev, sizeof prev, "%d ms buffer", cur);
+            ImGui::SetNextItemWidth(140);
+            if (ImGui::BeginCombo("##period", prev)) {
+                for (int p : periods) {
+                    char lab[32];
+                    std::snprintf(lab, sizeof lab, "%d ms buffer", p);
+                    if (ImGui::Selectable(lab, p == cur)) ui.audio.restart(p, ui.audio.exclusiveMode());
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::SameLine();
+            bool excl = ui.audio.exclusiveMode();
+            if (ImGui::Checkbox("Exclusive mode", &excl)) ui.audio.restart(ui.audio.requestedPeriodMs(), excl);
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("WASAPI exclusive: lowest latency, but other apps can't play audio meanwhile");
+            if (!ui.audio.error().empty()) ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::warn), "%s", ui.audio.error().c_str());
+        }
+        ImGui::Dummy(ImVec2(0, 4));
+        ImGui::TextDisabled("Engine load %.1f%%  (audio callback time / buffer time)", ui.s.telemetry.cpuLoad.load() * 100.0f);
+        {
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            ImVec2 a = ImGui::GetCursorScreenPos(), sz(colW - 20, 60);
+            ImGui::Dummy(sz);
+            vizFrame(dl, a, ImVec2(a.x + sz.x, a.y + sz.y));
+            ImVec2 pts[240];
+            float peak = 0.0f;
+            for (int i = 0; i < 240; ++i) {
+                float v = ui.cpuHistory[(ui.cpuHistoryPos + i) % 240];
+                peak = std::max(peak, v);
+                pts[i] = ImVec2(a.x + sz.x * i / 239.0f, a.y + sz.y - 4 - std::min(v / 0.25f, 1.0f) * (sz.y - 8));
+            }
+            dl->AddPolyline(pts, 240, theme::accent, 0, 1.5f);
+            ImGui::PushFont(theme::fontSmall);
+            char b[48]; std::snprintf(b, sizeof b, "peak %.1f%%  (scale 0-25%%)", peak * 100.0f);
+            dl->AddText(ImVec2(a.x + 6, a.y + 3), theme::textDim, b);
+            ImGui::PopFont();
+        }
         ImGui::Dummy(ImVec2(0, 8));
 
         w::SectionLabel("MIDI input");
@@ -828,7 +975,7 @@ static void drawFooter(UiState& ui, ImVec2 size)
 {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 o = ImGui::GetCursorScreenPos();
-    dl->AddRectFilled(o, ImVec2(o.x + size.x, o.y + size.y), theme::rgba(15, 18, 25));
+    dl->AddRectFilled(o, ImVec2(o.x + size.x, o.y + size.y), theme::rgba(15, 15, 16));
 
     ImGui::SetCursorScreenPos(ImVec2(o.x + 10, o.y + 8));
     views::Wheels(ui, ImVec2(56, size.y - 14));
@@ -858,6 +1005,8 @@ static void drawFooter(UiState& ui, ImVec2 size)
 void frame(UiState& ui, bool focused)
 {
     ui.wt.collect(ui.audio.running());
+    ui.cpuHistory[ui.cpuHistoryPos] = ui.s.telemetry.cpuLoad.load(std::memory_order_relaxed);
+    ui.cpuHistoryPos = (ui.cpuHistoryPos + 1) % 240;
 
     int prog = ui.midi.takeProgramChange();
     if (prog >= 0 && prog < (int)ui.factory.size()) {
@@ -871,7 +1020,7 @@ void frame(UiState& ui, bool focused)
     ImGui::SetNextWindowPos(vp->WorkPos);
     ImGui::SetNextWindowSize(vp->WorkSize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin("Halcyon", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+    ImGui::Begin("Nullwave", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
                  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImGui::PopStyleVar();
 

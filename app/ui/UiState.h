@@ -45,6 +45,8 @@ struct UiState {
 
     // visual state
     float peakL = 0.0f, peakR = 0.0f;
+    float cpuHistory[240] = {};
+    int   cpuHistoryPos = 0;
     std::string status;           // transient footer message
     double statusUntil = 0.0;
 

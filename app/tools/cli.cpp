@@ -1,9 +1,9 @@
-// halcyon_cli: headless rendering, benchmark and self-test for the engine.
+// nullwave_cli: headless rendering, benchmark and self-test for the engine.
 //
-//   halcyon_cli render <preset-number|name> out.wav
-//   halcyon_cli bench
-//   halcyon_cli selftest
-//   halcyon_cli list
+//   nullwave_cli render <preset-number|name> out.wav
+//   nullwave_cli bench
+//   nullwave_cli selftest
+//   nullwave_cli list
 
 #include <algorithm>
 #include <atomic>
@@ -265,7 +265,7 @@ static int cmdSelftest()
         p.customFrames[0].assign((size_t)WT_FRAMES * WT_SIZE, 0.0f);
         for (size_t i = 0; i < p.customFrames[0].size(); ++i) p.customFrames[0][i] = std::sin(i * 0.01f);
         p.wavetable[0] = "My Table";
-        std::string path = (std::filesystem::temp_directory_path() / "halcyon_selftest.hcp").string();
+        std::string path = (std::filesystem::temp_directory_path() / "nullwave_selftest.nwp").string();
         bool saved = savePresetFile(p, path);
         Preset q;
         bool loaded = loadPresetFile(q, path);
@@ -313,7 +313,7 @@ int main(int argc, char** argv)
     if (cmd == "bench") return cmdBench();
     if (cmd == "selftest") return cmdSelftest();
 
-    std::printf("Usage:\n  halcyon_cli list\n  halcyon_cli render <preset-number|name> out.wav\n"
-                "  halcyon_cli bench\n  halcyon_cli selftest\n");
+    std::printf("Usage:\n  nullwave_cli list\n  nullwave_cli render <preset-number|name> out.wav\n"
+                "  nullwave_cli bench\n  nullwave_cli selftest\n");
     return 1;
 }

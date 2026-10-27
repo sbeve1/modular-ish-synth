@@ -97,14 +97,14 @@ void canvas(UiState& ui, ImVec2 size)
     }
     if (ImGui::IsItemDeactivated() && E.drawing) { E.drawing = false; commit(ui); }
 
-    dl->AddRectFilled(a, b, theme::rgba(13, 16, 23), 6.0f);
+    dl->AddRectFilled(a, b, theme::rgba(14, 14, 15), 6.0f);
     for (int g = 1; g < 8; ++g) {
         float x = a.x + size.x * g / 8;
-        dl->AddLine(ImVec2(x, a.y), ImVec2(x, b.y), theme::rgba(24, 29, 39));
+        dl->AddLine(ImVec2(x, a.y), ImVec2(x, b.y), theme::rgba(24, 24, 25));
     }
-    dl->AddLine(ImVec2(a.x, mid), ImVec2(b.x, mid), theme::rgba(40, 48, 64));
-    dl->AddLine(ImVec2(a.x, mid - amp), ImVec2(b.x, mid - amp), theme::rgba(24, 29, 39));
-    dl->AddLine(ImVec2(a.x, mid + amp), ImVec2(b.x, mid + amp), theme::rgba(24, 29, 39));
+    dl->AddLine(ImVec2(a.x, mid), ImVec2(b.x, mid), theme::rgba(40, 40, 41));
+    dl->AddLine(ImVec2(a.x, mid - amp), ImVec2(b.x, mid - amp), theme::rgba(24, 24, 25));
+    dl->AddLine(ImVec2(a.x, mid + amp), ImVec2(b.x, mid + amp), theme::rgba(24, 24, 25));
 
     // neighbours, faint
     for (int nf : { E.frame - 1, E.frame + 1 }) {
@@ -142,7 +142,7 @@ void thumbnails(UiState& ui, float width)
         ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + width, a.y + h);
         if (ImGui::InvisibleButton("##th", ImVec2(width, h))) E.frame = f;
         bool sel = f == E.frame, hov = ImGui::IsItemHovered();
-        dl->AddRectFilled(a, b, sel ? theme::rgba(30, 44, 52) : (hov ? theme::rgba(26, 31, 42) : theme::rgba(17, 20, 28)), 4.0f);
+        dl->AddRectFilled(a, b, sel ? theme::rgba(12, 30, 16) : (hov ? theme::rgba(26, 26, 27) : theme::rgba(17, 17, 18)), 4.0f);
         if (sel) dl->AddRect(a, b, theme::accentDim, 4.0f, 0, 1.5f);
         const float* fr = E.edit->frame(f);
         ImVec2 pts[64];
@@ -164,7 +164,7 @@ void harmonicEditor(UiState& ui, ImVec2 size)
         int k = std::clamp((int)((m.x - a.x) / size.x * 32), 0, 31);
         E.harmonics[k] = std::clamp((b.y - m.y) / size.y, 0.0f, 1.0f);
     }
-    dl->AddRectFilled(a, b, theme::rgba(13, 16, 23), 4.0f);
+    dl->AddRectFilled(a, b, theme::rgba(14, 14, 15), 4.0f);
     float bw = size.x / 32;
     for (int k = 0; k < 32; ++k) {
         float hgt = E.harmonics[k] * size.y;
@@ -180,7 +180,7 @@ void draw(UiState& ui)
 
     ImGui::SetNextWindowSize(ImVec2(1040, 600), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4(theme::rgba(18, 21, 30, 252)));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4(theme::rgba(8, 9, 8, 252)));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
     char title[64];
     std::snprintf(title, sizeof title, "Wavetable Editor - Osc %c###wtedit", ui.wtEditorOsc == 0 ? 'A' : 'B');

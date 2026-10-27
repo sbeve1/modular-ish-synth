@@ -268,7 +268,7 @@ void applyPreset(const Preset& p, SharedState& s, WavetableManager& wt)
 // ---------------------------------------------------------------------
 // File format (text, one setting per line)
 //
-//   halcyon-preset 1
+//   nullwave-preset 1
 //   name <text>          category <text>
 //   param <key> <value>
 //   mod <src> <aux> <target-key> <amount> <mode> <curve>
@@ -287,7 +287,7 @@ bool savePresetFile(const Preset& p, const std::string& path)
     std::ofstream f(path, std::ios::binary);
     if (!f) return false;
 
-    f << "halcyon-preset 1\n";
+    f << "nullwave-preset 1\n";
     f << "name " << p.name << "\n";
     f << "category " << p.category << "\n";
     for (int i = 0; i < NUM_PARAMS; ++i)
@@ -319,7 +319,7 @@ bool loadPresetFile(Preset& p, const std::string& path)
     if (!f) return false;
 
     std::string line;
-    if (!std::getline(f, line) || line.rfind("halcyon-preset", 0) != 0) return false;
+    if (!std::getline(f, line) || line.rfind("nullwave-preset", 0) != 0) return false;
 
     p = Preset();
     p.name = fs::path(path).stem().string();
@@ -366,7 +366,7 @@ bool loadPresetFile(Preset& p, const std::string& path)
 std::string userPresetDir()
 {
     const char* appdata = std::getenv("APPDATA");
-    fs::path dir = fs::path(appdata ? appdata : ".") / "Halcyon" / "Presets";
+    fs::path dir = fs::path(appdata ? appdata : ".") / "Nullwave" / "Presets";
     std::error_code ec;
     fs::create_directories(dir, ec);
     return dir.string();
@@ -377,7 +377,7 @@ std::vector<std::string> listUserPresets()
     std::vector<std::string> out;
     std::error_code ec;
     for (const auto& e : fs::directory_iterator(userPresetDir(), ec))
-        if (e.is_regular_file() && e.path().extension() == ".hcp")
+        if (e.is_regular_file() && e.path().extension() == ".nwp")
             out.push_back(e.path().string());
     std::sort(out.begin(), out.end());
     return out;

@@ -35,13 +35,13 @@ target_link_libraries(imgui PUBLIC glfw opengl32)
 # Engine: no GUI or device dependencies (usable headless)
 # --------------------------------------------------
 file(GLOB ENGINE_SRC CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp)
-add_library(halcyon_engine STATIC ${ENGINE_SRC})
-target_include_directories(halcyon_engine PUBLIC
+add_library(nullwave_engine STATIC ${ENGINE_SRC})
+target_include_directories(nullwave_engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/src)
-target_compile_definitions(halcyon_engine PUBLIC NOMINMAX _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(nullwave_engine PUBLIC NOMINMAX _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS)
 if (MSVC)
-    target_compile_options(halcyon_engine PUBLIC /fp:fast /W3)
+    target_compile_options(nullwave_engine PUBLIC /fp:fast /W3)
 endif()
 
 # --------------------------------------------------
@@ -50,19 +50,19 @@ endif()
 file(GLOB HOST_SRC CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/host/*.cpp)
 file(GLOB UI_SRC   CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ui/*.cpp)
 
-add_executable(Halcyon WIN32
+add_executable(Nullwave WIN32
     main.cpp
     ${HOST_SRC}
     ${UI_SRC}
     ${PROJECT_SOURCE_DIR}/src/platform/RtMidi.cpp)
-target_compile_definitions(Halcyon PRIVATE __WINDOWS_MM__)
-target_link_libraries(Halcyon PRIVATE halcyon_engine imgui winmm)
-set_target_properties(Halcyon PROPERTIES
+target_compile_definitions(Nullwave PRIVATE __WINDOWS_MM__)
+target_link_libraries(Nullwave PRIVATE nullwave_engine imgui winmm)
+set_target_properties(Nullwave PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 if (MSVC)
-    target_link_options(Halcyon PRIVATE /ENTRY:mainCRTStartup)   # WIN32 app with a plain main()
+    target_link_options(Nullwave PRIVATE /ENTRY:mainCRTStartup)   # WIN32 app with a plain main()
 endif()
 
 # Headless tool: render presets to WAV, benchmark, self-test
-add_executable(halcyon_cli tools/cli.cpp tools/MiniaudioEncoder.cpp)
-target_link_libraries(halcyon_cli PRIVATE halcyon_engine)
+add_executable(nullwave_cli tools/cli.cpp tools/MiniaudioEncoder.cpp)
+target_link_libraries(nullwave_cli PRIVATE nullwave_engine)
