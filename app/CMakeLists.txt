@@ -59,6 +59,9 @@ target_compile_definitions(Halcyon PRIVATE __WINDOWS_MM__)
 target_link_libraries(Halcyon PRIVATE halcyon_engine imgui winmm)
 set_target_properties(Halcyon PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+if (MSVC)
+    target_link_options(Halcyon PRIVATE /ENTRY:mainCRTStartup)   # WIN32 app with a plain main()
+endif()
 
 # Headless tool: render presets to WAV, benchmark, self-test
 add_executable(halcyon_cli tools/cli.cpp tools/MiniaudioEncoder.cpp)
