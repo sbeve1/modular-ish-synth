@@ -47,7 +47,8 @@ struct WtCache {
 };
 WtCache gCache[3];
 
-struct WtViewState { float yaw = 0.45f, pitch = 1.1f; bool flat = false; };
+// zx/zy: screen direction of the depth axis; turn: rotation of the waveform axis
+struct WtViewState { float zx = 0.34f, zy = 0.52f, turn = 0.13f; bool flat = false; };
 WtViewState gView[3];
 
 void buildCache(WtCache& c, const WavetableSet* wt)
@@ -100,8 +101,8 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
     int vi = overrideTable ? 2 : osc;
     WtViewState& vs = gView[vi];
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 1.0f)) {
-        vs.yaw = std::clamp(vs.yaw + ImGui::GetIO().MouseDelta.x * 0.008f, -1.4f, 1.4f);
-        vs.pitch = std::clamp(vs.pitch + ImGui::GetIO().MouseDelta.y * 0.006f, 0.25f, 1.35f);
+        vs.turn = std::clamp(vs.turn + ImGui::GetIO().MouseDelta.x * 0.004f, -0.6f, 0.6f);
+        vs.zy = std::clamp(vs.zy + ImGui::GetIO().MouseDelta.y * 0.004f, 0.3f, 1.1f);
     }
     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) vs.flat = !vs.flat;
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && ImGui::GetCurrentContext()->HoveredIdTimer > 0.8f)
@@ -129,7 +130,7 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
                          : ui.s.params.value(amtP);
 
     const float W = size.x;
-    const float stripH = vs.flat ? size.y - 22.0f : std::floor(size.y * 0.26f);
+    const float stripH = vs.flat ? size.y - 22.0f : std::floor(size.y * 0.22f);
     const float stackH = vs.flat ? 0.0f : size.y - stripH - 22.0f;
     const ImU32 green = theme::accent;
 
@@ -145,11 +146,24 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
     // ---- 3D stack ----
     if (!vs.flat) {
         const float top = a.y + 20.0f, H = stackH;
-        const float dx = W * 0.22f * (vs.yaw / 1.4f) + W * 0.04f;
-        const float dy = H * 0.86f * (vs.pitch / 1.35f);
-        const float sx = W * 0.36f - std::fabs(dx) * 0.5f, ampY = H * 0.095f;
-        const ImVec2 origin(a.x + W * 0.5f - dx * 0.5f, top + H * 0.5f + dy * 0.5f);
-        auto project = [&](float x, float z, float y) { return ImVec2(origin.x + x * sx + z * dx, origin.y - y * ampY - z * dy); };
+        const float bx0 = -1.08f, bx1 = 1.2f, by0 = -1.2f, by1 = 1.2f;   // box extents
+
+        // Model space: x along the waveform (turned so the front corner faces the
+        // viewer), z into the depth, y = amplitude. Scale and offset are fitted so
+        // the whole box always fills the area.
+        const float amp = 0.21f;
+        const ImVec2 X(std::cos(vs.turn), std::sin(vs.turn)), Z(vs.zx, -vs.zy);
+        auto model = [&](float x, float z, float y) { return ImVec2(x * X.x + z * Z.x, x * X.y + z * Z.y - y * amp); };
+        float mnx = 1e9f, mny = 1e9f, mxx = -1e9f, mxy = -1e9f;
+        for (float x : { bx0, bx1 }) for (float z : { 0.0f, 1.0f }) for (float y : { by0, by1 }) {
+            ImVec2 m = model(x, z, y);
+            mnx = std::min(mnx, m.x); mxx = std::max(mxx, m.x);
+            mny = std::min(mny, m.y); mxy = std::max(mxy, m.y);
+        }
+        const float availW = W - 24.0f, availH = H - 6.0f;
+        const float scale = std::min(availW / (mxx - mnx), availH / (mxy - mny));
+        const ImVec2 origin(a.x + W * 0.5f - (mnx + mxx) * 0.5f * scale, top + H * 0.5f - (mny + mxy) * 0.5f * scale);
+        auto project = [&](float x, float z, float y) { ImVec2 m = model(x, z, y); return ImVec2(origin.x + m.x * scale, origin.y + m.y * scale); };
 
         ImVec2 pts[PTS];
         auto framePts = [&](const float* data, float z) {
@@ -157,10 +171,9 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         };
 
         // grey box around the stack: back wall and floor filled, edges outlined
-        const float bx0 = -1.08f, bx1 = 1.2f, by0 = -1.2f, by1 = 1.2f;
-        const ImU32 boxFill = theme::rgba(24, 24, 27), boxEdge = theme::rgba(70, 70, 76);
+        const ImU32 boxFill = theme::rgba(24, 24, 27, 128), boxEdge = theme::rgba(70, 70, 76, 128);
         dl->AddQuadFilled(project(bx0, 1.0f, by0), project(bx1, 1.0f, by0), project(bx1, 1.0f, by1), project(bx0, 1.0f, by1), boxFill);
-        dl->AddQuadFilled(project(bx0, 0.0f, by0), project(bx1, 0.0f, by0), project(bx1, 1.0f, by0), project(bx0, 1.0f, by0), theme::rgba(19, 19, 21));
+        dl->AddQuadFilled(project(bx0, 0.0f, by0), project(bx1, 0.0f, by0), project(bx1, 1.0f, by0), project(bx0, 1.0f, by0), theme::rgba(19, 19, 21, 128));
         auto edge = [&](float x0, float z0, float y0, float x1, float z1, float y1) {
             dl->AddLine(project(x0, z0, y0), project(x1, z1, y1), boxEdge, 1.0f);
         };
