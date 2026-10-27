@@ -105,6 +105,21 @@ design, miniaudio, RtMidi, the WAV render approach.
   position; the playing frame is filled and marked on a depth rail; a 2D
   strip below shows the exact output waveform with the warp mode applied
   (same phase-warp math as the oscillator).
+- Iterated on the wavetable view with feedback, using Serum 2's own display
+  as the reference:
+  - removed frame numbers; added a grey 3D box around the stack (half
+    opacity); accent moved to a lime-leaning neon green (#6EFF28)
+  - taller waves; tried a screen-space rotation (tilted the floor, rejected)
+    and a true 3D yaw (box too narrow for the wide display)
+  - final: an oblique projection with proportions measured from a Serum 2
+    screenshot (waveform axis right and slightly down, depth right and up, a
+    wide low box), 15 lightly filled slices that read as a shaded terrain,
+    playing frame bright and filled; the projection is fitted so the box
+    always fills the view
+  - removed the separate position dot and rail (the highlighted frame already
+    shows the position)
+- Automated UI checks: the app's `--screenshot` flag plus `--set key=value`,
+  `--page`, `--fx` let every visual change be verified from a capture.
 
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
@@ -114,4 +129,5 @@ design, miniaudio, RtMidi, the WAV render approach.
 - [x] Presets, wavetable editor
 - [x] Self-test, benchmark, README
 - [x] Arpeggiator, second filter, drawable LFO, EQ/compressor/phaser/flanger, undo/redo
+- [x] Rename to modular_synth; Serum 2-style wavetable view
 - [ ] Browser build (needs the Emscripten toolchain installed)
