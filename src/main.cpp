@@ -6,15 +6,19 @@
 #include "midi/MIDIHandler.h"
 #include "midi/MidiQueue.h"
 #include "engine/Synth.h"
+#include "render/Render.h"
 #include <thread>
 #include <chrono>
+#include <cmath>
+#include <cstring>
+#include <cstdio>
+#include <algorithm>
 
 
 // instantiate queue with power-of-two size
 static MidiRing<4096> gMidiQueue; // bigger to be safe
 
 Synth synth;
-MIDIHandler midi;
 
 // ------------------ AUDIO CALLBACK ------------------
 void audioCallback(ma_device* device, void* pOutput, const void*, ma_uint32 frameCount)
@@ -41,8 +45,38 @@ void audioCallback(ma_device* device, void* pOutput, const void*, ma_uint32 fram
 }
 
 
+// ------------------ HEADLESS RENDER ------------------
+static int runRender(const char* path)
+{
+    constexpr unsigned SAMPLE_RATE = 48000;
+    synth.prepare((float)SAMPLE_RATE);
+
+    auto start = std::chrono::steady_clock::now();
+    std::vector<float> audio = renderSequence(synth, (float)SAMPLE_RATE, demoSequence(), 3.0);
+    double renderSec = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+
+    float peak = 0.0f;
+    for (float s : audio) {
+        if (!std::isfinite(s)) {
+            std::cout << "Render produced a non-finite sample.\n";
+            return 1;
+        }
+        peak = std::max(peak, std::fabs(s));
+    }
+
+    if (!writeWav(path, audio, SAMPLE_RATE)) {
+        std::cout << "Failed to write " << path << "\n";
+        return 1;
+    }
+
+    double audioSec = (audio.size() / 2) / (double)SAMPLE_RATE;
+    std::printf("Wrote %s: %.2fs at %u Hz, peak %.3f, rendered in %.3fs (%.1fx realtime)\n",
+                path, audioSec, SAMPLE_RATE, peak, renderSec, audioSec / renderSec);
+    return 0;
+}
+
 // ------------------ MAIN ------------------
-int main()
+int main(int argc, char** argv)
 {
     // Init lookup tables
     initDSPTables();
@@ -52,13 +86,17 @@ int main()
     // synth.setSourceEnabled(SourceID::NOISE, true);
     // synth.oscAParams.wtPosBase = 1.0f; // wavetable is on square
 
-
-
-
-
-
+    if (argc >= 2 && std::strcmp(argv[1], "--render") == 0) {
+        if (argc < 3) {
+            std::cout << "Usage: Synth --render out.wav\n";
+            return 1;
+        }
+        return runRender(argv[2]);
+    }
 
     // IMPORTANT: wire MIDI → synth
+    // (constructed here, not globally, so --render doesn't open a MIDI port)
+    MIDIHandler midi;
     midi.synth = &synth;
     midi.setQueue(&gMidiQueue); // send events into queue
 

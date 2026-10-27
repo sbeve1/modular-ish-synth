@@ -49,6 +49,10 @@ file(GLOB_RECURSE AUDIO_SRC
 )
 
 
+file(GLOB RENDER_SRC
+    "src/render/*.cpp"
+)
+
 # IMPORTANT: control sources (LFO.cpp lives here)
 file(GLOB CONTROL_SRC
     "src/control/*.cpp"
@@ -67,6 +71,7 @@ add_executable(Synth
     ${MIDI_SRC}
     ${PLATFORM_SRC}
     ${CONTROL_SRC}
+    ${RENDER_SRC}
 )
 
 # --------------------------------------------------
