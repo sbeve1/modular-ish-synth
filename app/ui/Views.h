@@ -8,8 +8,9 @@
 // the audio thread directly.
 namespace views {
 
-// 3D wavetable: frames recede into depth, the playing position glows.
-// Drag to rotate, double-click to toggle 2D/3D.
+// Wavetable: numbered 3D frame stack with the playing position filled and
+// marked, plus a 2D strip of the exact output waveform (warp included).
+// Drag to tilt, double-click for the 2D view only.
 void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overrideTable = nullptr, float overridePos = -1.0f);
 
 void EnvelopeEditor(UiState& ui, int env, ImVec2 size);   // draggable nodes and curves

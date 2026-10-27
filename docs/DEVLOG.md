@@ -96,6 +96,16 @@ design, miniaudio, RtMidi, the WAV render approach.
 - Zero-allocation test now runs with everything on: arp, both filters, custom
   LFO, all 8 effects in reversed order.
 
+### Round 3: readability and identity
+- Renamed to **modular_synth**.
+- Accent switched to neon green (#00FF41); modulation stays white.
+- Wavetable view rebuilt for readability, modeled on how Serum presents
+  wavetables: only the 8 real frames (was 29 lines including interpolated
+  slices), numbered, spaced apart and fading with distance from the playing
+  position; the playing frame is filled and marked on a depth rail; a 2D
+  strip below shows the exact output waveform with the warp mode applied
+  (same phase-warp math as the oscillator).
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX

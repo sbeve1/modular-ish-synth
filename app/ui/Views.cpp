@@ -30,21 +30,24 @@ static void frameBg(ImDrawList* dl, ImVec2 a, ImVec2 b)
 }
 
 // ---------------------------------------------------------------------
-// 3D wavetable
+// Wavetable view
+//
+// Top: the 8 frames in an oblique 3D stack (frame 1 at the front), numbered,
+// fading with distance from the playing position, which is filled and marked
+// on a depth rail. Bottom: a 2D strip of the exact waveform being played,
+// with warp applied, like Serum's 2D view.
 // ---------------------------------------------------------------------
 namespace {
-constexpr int SLICES = 29;   // 8 frames + 3 interpolated slices between each pair
-constexpr int PTS = 112;
+constexpr int PTS = 128;    // per frame in the 3D stack
+constexpr int PTS2 = 256;   // in the 2D strip
 
 struct WtCache {
     const WavetableSet* src = nullptr;
-    size_t generation = 0;
-    float slice[SLICES][PTS];
     float frames[WT_FRAMES][PTS];
 };
 WtCache gCache[3];
 
-struct WtViewState { float yaw = 0.9f, pitch = 0.8f; bool flat = false; };
+struct WtViewState { float yaw = 0.45f, pitch = 1.1f; bool flat = false; };
 WtViewState gView[3];
 
 void buildCache(WtCache& c, const WavetableSet* wt)
@@ -55,12 +58,36 @@ void buildCache(WtCache& c, const WavetableSet* wt)
         const float* t = wt->mips.empty() ? wt->frame(f) : wt->table(level, f);
         for (int i = 0; i < PTS; ++i) c.frames[f][i] = t[i * WT_SIZE / PTS];
     }
-    for (int k = 0; k < SLICES; ++k) {
-        float fp = (float)k / (SLICES - 1) * (WT_FRAMES - 1);
-        int f0 = std::min((int)fp, WT_FRAMES - 1), f1 = std::min(f0 + 1, WT_FRAMES - 1);
-        float t = fp - f0;
-        for (int i = 0; i < PTS; ++i) c.slice[k][i] = c.frames[f0][i] + (c.frames[f1][i] - c.frames[f0][i]) * t;
+}
+
+// Same phase warps as the oscillator (Voice.cpp), for display.
+float warpPhaseUi(float p, int warp, float amt)
+{
+    switch (warp) {
+        case 1: if (std::fabs(amt - 0.5f) > 1e-3f) p = std::pow(p, std::exp2((amt - 0.5f) * 4.0f)); break;
+        case 2: { float w = 0.5f - amt * 0.47f; p = p < w ? p * (0.5f / w) : 0.5f + (p - w) * (0.5f / (1.0f - w)); break; }
+        case 3: p = frac01(p * (1.0f + amt * 7.0f)); break;
+        case 4: p = p + ((p < 0.5f ? p : 1.0f - p) - p) * amt; break;
+        default: break;
     }
+    return std::clamp(p, 0.0f, 0.99999f);
+}
+
+float readTable(const WavetableSet* wt, int level, float pos, float phase)
+{
+    float fp = pos * (WT_FRAMES - 1);
+    int f0 = std::min((int)fp, WT_FRAMES - 1), f1 = std::min(f0 + 1, WT_FRAMES - 1);
+    float ff = fp - f0;
+    auto at = [&](int f) {
+        const float* t = wt->mips.empty() ? wt->frame(f) : wt->table(level, f);
+        float idx = phase * WT_SIZE;
+        int i0 = (int)idx;
+        float fr = idx - i0;
+        int i1 = wt->mips.empty() ? (i0 + 1) % WT_SIZE : i0 + 1;
+        return t[i0] + (t[i1] - t[i0]) * fr;
+    };
+    float a = at(f0), b = at(f1);
+    return a + (b - a) * ff;
 }
 } // namespace
 
@@ -74,11 +101,11 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
     WtViewState& vs = gView[vi];
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 1.0f)) {
         vs.yaw = std::clamp(vs.yaw + ImGui::GetIO().MouseDelta.x * 0.008f, -1.4f, 1.4f);
-        vs.pitch = std::clamp(vs.pitch + ImGui::GetIO().MouseDelta.y * 0.006f, 0.05f, 1.35f);
+        vs.pitch = std::clamp(vs.pitch + ImGui::GetIO().MouseDelta.y * 0.006f, 0.25f, 1.35f);
     }
     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) vs.flat = !vs.flat;
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && ImGui::GetCurrentContext()->HoveredIdTimer > 0.8f)
-        ImGui::SetTooltip("Drag to rotate, double-click for %s view", vs.flat ? "3D" : "2D");
+        ImGui::SetTooltip("Drag to tilt the stack, double-click for %s", vs.flat ? "3D + 2D" : "2D only");
 
     frameBg(dl, a, b);
     dl->PushClipRect(a, b, true);
@@ -88,85 +115,122 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
     WtCache& c = gCache[vi];
     if (c.src != wt || overrideTable) buildCache(c, wt);
 
+    const bool live = ui.s.telemetry.displayVoiceActive.load(std::memory_order_relaxed);
     float pos;
     if (overridePos >= 0.0f) pos = overridePos;
-    else {
-        bool live = ui.s.telemetry.displayVoiceActive.load(std::memory_order_relaxed);
-        pos = live ? ui.s.telemetry.oscPos[osc].load(std::memory_order_relaxed)
-                   : ui.s.params.norm(oscParam(osc, P::OSCA_POS));
-    }
+    else pos = live ? ui.s.telemetry.oscPos[osc].load(std::memory_order_relaxed)
+                    : ui.s.params.norm(oscParam(osc, P::OSCA_POS));
     pos = std::clamp(pos, 0.0f, 1.0f);
 
-    // current waveform (interpolated between source frames)
-    float cur[PTS];
-    {
-        float fp = pos * (WT_FRAMES - 1);
-        int f0 = std::min((int)fp, WT_FRAMES - 1), f1 = std::min(f0 + 1, WT_FRAMES - 1);
-        float t = fp - f0;
-        for (int i = 0; i < PTS; ++i) cur[i] = c.frames[f0][i] + (c.frames[f1][i] - c.frames[f0][i]) * t;
-    }
+    // warp as currently heard (modulated when a voice is playing)
+    int warp = (int)ui.s.params.value(oscParam(osc, P::OSCA_WARP));
+    P amtP = oscParam(osc, P::OSCA_WARPAMT);
+    float warpAmt = live ? paramInfo(amtP).toValue(ui.s.telemetry.modNorm[(int)amtP].load(std::memory_order_relaxed))
+                         : ui.s.params.value(amtP);
 
-    const ImVec2 ctr((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f);
-    const float W = size.x, H = size.y;
-    ImVec2 pts[PTS];
+    const float W = size.x;
+    const float stripH = vs.flat ? size.y - 22.0f : std::floor(size.y * 0.26f);
+    const float stackH = vs.flat ? 0.0f : size.y - stripH - 22.0f;
+    const ImU32 green = theme::accent;
 
-    if (vs.flat) {
-        for (int f = 0; f < WT_FRAMES; ++f) {
-            for (int i = 0; i < PTS; ++i)
-                pts[i] = ImVec2(a.x + 8 + (W - 16) * i / (PTS - 1), ctr.y - c.frames[f][i] * H * 0.38f);
-            dl->AddPolyline(pts, PTS, theme::withAlpha(theme::accent, 0.12f), 0, 1.0f);
-        }
-        for (int i = 0; i < PTS; ++i)
-            pts[i] = ImVec2(a.x + 8 + (W - 16) * i / (PTS - 1), ctr.y - cur[i] * H * 0.38f);
-        dl->AddLine(ImVec2(a.x, ctr.y), ImVec2(b.x, ctr.y), theme::rgba(40, 40, 41));
-        dl->AddPolyline(pts, PTS, theme::withAlpha(theme::accent, 0.25f), 0, 6.0f);
-        dl->AddPolyline(pts, PTS, theme::accent, 0, 2.0f);
-    } else {
-        // Oblique projection: frame 1 at the front (bottom-left), frame 8 at the back
-        // (top-right). Drag changes the depth direction; slices are drawn back to front,
-        // each filled to its baseline so it hides the ones behind it.
-        const float dx = W * 0.22f * (vs.yaw / 1.4f) + W * 0.04f;
-        const float dy = H * 0.52f * (vs.pitch / 1.35f);
-        const float sx = W * 0.40f - std::fabs(dx) * 0.5f, ampY = H * 0.20f;
-        const ImVec2 origin(ctr.x - dx * 0.5f, ctr.y + dy * 0.5f + H * 0.02f);
-        auto project = [&](float x, float z, float y) {
-            return ImVec2(origin.x + x * sx + z * dx, origin.y - y * ampY - z * dy);
-        };
-
-        // Slices are lines only, so every frame stays visible through the others;
-        // the playing slice alone gets a faint translucent fill to its zero line.
-        auto drawSlice = [&](const float* data, float z, ImU32 lineCol, float thick, bool fill) {
-            for (int i = 0; i < PTS; ++i) pts[i] = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, data[i]);
-            if (fill) {
-                NoAAFill noaa(dl);
-                for (int i = 1; i < PTS; ++i) {
-                    ImVec2 z0 = project((float)(i - 1) / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
-                    ImVec2 z1 = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
-                    dl->AddQuadFilled(pts[i - 1], pts[i], z1, z0, theme::withAlpha(theme::accent, 0.07f));
-                }
-            }
-            dl->AddPolyline(pts, PTS, lineCol, 0, thick);
-        };
-
-        for (int k = SLICES - 1; k >= 0; --k) {
-            float z = (float)k / (SLICES - 1);
-            bool isFrame = k % 4 == 0;
-            float near = 1.0f - std::fabs(z - pos) * 2.0f;
-            float alpha = 0.10f + (isFrame ? 0.18f : 0.0f) + std::max(near, 0.0f) * 0.22f;
-            drawSlice(c.slice[k], z, theme::withAlpha(theme::text, alpha), isFrame ? 1.2f : 1.0f, false);
-        }
-        drawSlice(cur, pos, theme::accent, 2.2f, true);   // playing position, on top
-    }
-
-    // labels
+    // ---- header labels ----
     ImGui::PushFont(theme::fontSmall);
+    dl->AddText(ImVec2(a.x + 8, a.y + 4), theme::textDim, wt->name.c_str());
     char buf[64];
-    std::snprintf(buf, sizeof buf, "%s", wt->name.c_str());
-    dl->AddText(ImVec2(a.x + 8, a.y + 5), theme::textDim, buf);
-    std::snprintf(buf, sizeof buf, "frame %.1f / 8", pos * (WT_FRAMES - 1) + 1.0f);
+    std::snprintf(buf, sizeof buf, "frame %.1f / %d", pos * (WT_FRAMES - 1) + 1.0f, WT_FRAMES);
     ImVec2 ts = ImGui::CalcTextSize(buf);
-    dl->AddText(ImVec2(b.x - ts.x - 8, a.y + 5), theme::accent, buf);
+    dl->AddText(ImVec2(b.x - ts.x - 8, a.y + 4), green, buf);
     ImGui::PopFont();
+
+    // ---- 3D stack ----
+    if (!vs.flat) {
+        const float top = a.y + 20.0f, H = stackH;
+        const float dx = W * 0.22f * (vs.yaw / 1.4f) + W * 0.04f;
+        const float dy = H * 0.86f * (vs.pitch / 1.35f);
+        const float sx = W * 0.36f - std::fabs(dx) * 0.5f, ampY = H * 0.095f;
+        const ImVec2 origin(a.x + W * 0.5f - dx * 0.5f, top + H * 0.5f + dy * 0.5f);
+        auto project = [&](float x, float z, float y) { return ImVec2(origin.x + x * sx + z * dx, origin.y - y * ampY - z * dy); };
+
+        ImVec2 pts[PTS];
+        auto framePts = [&](const float* data, float z) {
+            for (int i = 0; i < PTS; ++i) pts[i] = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, data[i]);
+        };
+
+        // depth rail on the right, with the position marker
+        ImVec2 r0 = project(1.12f, 0.0f, 0.0f), r1 = project(1.12f, 1.0f, 0.0f);
+        dl->AddLine(r0, r1, theme::withAlpha(green, 0.25f), 1.0f);
+        for (int f = 0; f < WT_FRAMES; ++f) {
+            ImVec2 t = project(1.12f, (float)f / (WT_FRAMES - 1), 0.0f);
+            dl->AddLine(ImVec2(t.x - 3, t.y), ImVec2(t.x + 3, t.y), theme::withAlpha(green, 0.35f));
+        }
+
+        // frames, back to front, fading with distance from the playing position
+        ImGui::PushFont(theme::fontSmall);
+        for (int f = WT_FRAMES - 1; f >= 0; --f) {
+            float z = (float)f / (WT_FRAMES - 1);
+            float near = std::max(0.0f, 1.0f - std::fabs(z - pos) * 2.5f);
+            float alpha = 0.16f + 0.5f * near;
+            framePts(c.frames[f], z);
+            dl->AddPolyline(pts, PTS, theme::withAlpha(green, alpha), 0, 1.3f);
+            char n[4];
+            std::snprintf(n, sizeof n, "%d", f + 1);
+            ImVec2 lp = project(-1.0f, z, 0.0f);
+            dl->AddText(ImVec2(lp.x - 16, lp.y - 7), theme::withAlpha(green, 0.3f + 0.6f * near), n);
+        }
+        ImGui::PopFont();
+
+        // playing position: interpolated frame, filled, on top
+        float cur[PTS];
+        {
+            float fp = pos * (WT_FRAMES - 1);
+            int f0 = std::min((int)fp, WT_FRAMES - 1), f1 = std::min(f0 + 1, WT_FRAMES - 1);
+            float t = fp - f0;
+            for (int i = 0; i < PTS; ++i) cur[i] = c.frames[f0][i] + (c.frames[f1][i] - c.frames[f0][i]) * t;
+        }
+        framePts(cur, pos);
+        {
+            NoAAFill noaa(dl);
+            for (int i = 1; i < PTS; ++i) {
+                ImVec2 z0 = project((float)(i - 1) / (PTS - 1) * 2.0f - 1.0f, pos, 0.0f);
+                ImVec2 z1 = project((float)i / (PTS - 1) * 2.0f - 1.0f, pos, 0.0f);
+                dl->AddQuadFilled(pts[i - 1], pts[i], z1, z0, theme::withAlpha(green, 0.12f));
+            }
+        }
+        dl->AddPolyline(pts, PTS, theme::withAlpha(green, 0.25f), 0, 7.0f);
+        dl->AddPolyline(pts, PTS, green, 0, 2.4f);
+        ImVec2 m = project(1.12f, pos, 0.0f);
+        dl->AddCircleFilled(m, 4.5f, green);
+    }
+
+    // ---- 2D strip: what the oscillator plays, warp included ----
+    {
+        ImVec2 sa(a.x + 6, b.y - stripH - 6), sb(b.x - 6, b.y - 6);
+        dl->AddRectFilled(sa, sb, theme::rgba(9, 9, 10), 3.0f);
+        dl->AddRect(sa, sb, theme::withAlpha(green, 0.15f), 3.0f);
+        float mid = (sa.y + sb.y) * 0.5f, amp = (sb.y - sa.y) * 0.42f;
+        dl->AddLine(ImVec2(sa.x, mid), ImVec2(sb.x, mid), theme::withAlpha(green, 0.12f));
+        ImVec2 p2[PTS2];
+        const int level = 2;
+        for (int i = 0; i < PTS2; ++i) {
+            float ph = (float)i / PTS2;
+            float v = readTable(wt, level, pos, (warp == 0 || warp == 5) ? ph : warpPhaseUi(ph, warp, warpAmt));
+            if (warp == 5) v = std::sin(v * (1.0f + warpAmt * 5.0f) * dsp::PI * 0.5f);
+            p2[i] = ImVec2(sa.x + 4 + (sb.x - sa.x - 8) * i / (PTS2 - 1), mid - std::clamp(v, -1.1f, 1.1f) * amp);
+        }
+        {
+            NoAAFill noaa(dl);
+            for (int i = 1; i < PTS2; ++i)
+                dl->AddQuadFilled(p2[i - 1], p2[i], ImVec2(p2[i].x, mid), ImVec2(p2[i - 1].x, mid), theme::withAlpha(green, 0.10f));
+        }
+        dl->AddPolyline(p2, PTS2, green, 0, 1.8f);
+        ImGui::PushFont(theme::fontSmall);
+        char lab[48];
+        if (warp == 0) std::snprintf(lab, sizeof lab, "output");
+        else std::snprintf(lab, sizeof lab, "output  |  warp %s %.0f%%", kWarpModes[std::clamp(warp, 0, 5)], warpAmt * 100.0f);
+        ImVec2 ls = ImGui::CalcTextSize(lab);
+        dl->AddText(ImVec2(sb.x - ls.x - 6, sa.y + 3), theme::withAlpha(green, 0.6f), lab);
+        ImGui::PopFont();
+    }
 
     dl->PopClipRect();
     ImGui::PopID();
