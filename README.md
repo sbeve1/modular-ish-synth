@@ -143,8 +143,8 @@ each run as a download.
   once per block. Notes go through single-producer/single-consumer rings, one
   ring per producer thread.
 - The audio callback allocates nothing; all buffers are created in `prepare()`.
-- `app/engine` has no GUI or device code, so the same engine can drive the CLI
-  and, later, a WebAssembly/AudioWorklet build.
+- `app/engine` has no GUI or device code, so the same engine drives both the
+  app and the CLI.
 
 Measured on this machine (48 kHz, best of 3 runs), after an optimization
 pass that cut CPU use 19-32% with no change to the sound:

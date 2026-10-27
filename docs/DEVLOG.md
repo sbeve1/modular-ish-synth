@@ -21,17 +21,16 @@ not just the feature.
 ## Phase 2: GUI instrument "modular_synth" (branch `feature/gui-synth`, worktree `CRAZY PROJECT-gui`)
 
 Goal: turn the engine into a complete, playable synthesizer with a modern
-(Serum-2-inspired, original design) interface. Desktop first; browser build
-(WebAssembly + AudioWorklet + Web MIDI) planned from the same codebase.
+(Serum-2-inspired, original design) interface, as a standalone Windows
+desktop app.
 
 ### Architecture decisions
 
 - **Desktop app in C++ with Dear ImGui (GLFW + OpenGL 3).** Reuses the engine,
   miniaudio and RtMidi directly; native audio latency; UI rendering on its own
   thread, never in the audio callback.
-- **Engine library (`modular_synth_engine`) has no GUI or device code**, so the same
-  code can be compiled to WebAssembly later and driven by a headless CLI for
-  tests and benchmarks.
+- **Engine library (`modular_synth_engine`) has no GUI or device code**, so the
+  same code drives both the app and a headless CLI for tests and benchmarks.
 - **Lock-free UI ↔ audio bridge.**
   - Parameters: one atomic float per parameter, stored *normalized*; the audio
     thread snapshots them once per block.
@@ -171,9 +170,9 @@ Bugs found by the audit and fixed:
   arpeggiator, glass pad) offline, balanced per part and normalized to
   -1 dBFS, written as 16-bit WAV: `docs/demo.wav`, linked from the README.
 - GitHub Actions CI (`.github/workflows/ci.yml`, windows-latest): configure
-  with VS 2022, build Release, run `selftest` (fails the build on any
+  with Visual Studio, build Release, run `selftest` (fails the build on any
   failure), run `bench` for the log, upload the executables. Verified by
-  running the same commands on a clean build directory locally. Not pushed.
+  running the same commands on a clean build directory locally.
 
 ### Round 6: latency and LFO feedback from playing
 - **Input latency.** Measured the real output buffer: Windows shared mode on
@@ -212,6 +211,23 @@ Bugs found by the audit and fixed:
   ASIO), then re-encoded with ffmpeg from 1440p60 HEVC (23 MB) to 720p30 H.264
   two-pass (9.2 MB, under GitHub's 10 MB inline-video limit): `docs/demo.mp4`.
 
+### Round 7: publishing and CI
+- Pushed `feature/gui-synth` to GitHub as its own branch and opened a pull
+  request into `main`; `main` itself was not changed.
+- **CI broke when the runner image moved on.** `windows-latest` no longer
+  ships Visual Studio 2022, so the hard-coded `Visual Studio 17 2022`
+  generator failed at configure time. Building the name from `vswhere`'s
+  product-line field failed too: for VS 2026 it reports `18`, not `2026`
+  (giving the invalid `Visual Studio 18 18`). The workflow now reads the
+  installed major version from `vswhere` and picks the matching name from
+  CMake's own generator list (`cmake -E capabilities`), so it follows
+  whatever Visual Studio the runner has.
+- Moved to `actions/checkout@v7` and `actions/upload-artifact@v7`, which run
+  on Node.js 24 (GitHub deprecated the Node 20 runtime the v4 actions used).
+- Considered a browser build (WebAssembly + AudioWorklet + Web MIDI). It ran
+  with sound in the browser, but was dropped to keep this a standalone
+  desktop instrument.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX
@@ -224,4 +240,5 @@ Bugs found by the audit and fixed:
 - [x] Optimization pass: 19-32% faster, audit bugs fixed, sound unchanged
 - [x] Demo clip and CI workflow
 - [x] ASIO, lower input latency, LFO feedback fixes
-- [ ] Browser build (needs the Emscripten toolchain installed)
+- [x] Demo video
+- [x] Pushed to GitHub (pull request into `main`); CI follows the runner's Visual Studio
