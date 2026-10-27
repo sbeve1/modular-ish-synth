@@ -136,4 +136,5 @@ void ParamStore::setNorm(P id, float n)
     if (int steps = info.numSteps())
         n = std::round(n * steps) / steps;   // snap stepped params
     v[(int)id].store(n, std::memory_order_relaxed);
+    gen.fetch_add(1, std::memory_order_relaxed);
 }

@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <xmmintrin.h>
 
 // ---------------------------------------------------------------------
 // Mod source names
@@ -388,6 +389,10 @@ void Instrument::process(float* outL, float* outR, int frames)
 {
     auto t0 = std::chrono::steady_clock::now();
 
+    // flush denormals to zero on this thread: decaying filter, reverb and
+    // envelope states would otherwise hit very slow subnormal arithmetic
+    _mm_setcsr(_mm_getcsr() | 0x8040);
+
     snapshot();
 
     Event e;
@@ -402,16 +407,21 @@ void Instrument::process(float* outL, float* outR, int frames)
         std::fill(L, L + chunk, 0.0f);
         std::fill(R, R + chunk, 0.0f);
 
-        for (int pos = 0; pos < chunk; pos += CONTROL_RATE) {
-            int n = std::min(CONTROL_RATE, chunk - pos);
-            arpTick(n);
-            for (auto& v : voices)
-                if (v.active) v.render(ctx, L + pos, R + pos, n);
-            advanceFreeLfos(n);
+        // voices in control blocks, then FX every FX_BLOCK samples so that
+        // modulated FX parameters update smoothly regardless of buffer size
+        constexpr int FX_BLOCK = 64;
+        for (int fxPos = 0; fxPos < chunk; fxPos += FX_BLOCK) {
+            int fxEnd = std::min(fxPos + FX_BLOCK, chunk);
+            for (int pos = fxPos; pos < fxEnd; pos += CONTROL_RATE) {
+                int n = std::min(CONTROL_RATE, fxEnd - pos);
+                arpTick(n);
+                for (auto& v : voices)
+                    if (v.active) v.render(ctx, L + pos, R + pos, n);
+                advanceFreeLfos(n);
+            }
+            updateGlobalModulation();
+            renderFx(L + fxPos, R + fxPos, fxEnd - fxPos);
         }
-
-        updateGlobalModulation();
-        renderFx(L, R, chunk);
 
         std::memcpy(outL + done, L, chunk * sizeof(float));
         std::memcpy(outR + done, R, chunk * sizeof(float));

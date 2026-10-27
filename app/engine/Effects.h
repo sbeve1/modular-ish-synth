@@ -7,9 +7,12 @@
 // Global effects. prepare() allocates; process() never does.
 // Each process() works in place on stereo buffers and applies its own mix.
 
+// Power-of-two ring buffer. clear() is O(1): it resets a fill counter and
+// taps further back than what has been written since read as silence, so
+// switching an effect on never has to wipe megabytes inside the callback.
 struct DelayLine {
     std::vector<float> buf;
-    int mask = 0, w = 0;
+    int mask = 0, w = 0, filled = 0;
 
     void allocate(int minSamples)
     {
@@ -18,18 +21,23 @@ struct DelayLine {
         buf.assign(n, 0.0f);
         mask = n - 1;
         w = 0;
+        filled = 0;
     }
-    void clear() { std::fill(buf.begin(), buf.end(), 0.0f); }
-    inline void push(float x) { buf[w] = x; w = (w + 1) & mask; }
+    void clear() { filled = 0; }
+    inline void push(float x) { buf[w] = x; w = (w + 1) & mask; if (filled <= mask) ++filled; }
     inline float tap(float delaySamples) const   // linear interpolation
     {
+        if ((int)delaySamples + 2 > filled) return 0.0f;
         float r = (float)w - delaySamples - 1.0f;
         while (r < 0.0f) r += (float)(mask + 1);
         int i0 = (int)r;
         float f = r - (float)i0;
         return buf[i0 & mask] + f * (buf[(i0 + 1) & mask] - buf[i0 & mask]);
     }
-    inline float tapInt(int delaySamples) const { return buf[(w - delaySamples - 1) & mask]; }
+    inline float tapInt(int delaySamples) const
+    {
+        return delaySamples + 1 > filled ? 0.0f : buf[(w - delaySamples - 1) & mask];
+    }
 };
 
 struct DistortionFX {
@@ -126,8 +134,10 @@ struct PhaserFX {
     static constexpr int STAGES = 6;
     float sr = 48000.0f, phase = 0.0f;
     float ap[2][STAGES] = {}, fb[2] = {};
+    float coef[2] = { -1.0f, -1.0f };   // all-pass coefficient at the end of the last block
+    bool  coefValid = false;
     void prepare(float sampleRate) { sr = sampleRate; }
-    void reset() { for (auto& c : ap) for (float& s : c) s = 0.0f; fb[0] = fb[1] = 0.0f; }
+    void reset() { for (auto& c : ap) for (float& s : c) s = 0.0f; fb[0] = fb[1] = 0.0f; coefValid = false; }
     void process(float* l, float* r, int n, const Params& p);
 };
 

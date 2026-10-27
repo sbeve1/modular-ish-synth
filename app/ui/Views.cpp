@@ -42,7 +42,7 @@ constexpr int PTS = 128;    // per frame in the 3D stack
 constexpr int PTS2 = 256;   // in the 2D strip
 
 struct WtCache {
-    const WavetableSet* src = nullptr;
+    uint64_t srcId = 0;
     float frames[WT_FRAMES][PTS];
 };
 WtCache gCache[3];
@@ -55,7 +55,7 @@ WtViewState gView[3];
 
 void buildCache(WtCache& c, const WavetableSet* wt)
 {
-    c.src = wt;
+    c.srcId = wt->id;
     const int level = 4;   // 64 harmonics: smooth to draw
     for (int f = 0; f < WT_FRAMES; ++f) {
         const float* t = wt->mips.empty() ? wt->frame(f) : wt->table(level, f);
@@ -116,7 +116,7 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
     const WavetableSet* wt = overrideTable ? overrideTable : ui.s.wavetables[osc].load(std::memory_order_acquire);
     if (!wt) { dl->PopClipRect(); ImGui::PopID(); return; }
     WtCache& c = gCache[vi];
-    if (c.src != wt || overrideTable) buildCache(c, wt);
+    if (c.srcId != wt->id || wt->id == 0) buildCache(c, wt);
 
     const bool live = ui.s.telemetry.displayVoiceActive.load(std::memory_order_relaxed);
     float pos;
@@ -198,10 +198,11 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
             framePts(slice, z);
             {
                 NoAAFill noaa(dl);
+                ImVec2 z0 = project(-1.0f, z, 0.0f);
                 for (int i = 1; i < PTS; ++i) {
-                    ImVec2 z0 = project((float)(i - 1) / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
                     ImVec2 z1 = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, 0.0f);
                     dl->AddQuadFilled(pts[i - 1], pts[i], z1, z0, theme::withAlpha(green, 0.065f));
+                    z0 = z1;
                 }
             }
             bool isFrame = k % SUB == 0;
@@ -311,8 +312,9 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
     for (int g = 1; g < 4; ++g) dl->AddLine(ImVec2(left, top + (bottom - top) * g / 4), ImVec2(right, top + (bottom - top) * g / 4), theme::rgba(26, 26, 27));
     dl->AddLine(ImVec2(left, bottom), ImVec2(right, bottom), theme::rgba(40, 40, 41));
 
-    // curve points
-    std::vector<ImVec2> pts;
+    // curve points (reused buffer: no allocation per frame)
+    static std::vector<ImVec2> pts;
+    pts.clear();
     auto seg = [&](float x0, float x1, float l0, float l1, float curve) {
         int n = std::max(2, (int)((x1 - x0) / 3.0f));
         for (int i = 0; i <= n; ++i) {
@@ -451,7 +453,8 @@ void LfoGraph(UiState& ui, int lfo, ImVec2 size)
     }
 
     // ---- custom shape editing ----
-    std::vector<LfoPoint> pts = ui.wt.lfoCurve(lfo);
+    static std::vector<LfoPoint> pts;   // reused buffer: assignment keeps its capacity
+    pts = ui.wt.lfoCurve(lfo);
     int hoverPt = -1, hoverSeg = -1;
     if (custom) {
         float bestD = 10.0f * 10.0f;

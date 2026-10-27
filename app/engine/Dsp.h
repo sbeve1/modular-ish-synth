@@ -20,6 +20,44 @@ inline float fastTanh(float x)
 
 inline float killDenormal(float x) { return std::fabs(x) < 1e-15f ? 0.0f : x; }
 
+// ---- fast math for per-sample paths (no libm calls) ----
+
+// 2^x, x >= -126. Split at the nearest integer so the fraction is within
+// +-0.5; degree-5 polynomial there: max rel. error ~1.5e-6, continuous.
+inline float fastExp2(float x)
+{
+    x = std::max(x, -126.0f);
+    float fi = std::floor(x + 0.5f), f = x - fi;
+    float p = 1.0f + f * (0.69314718f + f * (0.24022651f + f * (0.05550411f + f * (0.00961813f + f * 0.00133336f))));
+    union { uint32_t i; float f; } u;
+    u.i = (uint32_t)((int)fi + 127) << 23;
+    return p * u.f;
+}
+
+// log2(x), x > 0. Exponent from the bits, mantissa via the atanh series: error ~1e-6.
+inline float fastLog2(float x)
+{
+    union { float f; uint32_t i; } u{ x };
+    int e = (int)((u.i >> 23) & 255) - 127;
+    u.i = (u.i & 0x007FFFFFu) | 0x3F800000u;
+    float m = u.f, t = (m - 1.0f) / (m + 1.0f), t2 = t * t;
+    float ln = 2.0f * t * (1.0f + t2 * (0.33333333f + t2 * (0.2f + t2 * (0.14285714f + t2 * 0.11111111f))));
+    return (float)e + ln * 1.44269504f;
+}
+
+// sin(x) for any x: range-reduce to [-pi/2, pi/2], odd polynomial (error ~1e-6).
+inline float fastSin(float x)
+{
+    x -= TWO_PI * std::floor(x * (1.0f / TWO_PI) + 0.5f);
+    if (x > 0.5f * PI)       x = PI - x;
+    else if (x < -0.5f * PI) x = -PI - x;
+    float x2 = x * x;
+    return x * (1.0f + x2 * (-0.16666667f + x2 * (0.0083333310f + x2 * (-0.00019840874f + x2 * 2.7525562e-6f))));
+}
+
+inline float fastDbToGain(float db) { return fastExp2(db * 0.16609640f); }        // 10^(db/20)
+inline float fastGainToDb(float g)  { return 6.02059991f * fastLog2(std::max(g, 1e-9f)); }
+
 inline float dbToGain(float db) { return std::pow(10.0f, db * 0.05f); }
 inline float gainToDb(float g)  { return 20.0f * std::log10(std::max(g, 1e-9f)); }
 

@@ -95,29 +95,45 @@ inline float shapeModValue(float v, ModCurve c)
 
 class ModSlotStore {
 public:
+    // Per-slot seqlock: the (single) writer makes the version odd while it
+    // writes; readers retry until they see the same even version before and
+    // after, so a slot is never read half-updated.
     ModSlotData get(int i) const
     {
         ModSlotData d;
-        d.src    = (ModSrc)src[i].load(std::memory_order_relaxed);
-        d.aux    = (ModSrc)aux[i].load(std::memory_order_relaxed);
-        d.target = target[i].load(std::memory_order_relaxed);
-        d.amount = amount[i].load(std::memory_order_relaxed);
-        d.mode   = (ModMode)mode[i].load(std::memory_order_relaxed);
-        d.curve  = (ModCurve)curve[i].load(std::memory_order_relaxed);
-        return d;
+        for (;;) {
+            uint32_t v1 = ver[i].load(std::memory_order_acquire);
+            if (v1 & 1u) continue;
+            d.src    = (ModSrc)src[i].load(std::memory_order_relaxed);
+            d.aux    = (ModSrc)aux[i].load(std::memory_order_relaxed);
+            d.target = target[i].load(std::memory_order_relaxed);
+            d.amount = amount[i].load(std::memory_order_relaxed);
+            d.mode   = (ModMode)mode[i].load(std::memory_order_relaxed);
+            d.curve  = (ModCurve)curve[i].load(std::memory_order_relaxed);
+            std::atomic_thread_fence(std::memory_order_acquire);
+            if (ver[i].load(std::memory_order_relaxed) == v1) return d;
+        }
     }
     void set(int i, const ModSlotData& d)
     {
-        // clear target first so the audio thread never pairs a new source with an old target
-        target[i].store(-1, std::memory_order_relaxed);
+        uint32_t v = ver[i].load(std::memory_order_relaxed);
+        ver[i].store(v + 1, std::memory_order_relaxed);
+        std::atomic_thread_fence(std::memory_order_release);
         src[i].store((int)d.src, std::memory_order_relaxed);
         aux[i].store((int)d.aux, std::memory_order_relaxed);
+        target[i].store(d.target, std::memory_order_relaxed);
         amount[i].store(d.amount, std::memory_order_relaxed);
         mode[i].store((int)d.mode, std::memory_order_relaxed);
         curve[i].store((int)d.curve, std::memory_order_relaxed);
-        target[i].store(d.target, std::memory_order_release);
+        ver[i].store(v + 2, std::memory_order_release);
+        gen.fetch_add(1, std::memory_order_relaxed);
     }
-    void setAmount(int i, float a) { amount[i].store(a, std::memory_order_relaxed); }
+    void setAmount(int i, float a)
+    {
+        amount[i].store(a, std::memory_order_relaxed);   // a single field: no seqlock needed
+        gen.fetch_add(1, std::memory_order_relaxed);
+    }
+    uint32_t generation() const { return gen.load(std::memory_order_relaxed); }
     void clear(int i) { set(i, ModSlotData{}); }
     void clearAll() { for (int i = 0; i < NUM_MOD_SLOTS; ++i) clear(i); }
 
@@ -135,6 +151,8 @@ private:
     std::atomic<float> amount[NUM_MOD_SLOTS]{};
     std::atomic<int>   mode[NUM_MOD_SLOTS]{};
     std::atomic<int>   curve[NUM_MOD_SLOTS]{};
+    std::atomic<uint32_t> ver[NUM_MOD_SLOTS]{};
+    std::atomic<uint32_t> gen{ 0 };   // bumped on every change (lets the UI skip work)
 
 public:
     ModSlotStore() { clearAll(); }

@@ -145,33 +145,101 @@ static int cmdRender(const std::string& key, const char* path)
     return 0;
 }
 
-static int cmdBench()
+// Seconds of CPU to render `seconds` of audio with `voices` held notes (best of 3).
+static double timeRender(const Preset& p, int voices, double seconds)
 {
-    Engine e;
+    double best = 1e9;
+    for (int run = 0; run < 3; ++run) {
+        std::vector<NoteEv> ev;
+        for (int v = 0; v < voices; ++v) ev.push_back({ 0.0, 40 + v * 3, 100 });
+        ev.push_back({ seconds, 0, 0 });
+        Engine eng;
+        eng.load(p);
+        auto t0 = std::chrono::steady_clock::now();
+        eng.render(ev, 0.0);
+        best = std::min(best, std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
+    }
+    return best;
+}
+
+static Preset benchHeavy()
+{
     Preset p;
-    p.name = "Bench";
+    p.name = "Heavy";
     p.set(P::OSCA_UNISON, 8); p.set(P::OSCB_ON, 1); p.set(P::OSCB_UNISON, 8);
     p.set(P::SUB_ON, 1); p.set(P::NOISE_ON, 1); p.set(P::FLT_TYPE, 1); p.set(P::POLYPHONY, 16);
     p.set(P::ENV1_SUS, 1.0f);
     p.mod(ModSrc::Lfo1, P::OSCA_POS, 0.5f);
     p.mod(ModSrc::Env2, P::FLT_CUTOFF, 0.4f);
     p.set(P::REV_ON, 1); p.set(P::DLY_ON, 1); p.set(P::CHO_ON, 1); p.set(P::DIST_ON, 1);
-    e.load(p);
+    return p;
+}
 
+static Preset benchMax()
+{
+    Preset p = benchHeavy();
+    p.name = "Max";
+    p.set(P::OSCA_UNISON, 16); p.set(P::OSCB_UNISON, 16);
+    p.set(P::OSCA_WARP, 1); p.set(P::OSCA_WARPAMT, 0.8f);   // Bend
+    p.set(P::OSCB_WARP, 3); p.set(P::OSCB_WARPAMT, 0.4f);   // Sync
+    p.set(P::FLT2_ON, 1); p.set(P::FLT2_TYPE, 5); p.set(P::FLT_ROUTING, 1);
+    p.mod(ModSrc::Lfo2, P::OSCB_POS, 0.3f);
+    p.mod(ModSrc::Env3, P::FLT2_CUTOFF, 0.3f);
+    p.mod(ModSrc::Velocity, P::OSCA_LEVEL, 0.2f);
+    p.mod(ModSrc::Lfo1, P::OSCA_WARPAMT, 0.2f);
+    for (int i = 0; i < NUM_FX; ++i) p.set(fxPowerParam((FxId)i), 1);
+    return p;
+}
+
+static Preset benchFxOnly()
+{
+    Preset p;
+    p.name = "FX rack only";
+    p.wavetable[0] = "Basic Shapes";
+    for (int i = 0; i < NUM_FX; ++i) p.set(fxPowerParam((FxId)i), 1);
+    p.set(P::ENV1_SUS, 1.0f);
+    return p;
+}
+
+static int cmdBench()
+{
     const double seconds = 10.0;
-    std::printf("Engine benchmark: 2 osc x 8 unison + sub + noise + 24 dB filter per voice, all FX on, %d Hz\n", (int)e.sr);
-    std::printf("%8s %14s %14s\n", "voices", "x realtime", "us/voice/blk");
+    std::printf("Engine benchmark, 48000 Hz, best of 3 runs of %.0f s each\n\n", seconds);
+
+    Preset heavy = benchHeavy();
+    std::printf("Heavy patch: 2 osc x 8 unison + sub + noise + 24 dB filter, 4 FX\n");
+    std::printf("%8s %14s %14s\n", "voices", "x realtime", "% of a core");
     for (int voices : { 1, 4, 8, 16 }) {
-        std::vector<NoteEv> ev;
-        for (int v = 0; v < voices; ++v) ev.push_back({ 0.0, 48 + v * 3, 100 });
-        ev.push_back({ seconds, 0, 0 });
-        Engine eng;
-        eng.load(p);
-        auto t0 = std::chrono::steady_clock::now();
-        eng.render(ev, 0.0);
-        double cpu = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
-        double blocks = seconds * eng.sr / 256.0;
-        std::printf("%8d %13.1fx %14.2f\n", voices, seconds / cpu, cpu / blocks / voices * 1e6);
+        double cpu = timeRender(heavy, voices, seconds);
+        std::printf("%8d %13.1fx %13.2f%%\n", voices, seconds / cpu, cpu / seconds * 100.0);
+    }
+
+    std::printf("\n%-44s %14s %14s\n", "scenario (16 voices unless noted)", "x realtime", "% of a core");
+    struct S { Preset p; int voices; const char* label; };
+    S scen[] = {
+        { benchMax(), 16, "Max: 2x16 unison, bend+sync warp, 2 filters, all 8 FX" },
+        { benchFxOnly(), 1, "FX rack only: 1 plain voice, all 8 FX" },
+    };
+    for (auto& sc : scen) {
+        double cpu = timeRender(sc.p, sc.voices, seconds);
+        std::printf("%-44s %13.1fx %13.2f%%\n", sc.label, seconds / cpu, cpu / seconds * 100.0);
+    }
+    return 0;
+}
+
+// Per-preset level fingerprint, to check optimizations don't change the sound.
+static int cmdFingerprint()
+{
+    auto all = factoryPresets();
+    all.push_back(benchMax());
+    for (const auto& p : all) {
+        Engine e;
+        e.load(p);
+        auto audio = e.render(demoSequence(), 3.0);
+        double sum = 0.0;
+        float peak = 0.0f;
+        for (float v : audio) { sum += (double)v * v; peak = std::max(peak, std::fabs(v)); }
+        std::printf("%-18s rms %.6f  peak %.6f\n", p.name.c_str(), std::sqrt(sum / audio.size()), peak);
     }
     return 0;
 }
@@ -376,9 +444,10 @@ int main(int argc, char** argv)
     if (cmd == "list") return cmdList();
     if (cmd == "render" && argc > 3) return cmdRender(argv[2], argv[3]);
     if (cmd == "bench") return cmdBench();
+    if (cmd == "fingerprint") return cmdFingerprint();
     if (cmd == "selftest") return cmdSelftest();
 
     std::printf("Usage:\n  modular_synth_cli list\n  modular_synth_cli render <preset-number|name> out.wav\n"
-                "  modular_synth_cli bench\n  modular_synth_cli selftest\n");
+                "  modular_synth_cli bench\n  modular_synth_cli fingerprint\n  modular_synth_cli selftest\n");
     return 1;
 }

@@ -44,7 +44,7 @@ struct LfoState {
 inline float lfoShapeValue(LfoShape shape, float p, const LfoState& st, const LfoCurveTable* curve = nullptr)
 {
     switch (shape) {
-        case LfoShape::Sine:       return std::sin(dsp::TWO_PI * p);
+        case LfoShape::Sine:       return dsp::fastSin(dsp::TWO_PI * p);
         case LfoShape::Triangle:   return p < 0.25f ? 4.0f * p : p < 0.75f ? 2.0f - 4.0f * p : 4.0f * p - 4.0f;
         case LfoShape::SawUp:      return 2.0f * p - 1.0f;
         case LfoShape::SawDown:    return 1.0f - 2.0f * p;

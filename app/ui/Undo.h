@@ -37,7 +37,7 @@ private:
     };
 
     Snapshot committed;
-    Snapshot lastSeen;          // previous frame, to detect when changes settle
+    uint64_t lastKey = 0;       // change counters seen last frame; capture only when they move
     bool pending = false;
     double lastChange = 0.0;
     std::vector<Snapshot> undoStack, redoStack;

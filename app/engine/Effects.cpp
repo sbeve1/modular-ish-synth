@@ -64,23 +64,29 @@ void ChorusFX::prepare(float sampleRate)
 
 void ChorusFX::process(float* l, float* r, int n, const Params& p)
 {
+    // modulation is computed every MOD_STEP samples and interpolated in between
+    constexpr int MOD_STEP = 16;
     const float base = 0.012f * sr, depth = (0.0005f + p.depth * 0.006f) * sr;
     const float inc = p.rate / sr;
-    for (int i = 0; i < n; ++i) {
-        float mL = std::sin(TWO_PI * phase), mR = std::sin(TWO_PI * (phase + 0.25f));
-        phase += inc;
-        if (phase >= 1.0f) phase -= 1.0f;
-
-        float in[2] = { l[i], r[i] };
-        float wet[2];
-        for (int ch = 0; ch < 2; ++ch) {
-            float d = base + depth * (ch == 0 ? mL : mR);
-            wet[ch] = dl[ch].tap(d);
-            dl[ch].push(in[ch] + fb[ch] * p.feedback);
-            fb[ch] = wet[ch];
+    for (int s0 = 0; s0 < n; s0 += MOD_STEP) {
+        int len = std::min(MOD_STEP, n - s0);
+        float ph1 = phase + inc * len;
+        float dA[2] = { base + depth * fastSin(TWO_PI * phase), base + depth * fastSin(TWO_PI * (phase + 0.25f)) };
+        float dB[2] = { base + depth * fastSin(TWO_PI * ph1),   base + depth * fastSin(TWO_PI * (ph1 + 0.25f)) };
+        phase = ph1 - std::floor(ph1);
+        for (int k = 0; k < len; ++k) {
+            int i = s0 + k;
+            float t = (k + 1) / (float)len;
+            float in[2] = { l[i], r[i] };
+            float wet[2];
+            for (int ch = 0; ch < 2; ++ch) {
+                wet[ch] = dl[ch].tap(dA[ch] + (dB[ch] - dA[ch]) * t);
+                dl[ch].push(in[ch] + fb[ch] * p.feedback);
+                fb[ch] = killDenormal(wet[ch]);
+            }
+            l[i] = lerp(in[0], wet[0], p.mix);
+            r[i] = lerp(in[1], wet[1], p.mix);
         }
-        l[i] = lerp(in[0], wet[0], p.mix);
-        r[i] = lerp(in[1], wet[1], p.mix);
     }
 }
 
@@ -184,7 +190,7 @@ void ReverbFX::process(float* l, float* r, int n, const Params& p)
 
         modPhase += modInc;
         if (modPhase >= 1.0f) modPhase -= 1.0f;
-        float mod = std::sin(TWO_PI * modPhase) * 6.0f;
+        float mod = fastSin(TWO_PI * modPhase) * 6.0f;
 
         float o[N];
         for (int i = 0; i < N; ++i) {
@@ -271,7 +277,7 @@ void CompressorFX::process(float* l, float* r, int n, const Params& p)
     float maxGr = 0.0f;
     for (int i = 0; i < n; ++i) {
         float peak = std::max(std::fabs(l[i]), std::fabs(r[i]));
-        float inDb = 20.0f * std::log10(std::max(peak, 1e-6f));
+        float inDb = fastGainToDb(std::max(peak, 1e-6f));
         envDb = inDb > envDb ? inDb + atk * (envDb - inDb) : inDb + rel * (envDb - inDb);
 
         float over = envDb - p.threshDb, gr;
@@ -280,7 +286,7 @@ void CompressorFX::process(float* l, float* r, int n, const Params& p)
         else { float x = over + knee * 0.5f; gr = slope * x * x / (2.0f * knee); }
         maxGr = std::max(maxGr, gr);
 
-        float g = dbToGain(-gr) * makeup;
+        float g = fastDbToGain(-gr) * makeup;
         l[i] = lerp(l[i], l[i] * g, p.mix);
         r[i] = lerp(r[i], r[i] * g, p.mix);
     }
@@ -293,24 +299,41 @@ void CompressorFX::process(float* l, float* r, int n, const Params& p)
 // ---------------------------------------------------------------------
 void PhaserFX::process(float* l, float* r, int n, const Params& p)
 {
+    // all-pass coefficients follow the LFO at control rate and are ramped
+    // linearly across each MOD_STEP block
+    constexpr int MOD_STEP = 16;
     const float inc = p.rate / sr;
-    for (int i = 0; i < n; ++i) {
-        phase += inc;
-        if (phase >= 1.0f) phase -= 1.0f;
-        float in[2] = { l[i], r[i] };
-        for (int ch = 0; ch < 2; ++ch) {
-            float lfo = 0.5f + 0.5f * std::sin(TWO_PI * (phase + ch * 0.25f));
-            float fc = 200.0f * std::pow(25.0f, lfo * p.depth);   // 200 Hz .. 5 kHz
-            float t = std::tan(PI * std::min(fc, sr * 0.45f) / sr);
-            float a = (t - 1.0f) / (t + 1.0f);
-            float x = in[ch] + fb[ch] * p.feedback;
-            for (int s = 0; s < STAGES; ++s) {
-                float y = a * x + ap[ch][s];
-                ap[ch][s] = killDenormal(x - a * y);
-                x = y;
+    auto coefAt = [&](float ph, int ch) {
+        float lfo = 0.5f + 0.5f * fastSin(TWO_PI * (ph + ch * 0.25f));
+        float fc = 200.0f * fastExp2(lfo * p.depth * 4.6438562f);   // 200 Hz .. 5 kHz (25 = 2^4.64)
+        float t = std::tan(PI * std::min(fc, sr * 0.45f) / sr);
+        return (t - 1.0f) / (t + 1.0f);
+    };
+    if (!coefValid) { coef[0] = coefAt(phase, 0); coef[1] = coefAt(phase, 1); coefValid = true; }
+
+    for (int s0 = 0; s0 < n; s0 += MOD_STEP) {
+        int len = std::min(MOD_STEP, n - s0);
+        phase += inc * len;
+        phase -= std::floor(phase);
+        float a0[2] = { coef[0], coef[1] };
+        float a1[2] = { coefAt(phase, 0), coefAt(phase, 1) };
+        float da[2] = { (a1[0] - a0[0]) / len, (a1[1] - a0[1]) / len };
+        coef[0] = a1[0];
+        coef[1] = a1[1];
+        for (int k = 0; k < len; ++k) {
+            int i = s0 + k;
+            float in[2] = { l[i], r[i] };
+            for (int ch = 0; ch < 2; ++ch) {
+                float a = a0[ch] + da[ch] * (k + 1);
+                float x = in[ch] + fb[ch] * p.feedback;
+                for (int s = 0; s < STAGES; ++s) {
+                    float y = a * x + ap[ch][s];
+                    ap[ch][s] = x - a * y;
+                    x = y;
+                }
+                fb[ch] = x;
+                (ch == 0 ? l[i] : r[i]) = lerp(in[ch], (in[ch] + x) * 0.6f, p.mix);
             }
-            fb[ch] = killDenormal(x);
-            (ch == 0 ? l[i] : r[i]) = lerp(in[ch], (in[ch] + x) * 0.6f, p.mix);
         }
     }
 }
@@ -327,17 +350,27 @@ void FlangerFX::prepare(float sampleRate)
 
 void FlangerFX::process(float* l, float* r, int n, const Params& p)
 {
+    constexpr int MOD_STEP = 16;
     const float inc = p.rate / sr;
     const float base = 0.0006f * sr, depth = (0.0004f + p.depth * 0.0065f) * sr;
-    for (int i = 0; i < n; ++i) {
-        phase += inc;
-        if (phase >= 1.0f) phase -= 1.0f;
-        float in[2] = { l[i], r[i] };
+    for (int s0 = 0; s0 < n; s0 += MOD_STEP) {
+        int len = std::min(MOD_STEP, n - s0);
+        float ph1 = phase + inc * len;
+        float dA[2], dB[2];
         for (int ch = 0; ch < 2; ++ch) {
-            float m = 0.5f + 0.5f * std::sin(TWO_PI * (phase + ch * 0.25f));
-            float d = killDenormal(dl[ch].tap(base + depth * m));
-            dl[ch].push(in[ch] + d * p.feedback);
-            (ch == 0 ? l[i] : r[i]) = lerp(in[ch], (in[ch] + d) * 0.7f, p.mix);
+            dA[ch] = base + depth * (0.5f + 0.5f * fastSin(TWO_PI * (phase + ch * 0.25f)));
+            dB[ch] = base + depth * (0.5f + 0.5f * fastSin(TWO_PI * (ph1 + ch * 0.25f)));
+        }
+        phase = ph1 - std::floor(ph1);
+        for (int k = 0; k < len; ++k) {
+            int i = s0 + k;
+            float t = (k + 1) / (float)len;
+            float in[2] = { l[i], r[i] };
+            for (int ch = 0; ch < 2; ++ch) {
+                float d = killDenormal(dl[ch].tap(dA[ch] + (dB[ch] - dA[ch]) * t));
+                dl[ch].push(in[ch] + d * p.feedback);
+                (ch == 0 ? l[i] : r[i]) = lerp(in[ch], (in[ch] + d) * 0.7f, p.mix);
+            }
         }
     }
 }

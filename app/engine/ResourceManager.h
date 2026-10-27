@@ -27,6 +27,7 @@ public:
         retire(current[osc]);
         current[osc] = std::move(wt);
         shared.wavetables[osc].store(current[osc].get(), std::memory_order_release);
+        ++gen;
     }
     const std::shared_ptr<WavetableSet>& get(int osc) const { return current[osc]; }
 
@@ -40,7 +41,9 @@ public:
         curveTable[lfo] = table;
         curvePoints[lfo] = std::move(pts);
         shared.lfoCurves[lfo].store(table.get(), std::memory_order_release);
+        ++gen;
     }
+    uint32_t generation() const { return gen; }   // bumped on every change
     const std::vector<LfoPoint>& lfoCurve(int lfo) const { return curvePoints[lfo]; }
 
     // Call regularly (every UI frame). With no audio running, callbacks never
@@ -65,6 +68,7 @@ private:
     std::shared_ptr<LfoCurveTable> curveTable[4];
     std::vector<LfoPoint> curvePoints[4];
     std::vector<Retired> retired;
+    uint32_t gen = 0;
 
     template <typename T>
     void retire(const std::shared_ptr<T>& p)

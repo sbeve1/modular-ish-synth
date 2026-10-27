@@ -242,7 +242,9 @@ public:
 
     float value(P id) const { return paramInfo(id).toValue(norm(id)); }
     void  setValue(P id, float value) { setNorm(id, paramInfo(id).toNorm(value)); }
+    uint32_t generation() const { return gen.load(std::memory_order_relaxed); }   // bumped on every write
 
 private:
     std::atomic<float> v[NUM_PARAMS];
+    std::atomic<uint32_t> gen{ 0 };
 };

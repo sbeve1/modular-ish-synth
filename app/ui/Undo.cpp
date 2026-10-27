@@ -4,6 +4,7 @@
 
 static constexpr size_t MAX_STEPS = 200;
 static constexpr double SETTLE_SECONDS = 0.35;
+static uint64_t changeKey(UiState& ui);
 
 void UndoHistory::capture(UiState& ui, Snapshot& out)
 {
@@ -51,6 +52,7 @@ void UndoHistory::apply(UiState& ui, const Snapshot& s)
 void UndoHistory::reset(UiState& ui)
 {
     capture(ui, committed);
+    lastKey = changeKey(ui);
     undoStack.clear();
     redoStack.clear();
     pending = false;
@@ -68,15 +70,24 @@ void UndoHistory::commitPending(UiState& ui)
     pending = false;
 }
 
+static uint64_t changeKey(UiState& ui)
+{
+    // params, mod slots, resources and FX order each have a cheap change marker
+    uint64_t k = ui.s.params.generation();
+    k = k * 1000003u + ui.s.mods.generation();
+    k = k * 1000003u + ui.wt.generation();
+    k = k * 1000003u + ui.s.fxOrder.load(std::memory_order_relaxed);
+    return k;
+}
+
 void UndoHistory::update(UiState& ui, bool mouseDown, double now)
 {
-    Snapshot cur;
-    capture(ui, cur);
-    if (!same(cur, committed)) {
-        if (!pending) pending = true;
-        // keep pushing the deadline out while things are still moving
-        if (!same(cur, lastSeen)) lastChange = now;
-        lastSeen = cur;
+    // nothing is copied while nothing changes; a full snapshot is only taken at commit
+    uint64_t key = changeKey(ui);
+    if (key != lastKey) {
+        lastKey = key;
+        lastChange = now;   // keep pushing the deadline out while things are still moving
+        pending = true;
     }
     if (pending && !mouseDown && now - lastChange > SETTLE_SECONDS)
         commitPending(ui);

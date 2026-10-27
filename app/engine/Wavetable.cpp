@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <atomic>
 #include <cstdint>
 
 static constexpr double kPi = 3.14159265358979323846;
@@ -47,6 +48,9 @@ void fftComplex(std::vector<float>& re, std::vector<float>& im, bool inverse)
 // ---------------------------------------------------------------------
 void WavetableSet::build()
 {
+    static std::atomic<uint64_t> nextId{ 1 };
+    id = nextId.fetch_add(1);
+
     mips.assign((size_t)WT_LEVELS * WT_FRAMES * (WT_SIZE + 1), 0.0f);
 
     std::vector<float> specRe(WT_SIZE), specIm(WT_SIZE), re(WT_SIZE), im(WT_SIZE);

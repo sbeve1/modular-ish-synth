@@ -13,6 +13,13 @@ static float syncHz(float tempo, int div)
 
 static inline float frac01(float x) { return x - std::floor(x); }
 
+// Bend warp: p^e as exp2(e * log2 p) with the fast, accurate (~1e-6) versions,
+// so there is no libm pow per sample per unison voice.
+static inline float bendPhase(float p, float e)
+{
+    return dsp::fastExp2(e * dsp::fastLog2(std::max(p, 1e-30f)));
+}
+
 // ---------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------
@@ -87,9 +94,7 @@ float Voice::lfoPhase(int i, const VoiceContext& ctx) const
 float Voice::eff(const VoiceContext& ctx, P p) const
 {
     int i = (int)p;
-    if (!ctx.modulated[i])
-        return ctx.value[i];
-    return paramInfo(i).toValue(ctx.norm[i] + modOff[i]);
+    return ctx.modulated[i] ? modValue[i] : ctx.value[i];
 }
 
 void Voice::updateModulation(const VoiceContext& ctx)
@@ -106,6 +111,12 @@ void Voice::updateModulation(const VoiceContext& ctx)
         if (slot.mode == ModMode::Multiply)
             amt *= ctx.norm[slot.target];   // scales the knob position toward zero
         modOff[slot.target] += amt;
+    }
+
+    // convert each modulated target to its plain value once per block
+    for (int s = 0; s < ctx.numSlots; ++s) {
+        int t = ctx.slots[s].target;
+        modValue[t] = paramInfo(t).toValue(ctx.norm[t] + modOff[t]);
     }
 }
 
@@ -168,16 +179,40 @@ void Voice::updateSources(const VoiceContext& ctx, int n)
 // ---------------------------------------------------------------------
 enum class Warp { Off, Bend, Pwm, Sync, Mirror, Fold };
 
-static inline float warpPhase(float p, Warp w, float amt, float bendExp, float pwmW, float syncRatio)
+// Inner oscillator loop, specialized per warp mode so the per-sample work has
+// no mode branches. Unison voices are the outer loop: each voice's phase,
+// increment and gains stay in registers while it fills the block.
+template <Warp W>
+static void oscLoop(const float* t0, const float* t1, float ff, float* phase, const float* inc,
+                    const float* gl, const float* gr, int uni, int n, float* outL, float* outR,
+                    float amt, float bendExp, float pwmW, float syncRatio, float foldGain)
 {
-    switch (w) {
-        case Warp::Bend:   p = std::pow(p, bendExp); break;
-        case Warp::Pwm:    p = p < pwmW ? p * (0.5f / pwmW) : 0.5f + (p - pwmW) * (0.5f / (1.0f - pwmW)); break;
-        case Warp::Sync:   p = frac01(p * syncRatio); break;
-        case Warp::Mirror: p = dsp::lerp(p, p < 0.5f ? p : 1.0f - p, amt); break;
-        default: break;
+    for (int i = 0; i < uni; ++i) {
+        float p = phase[i];
+        const float dp = inc[i], gL = gl[i], gR = gr[i];
+        for (int s = 0; s < n; ++s) {
+            float wp;
+            if constexpr (W == Warp::Bend)        wp = std::min(bendPhase(p, bendExp), 0.99999f);
+            else if constexpr (W == Warp::Pwm)    wp = std::min(p < pwmW ? p * (0.5f / pwmW) : 0.5f + (p - pwmW) * (0.5f / (1.0f - pwmW)), 0.99999f);
+            else if constexpr (W == Warp::Sync)   { wp = p * syncRatio; wp -= (float)(int)wp; }
+            else if constexpr (W == Warp::Mirror) wp = p + ((p < 0.5f ? p : 1.0f - p) - p) * amt;
+            else                                  wp = p;
+
+            float idx = wp * WT_SIZE;
+            int   i0 = (int)idx;
+            float fr = idx - (float)i0;
+            float a = t0[i0] + fr * (t0[i0 + 1] - t0[i0]);
+            float b = t1[i0] + fr * (t1[i0 + 1] - t1[i0]);
+            float v = a + ff * (b - a);
+            if constexpr (W == Warp::Fold) v = dsp::fastSin(v * foldGain);
+            outL[s] += v * gL;
+            outR[s] += v * gR;
+
+            p += dp;
+            if (p >= 1.0f) p -= (float)(int)p;   // safe even if the increment reaches 1 (extreme pitch)
+        }
+        phase[i] = p;
     }
-    return std::clamp(p, 0.0f, 0.99999f);
 }
 
 void Voice::renderOsc(const VoiceContext& ctx, int osc, float basePitch,
@@ -189,11 +224,12 @@ void Voice::renderOsc(const VoiceContext& ctx, int osc, float basePitch,
 
     auto op = [&](P a) { return eff(ctx, oscParam(osc, a)); };
     const float sr = ctx.sampleRate;
+    OscState& st = oscState[osc];
 
     float notePitch = basePitch + op(P::OSCA_OCT) * 12.0f + op(P::OSCA_SEMI) + op(P::OSCA_FINE) * 0.01f;
     float freq  = dsp::midiToHz(notePitch);
     int   uni   = std::clamp((int)op(P::OSCA_UNISON), 1, UNISON_MAX);
-    float cents = 80.0f * std::pow(op(P::OSCA_DETUNE), 1.5f);
+    float detune = op(P::OSCA_DETUNE);
     float blend = op(P::OSCA_BLEND);
     float width = op(P::OSCA_WIDTH);
     float pan   = op(P::OSCA_PAN);
@@ -201,7 +237,7 @@ void Voice::renderOsc(const VoiceContext& ctx, int osc, float basePitch,
     auto  warp  = (Warp)(int)op(P::OSCA_WARP);
     float amt   = op(P::OSCA_WARPAMT);
     float pos   = op(P::OSCA_POS);
-    oscState[osc].pos = pos;
+    st.pos = pos;
 
     float framePos = pos * (WT_FRAMES - 1);
     int   f0 = std::min((int)framePos, WT_FRAMES - 1);
@@ -209,64 +245,97 @@ void Voice::renderOsc(const VoiceContext& ctx, int osc, float basePitch,
     float ff = framePos - f0;
 
     float syncRatio = 1.0f + amt * 7.0f;
-    float bendExp   = std::exp2((amt - 0.5f) * 4.0f) ;   // 0.25 .. 4, neutral at 50%
+    float bendExp   = std::exp2((amt - 0.5f) * 4.0f);   // 0.25 .. 4, neutral at 50%
     if (warp == Warp::Bend && std::fabs(amt - 0.5f) < 1e-3f) warp = Warp::Off;
     float pwmW      = 0.5f - amt * 0.47f;
 
-    float maxRatio = uni > 1 ? std::exp2(cents / 1200.0f) : 1.0f;
-    float lvlFreq  = freq * maxRatio * (warp == Warp::Sync ? syncRatio : 1.0f);
+    // detune ratios and stereo gains change rarely: recompute only when their inputs do
+    if (uni != st.cUni || detune != st.cDetune) {
+        float cents = 80.0f * std::pow(detune, 1.5f);
+        for (int i = 0; i < uni; ++i) {
+            float s = uni == 1 ? 0.0f : (float)i / (uni - 1) * 2.0f - 1.0f;
+            st.ratio[i] = std::exp2(s * cents / 1200.0f);
+        }
+        st.maxRatio = uni > 1 ? st.ratio[uni - 1] : 1.0f;
+        st.cDetune = detune;
+        st.cBlend = -1.0f;   // force gains below
+    }
+    if (uni != st.cUni || blend != st.cBlend || width != st.cWidth || pan != st.cPan || level != st.cLevel) {
+        float sumSq = 0.0f;
+        for (int i = 0; i < uni; ++i) {
+            float s = uni == 1 ? 0.0f : (float)i / (uni - 1) * 2.0f - 1.0f;
+            bool center = uni == 1 || std::fabs(s) <= 1.0f / (uni - 1) + 1e-4f;
+            float g = center ? 1.0f : blend;
+            sumSq += g * g;
+            float l, r;
+            dsp::panGains(std::clamp(pan + s * width, -1.0f, 1.0f), l, r);
+            st.gl[i] = g * l;
+            st.gr[i] = g * r;
+        }
+        float norm = level / std::sqrt(std::max(sumSq, 1e-6f)) * 1.41421f;   // pan law compensation
+        for (int i = 0; i < uni; ++i) { st.gl[i] *= norm; st.gr[i] *= norm; }
+        st.cBlend = blend; st.cWidth = width; st.cPan = pan; st.cLevel = level;
+    }
+    st.cUni = uni;
+
+    float inc[UNISON_MAX];
+    const float base = freq / sr;
+    for (int i = 0; i < uni; ++i) inc[i] = base * st.ratio[i];
+
+    float lvlFreq  = freq * st.maxRatio * (warp == Warp::Sync ? syncRatio : 1.0f);
     int   level_   = wtLevelFor(lvlFreq, sr);
     const float* t0 = wt->table(level_, f0);
     const float* t1 = wt->table(level_, f1);
 
-    float inc[UNISON_MAX], gl[UNISON_MAX], gr[UNISON_MAX];
-    float sumSq = 0.0f;
-    for (int i = 0; i < uni; ++i) {
-        float s = uni == 1 ? 0.0f : (float)i / (uni - 1) * 2.0f - 1.0f;
-        bool center = uni == 1 || std::fabs(s) <= 1.0f / (uni - 1) + 1e-4f;
-        float g = center ? 1.0f : blend;
-        sumSq += g * g;
-        inc[i] = freq * std::exp2(s * cents / 1200.0f) / sr;
-        float l, r;
-        dsp::panGains(std::clamp(pan + s * width, -1.0f, 1.0f), l, r);
-        gl[i] = g * l;
-        gr[i] = g * r;
-    }
-    float norm = level / std::sqrt(std::max(sumSq, 1e-6f)) * 1.41421f;  // pan law compensation
-    for (int i = 0; i < uni; ++i) { gl[i] *= norm; gr[i] *= norm; }
-
     const bool toFilter = op(P::OSCA_FILTER) > 0.5f;
     float* outL = toFilter ? fl : dl;
     float* outR = toFilter ? fr : dr;
-    float* phase = oscState[osc].phase;
     const float foldGain = (1.0f + amt * 5.0f) * dsp::PI * 0.5f;
 
-    for (int s = 0; s < n; ++s) {
-        float accL = 0.0f, accR = 0.0f;
-        for (int i = 0; i < uni; ++i) {
-            float p = phase[i];
-            float wp = warp == Warp::Off || warp == Warp::Fold ? p : warpPhase(p, warp, amt, bendExp, pwmW, syncRatio);
-            float idx = wp * WT_SIZE;
-            int   i0 = (int)idx;
-            float fr = idx - (float)i0;
-            float a = t0[i0] + fr * (t0[i0 + 1] - t0[i0]);
-            float b = t1[i0] + fr * (t1[i0 + 1] - t1[i0]);
-            float v = a + ff * (b - a);
-            if (warp == Warp::Fold) v = std::sin(v * foldGain);
-            accL += v * gl[i];
-            accR += v * gr[i];
-            p += inc[i];
-            if (p >= 1.0f) p -= 1.0f;
-            phase[i] = p;
-        }
-        outL[s] += accL;
-        outR[s] += accR;
+#define NW_OSC(W) oscLoop<W>(t0, t1, ff, st.phase, inc, st.gl, st.gr, uni, n, outL, outR, amt, bendExp, pwmW, syncRatio, foldGain)
+    switch (warp) {
+        case Warp::Bend:   NW_OSC(Warp::Bend); break;
+        case Warp::Pwm:    NW_OSC(Warp::Pwm); break;
+        case Warp::Sync:   NW_OSC(Warp::Sync); break;
+        case Warp::Mirror: NW_OSC(Warp::Mirror); break;
+        case Warp::Fold:   NW_OSC(Warp::Fold); break;
+        default:           NW_OSC(Warp::Off); break;
     }
+#undef NW_OSC
 }
 
 // ---------------------------------------------------------------------
 // Filter (in place). Stage 2 adds the resonant half of a 24 dB cascade.
 // ---------------------------------------------------------------------
+template <int MODE>   // 0 lp, 1 bp (unity gain), 2 hp, 3 notch, 4 peak
+static inline float pickOut(float lp, float bp, float hp, float k)
+{
+    if constexpr (MODE == 0) return lp;
+    else if constexpr (MODE == 1) return bp * k;
+    else if constexpr (MODE == 2) return hp;
+    else if constexpr (MODE == 3) return lp + hp;
+    else return lp - hp;
+}
+
+template <int MODE, bool STEEP, bool DRIVE>
+static void filterLoop(dsp::Svf* st, float* L, float* R, int n, float g, float gNorm, float mix)
+{
+    for (int s = 0; s < n; ++s) {
+        float in[2] = { L[s], R[s] };
+        for (int ch = 0; ch < 2; ++ch) {
+            float x = in[ch];
+            if constexpr (DRIVE) x = fastTanh(x * g) * gNorm * 1.5f;
+            float lp, bp, hp;
+            st[0].tick(ch, x, lp, bp, hp);
+            float y = pickOut<MODE>(lp, bp, hp, st[0].k);
+            if constexpr (STEEP) {
+                st[1].tick(ch, y, lp, bp, hp);
+                y = pickOut<MODE>(lp, bp, hp, st[1].k);
+            }
+            (ch == 0 ? L[s] : R[s]) = in[ch] + (y - in[ch]) * mix;
+        }
+    }
+}
 void Voice::runFilter(const VoiceContext& ctx, int f, float* L, float* R, int n)
 {
     const float sr = ctx.sampleRate;
@@ -294,31 +363,21 @@ void Voice::runFilter(const VoiceContext& ctx, int f, float* L, float* R, int n)
     float g = 1.0f + drive * 12.0f;
     float gNorm = 1.0f / std::sqrt(g);
 
-    auto pick = [mode](float lp, float bp, float hp, float k) {
-        switch (mode) {
-            case 0:  return lp;
-            case 1:  return bp * k;      // unity-gain band-pass
-            case 2:  return hp;
-            case 3:  return lp + hp;
-            default: return lp - hp;
-        }
-    };
-
-    for (int s = 0; s < n; ++s) {
-        float in[2] = { L[s], R[s] };
-        for (int ch = 0; ch < 2; ++ch) {
-            float x = in[ch];
-            if (drive > 0.0f) x = fastTanh(x * g) * gNorm * 1.5f;
-            float lp, bp, hp;
-            st[0].tick(ch, x, lp, bp, hp);
-            float y = pick(lp, bp, hp, st[0].k);
-            if (steep) {
-                st[1].tick(ch, y, lp, bp, hp);
-                y = pick(lp, bp, hp, st[1].k);
-            }
-            (ch == 0 ? L[s] : R[s]) = in[ch] + (y - in[ch]) * mix;
-        }
+#define NW_FLT(M, S, D) filterLoop<M, S, D>(st, L, R, n, g, gNorm, mix)
+    const bool drv = drive > 0.0f;
+    switch (mode * 4 + (steep ? 2 : 0) + (drv ? 1 : 0)) {
+        case 0:  NW_FLT(0, false, false); break;  case 1:  NW_FLT(0, false, true); break;
+        case 2:  NW_FLT(0, true, false);  break;  case 3:  NW_FLT(0, true, true);  break;
+        case 4:  NW_FLT(1, false, false); break;  case 5:  NW_FLT(1, false, true); break;
+        case 6:  NW_FLT(1, true, false);  break;  case 7:  NW_FLT(1, true, true);  break;
+        case 8:  NW_FLT(2, false, false); break;  case 9:  NW_FLT(2, false, true); break;
+        case 10: NW_FLT(2, true, false);  break;  case 11: NW_FLT(2, true, true);  break;
+        case 12: NW_FLT(3, false, false); break;  case 13: NW_FLT(3, false, true); break;
+        case 14: NW_FLT(3, true, false);  break;  case 15: NW_FLT(3, true, true);  break;
+        case 16: NW_FLT(4, false, false); break;  case 17: NW_FLT(4, false, true); break;
+        case 18: NW_FLT(4, true, false);  break;  default: NW_FLT(4, true, true);  break;
     }
+#undef NW_FLT
 }
 
 // ---------------------------------------------------------------------
@@ -362,7 +421,7 @@ void Voice::render(const VoiceContext& ctx, float* outL, float* outR, int n)
         for (int s = 0; s < n; ++s) {
             float p = subPhase, v;
             switch (shape) {
-                case 0:  v = std::sin(dsp::TWO_PI * p); break;
+                case 0:  v = dsp::fastSin(dsp::TWO_PI * p); break;
                 case 1:  v = p < 0.25f ? 4 * p : p < 0.75f ? 2 - 4 * p : 4 * p - 4; break;
                 case 2:  v = 1.0f - 2.0f * p + dsp::polyBlep(p, inc); break;
                 default: v = (p < 0.5f ? 1.0f : -1.0f) + dsp::polyBlep(p, inc) - dsp::polyBlep(frac01(p + 0.5f), inc); break;

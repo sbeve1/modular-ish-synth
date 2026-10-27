@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,6 +21,7 @@ constexpr int WT_LEVELS = 11;
 
 struct WavetableSet {
     std::string name;
+    uint64_t id = 0;             // unique per build(), for caches (addresses can be reused)
     std::vector<float> frames;   // [WT_FRAMES][WT_SIZE] source
     std::vector<float> mips;     // [WT_LEVELS][WT_FRAMES][WT_SIZE + 1]
 

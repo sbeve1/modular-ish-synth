@@ -44,6 +44,7 @@ public:
 
     float src[NUM_MOD_SRC] = {};          // last computed source values
     float modOff[NUM_PARAMS] = {};        // normalized offsets from the matrix
+    float modValue[NUM_PARAMS] = {};      // plain value of each modulated param, once per block
 
     void start(int note, float velocity, float startPitch, uint64_t order, const VoiceContext& ctx, bool retrigger);
     void release();
@@ -62,6 +63,11 @@ private:
     struct OscState {
         float phase[UNISON_MAX] = {};
         float pos = 0.0f;   // effective WT position, for display
+        // cached unison layout (recomputed only when its inputs change)
+        int   cUni = -1;
+        float cDetune = -1.0f, cBlend = -1.0f, cWidth = -2.0f, cPan = -2.0f, cLevel = -1.0f;
+        float ratio[UNISON_MAX] = {}, gl[UNISON_MAX] = {}, gr[UNISON_MAX] = {};
+        float maxRatio = 1.0f;
     };
 
     float pitch = 60.0f, targetPitch = 60.0f;
