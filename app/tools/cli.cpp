@@ -224,6 +224,25 @@ static int cmdBench()
         double cpu = timeRender(sc.p, sc.voices, seconds);
         std::printf("%-44s %13.1fx %13.2f%%\n", sc.label, seconds / cpu, cpu / seconds * 100.0);
     }
+
+    // where the Max scenario's time goes: remove one part at a time
+    std::printf("\nMax breakdown (16 voices), cost with one part removed:\n");
+    struct V { const char* label; void (*apply)(Preset&); };
+    const V parts[] = {
+        { "no warp",       [](Preset& p) { p.set(P::OSCA_WARP, 0); p.set(P::OSCB_WARP, 0); } },
+        { "bend off",      [](Preset& p) { p.set(P::OSCA_WARP, 0); } },
+        { "sync off",      [](Preset& p) { p.set(P::OSCB_WARP, 0); } },
+        { "unison 1",      [](Preset& p) { p.set(P::OSCA_UNISON, 1); p.set(P::OSCB_UNISON, 1); } },
+        { "filters off",   [](Preset& p) { p.set(P::FLT_ON, 0); p.set(P::FLT2_ON, 0); } },
+        { "no modulation", [](Preset& p) { p.mods.clear(); } },
+        { "FX off",        [](Preset& p) { for (int i = 0; i < NUM_FX; ++i) p.set(fxPowerParam((FxId)i), 0); } },
+    };
+    for (const auto& v : parts) {
+        Preset p = benchMax();
+        v.apply(p);
+        double cpu = timeRender(p, 16, seconds);
+        std::printf("  %-16s %8.2f%%\n", v.label, cpu / seconds * 100.0);
+    }
     return 0;
 }
 

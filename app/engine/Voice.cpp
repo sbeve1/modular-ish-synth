@@ -13,11 +13,33 @@ static float syncHz(float tempo, int div)
 
 static inline float frac01(float x) { return x - std::floor(x); }
 
-// Bend warp: p^e as exp2(e * log2 p) with the fast, accurate (~1e-6) versions,
-// so there is no libm pow per sample per unison voice.
+// Bend warp: p^e = exp2(e * log2 p) without a pow per sample per unison voice.
+// log2 p comes from a 4096-point table (interpolation error < 1e-3 in log2
+// above p = 1/256, falling quadratically); the first 1/256 of the cycle, where
+// log2 curves sharply, uses the exact fast log2.
+namespace {
+constexpr int LOG2_N = 4096;
+struct Log2Table {
+    float v[LOG2_N + 1];
+    Log2Table()
+    {
+        v[0] = 0.0f;   // unused: small phases take the exact path
+        for (int i = 1; i <= LOG2_N; ++i) v[i] = std::log2((float)i / LOG2_N);
+    }
+} const kLog2;
+} // namespace
+
 static inline float bendPhase(float p, float e)
 {
-    return dsp::fastExp2(e * dsp::fastLog2(std::max(p, 1e-30f)));
+    float l;
+    if (p < 1.0f / 256.0f) {
+        l = dsp::fastLog2(std::max(p, 1e-30f));
+    } else {
+        float pos = p * LOG2_N;
+        int i = (int)pos;
+        l = kLog2.v[i] + (kLog2.v[i + 1] - kLog2.v[i]) * (pos - (float)i);
+    }
+    return dsp::fastExp2Neg(e * l);
 }
 
 // ---------------------------------------------------------------------

@@ -121,6 +121,51 @@ design, miniaudio, RtMidi, the WAV render approach.
 - Automated UI checks: the app's `--screenshot` flag plus `--set key=value`,
   `--page`, `--fx` let every visual change be verified from a capture.
 
+### Round 4: optimization pass (no features cut)
+Method: my own review plus an independent read-only subagent audit (given
+the rule "optimize, don't cut"); an extended benchmark (best of 3 runs) with
+a per-part breakdown; and a per-preset RMS/peak fingerprint to prove the
+sound didn't change (13 of 17 presets bit-identical, the rest within 0.07%,
+all from control-rate chorus modulation).
+
+| Scenario (48 kHz) | Before | After | Change |
+|---|---|---|---|
+| Heavy patch, 16 voices | 7.58% of a core (13.2x RT) | 6.11% (16.4x RT) | 19% faster |
+| Max: 2x16 unison, bend+sync warp, 2 filters, all 8 FX | 30.17% | 22.60% | 25% faster |
+| FX rack only (all 8 effects) | 1.42% | 0.96% | 32% faster |
+
+What changed:
+- Fast, accurate math for per-sample paths: `fastExp2` (split at the nearest
+  integer, ~1.5e-6), `fastLog2` (~1e-6), `fastSin` (~3e-6).
+- Bend warp: `pow` per sample per unison voice replaced by a 4096-point
+  log2 table plus a branch-free `exp2`, with an exact path near phase 0.
+  The breakdown showed my first "exact" version was slower than the table
+  (warp alone cost 25% of a core); the hybrid brought it to ~10%.
+- Oscillator inner loop templated on warp mode (no per-sample switch),
+  unison voices as the outer loop; detune ratios and stereo gains cached and
+  rebuilt only when their inputs change.
+- Filter loop templated on mode/slope/drive.
+- Phaser coefficients computed per 16 samples and ramped; chorus/flanger
+  modulation per 16 samples, interpolated; compressor dB math via fast
+  log2/exp2.
+- Modulated parameter values converted once per block, not per lookup.
+- Original `Envelope`: time scale computed once per tick and skipped when key
+  tracking is off; curve exponents cached (about 5 pow per tick down to 1).
+- Effects run in 64-sample sub-blocks so modulated FX parameters update
+  smoothly regardless of the audio buffer size.
+
+Bugs found by the audit and fixed:
+- Out-of-bounds wavetable read when an oscillator's frequency reached the
+  sample rate (single `p -= 1` wrap); now wraps by the integer part.
+- No denormal protection: FTZ/DAZ set at the top of `process()`.
+- Switching the delay on cleared 2 MB inside one callback; delay lines now
+  reset in O(1) with a fill counter (unwritten history reads as silence).
+- Torn mod-slot reads between UI and audio threads; each slot now uses a
+  seqlock.
+- UI: undo copied the whole state every frame (now only when a change
+  counter moves); editors allocated per frame; the 3D view cache was keyed
+  by address (stale after reuse), now by a per-build table id.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX
@@ -130,4 +175,5 @@ design, miniaudio, RtMidi, the WAV render approach.
 - [x] Self-test, benchmark, README
 - [x] Arpeggiator, second filter, drawable LFO, EQ/compressor/phaser/flanger, undo/redo
 - [x] Rename to modular_synth; Serum 2-style wavetable view
+- [x] Optimization pass: 19-32% faster, audit bugs fixed, sound unchanged
 - [ ] Browser build (needs the Emscripten toolchain installed)

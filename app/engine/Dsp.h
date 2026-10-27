@@ -34,6 +34,19 @@ inline float fastExp2(float x)
     return p * u.f;
 }
 
+// 2^x for x <= 0 only (e.g. p^e with p < 1): same accuracy as fastExp2,
+// rounding by truncation instead of floor.
+inline float fastExp2Neg(float x)
+{
+    x = std::max(x, -126.0f);
+    int fi = (int)(x - 0.5f);   // nearest integer for x <= 0
+    float f = x - (float)fi;
+    float p = 1.0f + f * (0.69314718f + f * (0.24022651f + f * (0.05550411f + f * (0.00961813f + f * 0.00133336f))));
+    union { uint32_t i; float f; } u;
+    u.i = (uint32_t)(fi + 127) << 23;
+    return p * u.f;
+}
+
 // log2(x), x > 0. Exponent from the bits, mantissa via the atanh series: error ~1e-6.
 inline float fastLog2(float x)
 {
