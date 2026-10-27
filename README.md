@@ -1,6 +1,8 @@
 # modular_synth
 
-[![CI](https://github.com/sbeve1/modular-ish-synth/actions/workflows/ci.yml/badge.svg)](https://github.com/sbeve1/modular-ish-synth/actions/workflows/ci.yml)
+A real-time polyphonic software synthesizer written in modern C++, built as a portfolio / university DSP project. It focuses on DSP fundamentals, real-time engine architecture, and audio-thread constraints rather than UI polish or product completeness. The goal is to demonstrate a correctly engineered signal path from MIDI input to audio output, not to build a feature-complete commercial instrument.
+
+Author: [Tevin Nguyen] - [tevinsynguyen@gmail.com]
 
 A polyphonic wavetable synthesizer for Windows, written in C++. modular_synth has a
 real-time audio engine, a GUI built with Dear ImGui, MIDI keyboard support,
@@ -168,4 +170,4 @@ docs/         DEVLOG.md (development log)
 
 ## License
 
-MIT. See `LICENSE.txt`.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
