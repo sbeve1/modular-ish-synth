@@ -139,6 +139,9 @@ void Voice::updateModulation(const VoiceContext& ctx)
     for (int s = 0; s < ctx.numSlots; ++s) {
         int t = ctx.slots[s].target;
         modValue[t] = paramInfo(t).toValue(ctx.norm[t] + modOff[t]);
+        float n = std::clamp(ctx.norm[t] + modOff[t], 0.0f, 1.0f);
+        modMin[t] = std::min(modMin[t], n);
+        modMax[t] = std::max(modMax[t], n);
     }
 }
 

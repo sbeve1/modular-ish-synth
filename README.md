@@ -37,6 +37,8 @@ The clip is rendered offline by the engine itself
 - 16 factory presets; user presets are saved as readable text files
 
 **Playing**
+- Audio through Windows audio (WASAPI, shared or exclusive) or an ASIO driver
+  (e.g. Focusrite USB ASIO: ~4 ms output latency); start with `--asio` to use ASIO
 - MIDI keyboards: notes, velocity, pitch bend, mod wheel, sustain, aftertouch,
   program change, and MIDI learn on any knob
 - Computer keyboard: `A W S E D F T G Y H U J K O L P` play notes, `Z`/`X`
@@ -93,7 +95,7 @@ build/vs/app/Release/modular_synth_cli.exe bench
 build/vs/app/Release/modular_synth_cli.exe showcase demo.wav
 ```
 
-`bench` reports CPU cost for several scenarios plus a breakdown of where the
+`lfotest` checks that every LFO shape at 2, 10 and 40 Hz fully modulates its target. `bench` reports CPU cost for several scenarios plus a breakdown of where the
 heaviest one spends its time. `showcase` renders the README demo clip.
 
 `selftest` checks the following:

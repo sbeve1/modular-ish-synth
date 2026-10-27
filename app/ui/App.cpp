@@ -919,6 +919,7 @@ static void drawFooter(UiState& ui, ImVec2 size)
 void frame(UiState& ui, bool focused)
 {
     ui.wt.collect(ui.audio.running());
+    ui.s.telemetry.modRangeRead.fetch_add(1, std::memory_order_release);   // knobs read last frame's ranges
     ui.cpuHistory[ui.cpuHistoryPos] = ui.s.telemetry.cpuLoad.load(std::memory_order_relaxed);
     ui.cpuHistoryPos = (ui.cpuHistoryPos + 1) % 240;
 

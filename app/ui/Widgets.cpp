@@ -139,11 +139,24 @@ bool Knob(UiState& ui, P p, const char* label, float radius)
         arc(dl, c, r, angleFor(lo), angleFor(hi), col, 2.2f);
     }
 
-    // live value from the newest voice
+    // live modulation from the newest voice: the range actually swept since the
+    // last frame (held briefly so fast LFOs read as a moving band), plus a dot
+    // at the current value
     if (numSlots > 0) {
-        float live = ui.s.telemetry.modNorm[(int)p].load(std::memory_order_relaxed);
-        bool show = info.scope == Scope::Global || ui.s.telemetry.displayVoiceActive.load(std::memory_order_relaxed);
+        const Telemetry& t = ui.s.telemetry;
+        float live = t.modNorm[(int)p].load(std::memory_order_relaxed);
+        bool show = info.scope == Scope::Global || t.displayVoiceActive.load(std::memory_order_relaxed);
+        static float shownMin[NUM_PARAMS], shownMax[NUM_PARAMS];
+        static int shownFrame[NUM_PARAMS];
+        float lo = t.modMin[(int)p].load(std::memory_order_relaxed), hi = t.modMax[(int)p].load(std::memory_order_relaxed);
+        int frame = ImGui::GetFrameCount();
+        if (shownFrame[(int)p] != frame - 1) { shownMin[(int)p] = lo; shownMax[(int)p] = hi; }   // first frame after a gap
+        shownFrame[(int)p] = frame;
+        shownMin[(int)p] = std::min(lo, shownMin[(int)p] + (lo - shownMin[(int)p]) * 0.2f);
+        shownMax[(int)p] = std::max(hi, shownMax[(int)p] + (hi - shownMax[(int)p]) * 0.2f);
         if (show) {
+            if (shownMax[(int)p] - shownMin[(int)p] > 0.004f)
+                arc(dl, c, radius, angleFor(shownMin[(int)p]), angleFor(shownMax[(int)p]), theme::withAlpha(theme::mod, 0.85f), 3.5f);
             float a = angleFor(live);
             ImVec2 d(c.x + std::cos(a) * radius, c.y + std::sin(a) * radius);
             dl->AddCircleFilled(d, 3.6f, theme::mod);
@@ -174,7 +187,7 @@ bool Knob(UiState& ui, P p, const char* label, float radius)
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload(MODSRC_PAYLOAD)) {
             ModSrc src = *(const ModSrc*)pl->Data;
-            addModulation(ui, src, (int)p, modSrcBipolar(src) ? 0.2f : 0.3f);
+            addModulation(ui, src, (int)p, 0.5f);   // clearly audible straight away; Alt+drag to adjust
         }
         ImGui::EndDragDropTarget();
     }

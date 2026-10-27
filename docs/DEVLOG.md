@@ -175,6 +175,26 @@ Bugs found by the audit and fixed:
   failure), run `bench` for the log, upload the executables. Verified by
   running the same commands on a clean build directory locally. Not pushed.
 
+### Round 6: latency and LFO feedback from playing
+- **Input latency.** Measured the real output buffer: Windows shared mode on
+  a Focusrite held 970 frames (22 ms), and computer keys also waited for the
+  next vsync frame (up to ~16 ms). Keys are now handled in the GLFW key
+  callback (the UI loop wakes on input instead of blocking on vsync); output
+  queues 2 periods instead of 3; the Global page shows the real latency.
+- **ASIO.** Added an ASIO driver option through RtAudio (static, ASIO API
+  only; it ships the ASIO host interface). Renders straight into the driver's
+  non-interleaved buffers. On the Focusrite: 64 samples at 48 kHz, 3.9 ms
+  reported output latency, 5.6x lower than WASAPI shared. `--asio [buffer]`
+  starts on ASIO; falls back to WASAPI if the driver can't open.
+- **"Fast/sharp LFOs don't do anything."** Measured first: a new
+  `lfotest` command renders every shape at 2/10/40 Hz into Osc A level and
+  measures the level swing; all were 1.00 (full), so the engine was fine.
+  The real problems were in the UI: drops defaulted to 20% depth (easy to
+  miss), and the knob showed one sampled value per frame, which aliases with
+  fast LFOs and looks frozen or random. Drops now default to 50%, and the
+  audio thread records the min/max each modulated parameter swept between UI
+  frames; knobs draw that range as a bright band plus the current-value dot.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX
@@ -186,4 +206,5 @@ Bugs found by the audit and fixed:
 - [x] Rename to modular_synth; Serum 2-style wavetable view
 - [x] Optimization pass: 19-32% faster, audit bugs fixed, sound unchanged
 - [x] Demo clip and CI workflow
+- [x] ASIO, lower input latency, LFO feedback fixes
 - [ ] Browser build (needs the Emscripten toolchain installed)

@@ -54,7 +54,8 @@ void Instrument::prepare(float sampleRate, int maxBlockSize)
     masterGain.snap(dsp::dbToGain(s.params.value(P::MASTER_VOL)));
 
     for (int l = 0; l < 4; ++l) freeLfo[l].reset(0.0f, 1000u + l);
-    for (auto& v : voices) v.active = false;
+    for (auto& v : voices) { v.active = false; v.resetModRange(); }
+    for (int i = 0; i < NUM_PARAMS; ++i) { rangeMin[i] = gMin[i] = 2.0f; rangeMax[i] = gMax[i] = -1.0f; }
 }
 
 // ---------------------------------------------------------------------
@@ -369,6 +370,9 @@ void Instrument::updateGlobalModulation()
     for (int k = 0; k < numGlobalSlots; ++k) {
         int t = globalSlots[k].target;
         gvalue[t] = paramInfo(t).toValue(norm[t] + off[t]);
+        float n = std::clamp(norm[t] + off[t], 0.0f, 1.0f);
+        gMin[t] = std::min(gMin[t], n);
+        gMax[t] = std::max(gMax[t], n);
     }
 }
 
@@ -544,14 +548,33 @@ void Instrument::publish(const float* l, const float* r, int n, double busySecon
     for (int i = 0; i < NUM_MOD_SRC; ++i)
         t.srcValue[i].store(has ? voices[displayVoice].src[i] : ctx.globalSrc[i], std::memory_order_relaxed);
 
+    // start a fresh range once the UI has read the last one
+    uint32_t read = t.modRangeRead.load(std::memory_order_acquire);
+    if (read != rangeEpoch) {
+        rangeEpoch = read;
+        for (int i = 0; i < NUM_PARAMS; ++i) { rangeMin[i] = 2.0f; rangeMax[i] = -1.0f; }
+    }
+
     for (int i = 0; i < NUM_PARAMS; ++i) {
         float nv = norm[i];
         if (modulated[i]) {
-            if (paramInfo(i).scope == Scope::Global) nv = paramInfo(i).toNorm(gvalue[i]);
-            else if (has) nv = std::clamp(norm[i] + voices[displayVoice].modOff[i], 0.0f, 1.0f);
+            if (paramInfo(i).scope == Scope::Global) {
+                nv = paramInfo(i).toNorm(gvalue[i]);
+                rangeMin[i] = std::min(rangeMin[i], gMin[i]);
+                rangeMax[i] = std::max(rangeMax[i], gMax[i]);
+            } else if (has) {
+                const Voice& dv = voices[displayVoice];
+                nv = std::clamp(norm[i] + dv.modOff[i], 0.0f, 1.0f);
+                rangeMin[i] = std::min(rangeMin[i], dv.modMin[i]);
+                rangeMax[i] = std::max(rangeMax[i], dv.modMax[i]);
+            }
+            t.modMin[i].store(rangeMin[i] <= 1.0f ? rangeMin[i] : nv, std::memory_order_relaxed);
+            t.modMax[i].store(rangeMax[i] >= 0.0f ? rangeMax[i] : nv, std::memory_order_relaxed);
         }
         t.modNorm[i].store(nv, std::memory_order_relaxed);
     }
+    for (auto& v : voices) v.resetModRange();
+    for (int k = 0; k < numGlobalSlots; ++k) { gMin[globalSlots[k].target] = 2.0f; gMax[globalSlots[k].target] = -1.0f; }
 
     for (int l = 0; l < 4; ++l)
         t.lfoPhase[l].store(has ? voices[displayVoice].lfoPhase(l, ctx) : freeLfo[l].phase, std::memory_order_relaxed);

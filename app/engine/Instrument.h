@@ -50,6 +50,9 @@ private:
     float norm[NUM_PARAMS] = {};
     float value[NUM_PARAMS] = {};
     float gvalue[NUM_PARAMS] = {};     // globals after modulation
+    float rangeMin[NUM_PARAMS], rangeMax[NUM_PARAMS];   // accumulated for the UI
+    float gMin[NUM_PARAMS], gMax[NUM_PARAMS];           // global params, since last publish
+    uint32_t rangeEpoch = 0;
     bool  modulated[NUM_PARAMS] = {};
     ModSlotData slots[NUM_MOD_SLOTS];
     int numVoiceSlots = 0;

@@ -354,6 +354,51 @@ static int cmdShowcase(const char* path)
     return 0;
 }
 
+// ---- lfotest: does each LFO shape/rate actually move its target? ----
+// Renders a held note with LFO 1 -> Osc A level at full depth and measures how
+// much the short-window level swings (0 = no modulation, 1 = full on/off).
+static double modulationSwing(const Preset& p, double seconds)
+{
+    Engine e;
+    e.load(p);
+    std::vector<NoteEv> ev = { { 0.0, 60, 100 }, { seconds, 60, 0 } };
+    auto audio = e.render(ev, 0.0);
+    const size_t win = (size_t)(0.001 * e.sr);   // 1 ms windows
+    std::vector<double> lv;
+    for (size_t s = (size_t)(0.1 * e.sr); s + win < audio.size() / 2; s += win) {   // skip the attack
+        double acc = 0.0;
+        for (size_t i = 0; i < win; ++i) { float v = audio[2 * (s + i)]; acc += v * v; }
+        lv.push_back(std::sqrt(acc / win));
+    }
+    std::sort(lv.begin(), lv.end());
+    double lo = lv[lv.size() / 20], hi = lv[lv.size() * 19 / 20];   // 5th / 95th percentile
+    return hi > 1e-9 ? (hi - lo) / hi : 0.0;
+}
+
+static int cmdLfoTest()
+{
+    const char* shapes[] = { "Sine", "Triangle", "Saw Up", "Saw Down", "Square", "S&H", "Drift", "Custom" };
+    const float rates[] = { 2.0f, 10.0f, 40.0f };
+    std::printf("LFO 1 -> Osc A level (amount 100%%): level swing, 0 = none, 1 = full\n");
+    std::printf("%-10s %8s %8s %8s\n", "shape", "2 Hz", "10 Hz", "40 Hz");
+    for (int sh = 0; sh < 8; ++sh) {
+        std::printf("%-10s", shapes[sh]);
+        for (float r : rates) {
+            Preset p;
+            p.set(P::OSCA_POS, 0.0f);            // sine wave: steady level without modulation
+            p.set(P::OSCA_LEVEL, 0.5f);
+            p.set(P::ENV1_SUS, 1.0f);
+            p.set(P::FLT_ON, 0);
+            p.set(P::LFO1_SHAPE, (float)sh);
+            p.set(P::LFO1_RATE, r);
+            p.mod(ModSrc::Lfo1, P::OSCA_LEVEL, 1.0f);
+            std::printf(" %8.2f", modulationSwing(p, 1.0));
+        }
+        std::printf("\n");
+    }
+    return 0;
+}
+
 // ---- self-test ----
 static int gFails = 0;
 #define CHECK(cond, ...) do { if (cond) { std::printf("  pass  "); } else { std::printf("  FAIL  "); ++gFails; } std::printf(__VA_ARGS__); std::printf("\n"); } while (0)
@@ -555,6 +600,7 @@ int main(int argc, char** argv)
     if (cmd == "render" && argc > 3) return cmdRender(argv[2], argv[3]);
     if (cmd == "bench") return cmdBench();
     if (cmd == "fingerprint") return cmdFingerprint();
+    if (cmd == "lfotest") return cmdLfoTest();
     if (cmd == "showcase" && argc > 2) return cmdShowcase(argv[2]);
     if (cmd == "selftest") return cmdSelftest();
 

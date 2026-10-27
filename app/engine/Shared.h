@@ -176,6 +176,10 @@ struct Telemetry {
     std::atomic<int>   displayVoiceActive{ 0 };
     std::atomic<float> srcValue[NUM_MOD_SRC]{};
     std::atomic<float> modNorm[NUM_PARAMS]{};       // effective normalized value
+    // range each modulated param swept since the UI last looked (fast LFOs move
+    // further between frames than a single sampled value can show)
+    std::atomic<float> modMin[NUM_PARAMS]{}, modMax[NUM_PARAMS]{};
+    std::atomic<uint32_t> modRangeRead{ 0 };         // UI bumps this after reading the ranges
     std::atomic<float> lfoPhase[4]{};
     std::atomic<int>   envStage[3]{};                // 0 idle, 1 A, 2 H, 3 D, 4 S, 5 R
     std::atomic<float> envStageTime[3]{};

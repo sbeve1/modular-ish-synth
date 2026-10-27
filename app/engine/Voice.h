@@ -45,6 +45,10 @@ public:
     float src[NUM_MOD_SRC] = {};          // last computed source values
     float modOff[NUM_PARAMS] = {};        // normalized offsets from the matrix
     float modValue[NUM_PARAMS] = {};      // plain value of each modulated param, once per block
+    float modMin[NUM_PARAMS], modMax[NUM_PARAMS];   // swept range since the instrument last read it
+
+    Voice() { resetModRange(); }
+    void resetModRange() { for (int i = 0; i < NUM_PARAMS; ++i) { modMin[i] = 2.0f; modMax[i] = -1.0f; } }
 
     void start(int note, float velocity, float startPitch, uint64_t order, const VoiceContext& ctx, bool retrigger);
     void release();
