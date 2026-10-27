@@ -208,6 +208,10 @@ Bugs found by the audit and fixed:
   the drawn curve at the reported phase 99.6% of the time across all shapes,
   with and without offset (the rest are samples at sharp edges).
 
+- **Demo video.** Recorded live (OBS, Windows audio since OBS can't capture
+  ASIO), then re-encoded with ffmpeg from 1440p60 HEVC (23 MB) to 720p30 H.264
+  two-pass (9.2 MB, under GitHub's 10 MB inline-video limit): `docs/demo.mp4`.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX

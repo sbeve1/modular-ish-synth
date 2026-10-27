@@ -8,6 +8,8 @@ and a headless tool for rendering, benchmarking and self-testing.
 
 ![modular_synth](docs/screenshot.png)
 
+**Watch:** [docs/demo.mp4](docs/demo.mp4) (2 min, played live on a MIDI keyboard).
+
 **Listen:** [docs/demo.wav](docs/demo.wav) (29 s): a pad, a supersaw lead,
 a sub bass line, the arpeggiator and a glass pad, all factory presets.
 The clip is rendered offline by the engine itself
