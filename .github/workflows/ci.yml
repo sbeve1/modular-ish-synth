@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Ask vswhere which Visual Studio the runner has, then take the matching
       # generator name from CMake's own list ("Visual Studio 17 2022",
@@ -38,7 +38,7 @@ jobs:
         run: build/app/Release/modular_synth_cli.exe bench
 
       - name: Upload executables
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: modular_synth-windows
           path: |
