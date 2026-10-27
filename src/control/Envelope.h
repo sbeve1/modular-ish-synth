@@ -151,6 +151,11 @@ public:
 
     bool isActive() const { return state != State::IDLE; }
 
+    // for displays: 0 idle, 1 attack, 2 hold, 3 decay, 4 sustain, 5 release
+    int   stageIndex() const { return (int)state; }
+    float stageTime()  const { return elapsed; }
+    float level()      const { return value; }
+
 private:
     // =============================
     // INTERNAL STATE

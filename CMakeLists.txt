@@ -92,3 +92,11 @@ target_include_directories(Synth PRIVATE
 if (WIN32)
     target_link_libraries(Synth winmm)
 endif()
+
+# --------------------------------------------------
+# GUI instrument (app/)
+# --------------------------------------------------
+option(SYNTH_BUILD_APP "Build the GUI synthesizer app" ON)
+if (SYNTH_BUILD_APP)
+    add_subdirectory(app)
+endif()
