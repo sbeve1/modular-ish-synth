@@ -166,6 +166,15 @@ Bugs found by the audit and fixed:
   counter moves); editors allocated per frame; the 3D view cache was keyed
   by address (stale after reuse), now by a per-build table id.
 
+### Round 5: resume polish
+- `showcase` CLI command renders a 29 s multi-preset demo (pad, lead, bass,
+  arpeggiator, glass pad) offline, balanced per part and normalized to
+  -1 dBFS, written as 16-bit WAV: `docs/demo.wav`, linked from the README.
+- GitHub Actions CI (`.github/workflows/ci.yml`, windows-latest): configure
+  with VS 2022, build Release, run `selftest` (fails the build on any
+  failure), run `bench` for the log, upload the executables. Verified by
+  running the same commands on a clean build directory locally. Not pushed.
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX
@@ -176,4 +185,5 @@ Bugs found by the audit and fixed:
 - [x] Arpeggiator, second filter, drawable LFO, EQ/compressor/phaser/flanger, undo/redo
 - [x] Rename to modular_synth; Serum 2-style wavetable view
 - [x] Optimization pass: 19-32% faster, audit bugs fixed, sound unchanged
+- [x] Demo clip and CI workflow
 - [ ] Browser build (needs the Emscripten toolchain installed)

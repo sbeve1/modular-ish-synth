@@ -1,10 +1,17 @@
 # modular_synth
 
+[![CI](https://github.com/sbeve1/modular-ish-synth/actions/workflows/ci.yml/badge.svg)](https://github.com/sbeve1/modular-ish-synth/actions/workflows/ci.yml)
+
 A polyphonic wavetable synthesizer for Windows, written in C++. modular_synth has a
 real-time audio engine, a GUI built with Dear ImGui, MIDI keyboard support,
 and a headless tool for rendering, benchmarking and self-testing.
 
 ![modular_synth](docs/screenshot.png)
+
+**Listen:** [docs/demo.wav](docs/demo.wav) (29 s): a pad, a supersaw lead,
+a sub bass line, the arpeggiator and a glass pad, all factory presets.
+The clip is rendered offline by the engine itself
+(`modular_synth_cli showcase docs/demo.wav`), so it is reproducible.
 
 ## Features
 
@@ -82,13 +89,25 @@ build/vs/app/Release/modular_synth_cli.exe render "Aurora Pad" pad.wav
 build/vs/app/Release/modular_synth_cli.exe bench
 ```
 
+```bash
+build/vs/app/Release/modular_synth_cli.exe showcase demo.wav
+```
+
+`bench` reports CPU cost for several scenarios plus a breakdown of where the
+heaviest one spends its time. `showcase` renders the README demo clip.
+
 `selftest` checks the following:
 - every factory preset renders finite, in-range audio and releases all of its voices
 - the audio path makes zero heap allocations (counted by overriding `operator new`)
 - parameters round-trip between plain and normalized values
 - the mod matrix changes the sound
 - preset files round-trip
+- the arpeggiator, both filter routings and drawn LFO shapes behave as expected
 - the lock-free event queue works under a two-thread stress test
+
+GitHub Actions builds everything on Windows and runs `selftest` on every push
+and pull request (`.github/workflows/ci.yml`); the executables are attached to
+each run as a download.
 
 ## Architecture
 
@@ -121,14 +140,15 @@ build/vs/app/Release/modular_synth_cli.exe bench
 - `app/engine` has no GUI or device code, so the same engine can drive the CLI
   and, later, a WebAssembly/AudioWorklet build.
 
-Measured on this machine (48 kHz), with a heavy patch: 2 oscillators × 8
-unison, sub, noise, a 24 dB filter and all effects on.
+Measured on this machine (48 kHz, best of 3 runs), after an optimization
+pass that cut CPU use 19-32% with no change to the sound:
 
-| Voices | Speed (× realtime) | CPU at realtime |
+| Scenario | Speed (× realtime) | CPU at realtime |
 |---|---|---|
-| 1 | 95× | ~1% |
-| 8 | 25× | ~4% |
-| 16 | 13× | ~8% |
+| Heavy patch (2 osc × 8 unison, sub, noise, 24 dB filter, 4 FX), 1 voice | 105× | ~1% |
+| Same, 16 voices | 16× | ~6% |
+| Max: 16 voices, 2 × 16 unison, bend + sync warp, 2 filters, all 8 FX | 4.4× | ~23% |
+| FX rack only, all 8 effects | 104× | ~1% |
 
 ## Project layout
 

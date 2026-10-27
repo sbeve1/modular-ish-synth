@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -263,6 +264,96 @@ static int cmdFingerprint()
     return 0;
 }
 
+// ---- showcase: a short multi-preset demo for the README ----
+// Each segment renders one preset with its own notes; segments overlap so
+// release tails blend into the next part. Output is normalized to -1 dBFS
+// and written as 16-bit PCM to keep the file small.
+static int cmdShowcase(const char* path)
+{
+    struct Segment {
+        const char* preset;
+        double start;                 // seconds into the demo
+        std::vector<NoteEv> notes;    // times relative to start
+        double tail;
+        void (*tweak)(Preset&);
+        float gain;                   // level balance between parts
+    };
+    auto chord = [](std::initializer_list<int> ns, double t, double len, int vel) {
+        std::vector<NoteEv> v;
+        for (int n : ns) { v.push_back({ t, n, vel }); v.push_back({ t + len, n, 0 }); }
+        return v;
+    };
+    auto join = [](std::vector<NoteEv> a, const std::vector<NoteEv>& b) { a.insert(a.end(), b.begin(), b.end()); return a; };
+
+    // pad: Am -> F -> C -> G
+    std::vector<NoteEv> pad = join(join(chord({ 57, 60, 64, 69 }, 0.0, 2.9, 90), chord({ 53, 57, 60, 65 }, 3.0, 2.9, 90)),
+                                   join(chord({ 55, 60, 64, 67 }, 6.0, 2.9, 90), chord({ 55, 59, 62, 67 }, 9.0, 2.9, 90)));
+    // lead melody over the second half of the pad
+    std::vector<NoteEv> lead;
+    const double mel[][3] = { { 0.0, 76, 0.45 }, { 0.5, 74, 0.45 }, { 1.0, 72, 0.9 }, { 2.0, 74, 0.45 }, { 2.5, 76, 0.45 },
+                              { 3.0, 79, 1.4 }, { 4.5, 76, 0.45 }, { 5.0, 74, 0.9 } };
+    for (auto& m : mel) { lead.push_back({ m[0], (int)m[1], 105 }); lead.push_back({ m[0] + m[2], (int)m[1], 0 }); }
+    // bassline, eighths at 120 BPM
+    std::vector<NoteEv> bass;
+    const int line[16] = { 33, 33, 45, 33, 36, 36, 48, 36, 29, 29, 41, 29, 31, 31, 43, 31 };
+    for (int i = 0; i < 16; ++i) { bass.push_back({ i * 0.25, line[i], i % 2 ? 90 : 120 }); bass.push_back({ i * 0.25 + 0.2, line[i], 0 }); }
+
+    std::vector<Segment> segs = {
+        { "Aurora Pad",    0.0,  pad,  3.0, nullptr, 1.35f },
+        { "Supersaw Lead", 6.0,  lead, 2.0, nullptr, 1.0f },
+        { "Sub Pressure",  12.5, bass, 1.0, nullptr, 0.95f },
+        { "Pulse Arp",     16.5, chord({ 57, 60, 64, 67 }, 0.0, 4.0, 100), 2.0,
+          [](Preset& p) { p.set(P::ARP_ON, 1); p.set(P::ARP_MODE, 2); p.set(P::ARP_DIV, 12); p.set(P::ARP_OCT, 2); }, 3.2f },
+        { "Glass Pad",     20.5, chord({ 45, 57, 64, 71, 76 }, 0.0, 3.5, 85), 5.0, nullptr, 0.7f },
+    };
+
+    const float sr = 48000.0f;
+    double total = 0.0;
+    for (auto& s : segs) total = std::max(total, s.start + (s.notes.empty() ? 0.0 : s.notes.back().t) + s.tail + 4.0);
+    std::vector<float> mix((size_t)(total * sr) * 2, 0.0f);
+    size_t used = 0;
+
+    auto all = factoryPresets();
+    for (auto& s : segs) {
+        const Preset* base = findPreset(all, s.preset);
+        if (!base) { std::printf("missing preset %s\n", s.preset); return 1; }
+        Preset p = *base;
+        if (s.tweak) s.tweak(p);
+        std::sort(s.notes.begin(), s.notes.end(), [](const NoteEv& a, const NoteEv& b) {
+            return a.t != b.t ? a.t < b.t : (a.vel == 0 && b.vel != 0);
+        });
+        Engine e(sr);
+        e.load(p);
+        auto audio = e.render(s.notes, s.tail);
+        size_t off = (size_t)(s.start * sr) * 2;
+        for (size_t i = 0; i < audio.size() && off + i < mix.size(); ++i) mix[off + i] += audio[i] * s.gain;
+        used = std::max(used, std::min(off + audio.size(), mix.size()));
+        std::printf("  %-14s at %5.1fs\n", s.preset, s.start);
+    }
+    mix.resize(used);
+
+    float peak = 0.0f;
+    for (float v : mix) peak = std::max(peak, std::fabs(v));
+    float g = peak > 0.0f ? 0.891f / peak : 1.0f;   // -1 dBFS
+    // short fade-out on the last 0.5 s
+    size_t fade = (size_t)(0.5f * sr) * 2;
+    for (size_t i = 0; i < mix.size(); ++i) {
+        float f = i + fade > mix.size() ? (float)(mix.size() - i) / fade : 1.0f;
+        mix[i] *= g * f;
+    }
+
+    std::vector<int16_t> pcm(mix.size());
+    for (size_t i = 0; i < mix.size(); ++i) pcm[i] = (int16_t)std::lround(std::clamp(mix[i], -1.0f, 1.0f) * 32767.0f);
+    ma_encoder_config cfg = ma_encoder_config_init(ma_encoding_format_wav, ma_format_s16, 2, (ma_uint32)sr);
+    ma_encoder enc;
+    if (ma_encoder_init_file(path, &cfg, &enc) != MA_SUCCESS) { std::printf("Failed to write %s\n", path); return 1; }
+    ma_uint64 written = 0;
+    ma_encoder_write_pcm_frames(&enc, pcm.data(), pcm.size() / 2, &written);
+    ma_encoder_uninit(&enc);
+    std::printf("Wrote %s: %.1f s, 16-bit stereo, normalized from peak %.3f\n", path, pcm.size() / 2 / sr, peak);
+    return 0;
+}
+
 // ---- self-test ----
 static int gFails = 0;
 #define CHECK(cond, ...) do { if (cond) { std::printf("  pass  "); } else { std::printf("  FAIL  "); ++gFails; } std::printf(__VA_ARGS__); std::printf("\n"); } while (0)
@@ -464,6 +555,7 @@ int main(int argc, char** argv)
     if (cmd == "render" && argc > 3) return cmdRender(argv[2], argv[3]);
     if (cmd == "bench") return cmdBench();
     if (cmd == "fingerprint") return cmdFingerprint();
+    if (cmd == "showcase" && argc > 2) return cmdShowcase(argv[2]);
     if (cmd == "selftest") return cmdSelftest();
 
     std::printf("Usage:\n  modular_synth_cli list\n  modular_synth_cli render <preset-number|name> out.wav\n"
