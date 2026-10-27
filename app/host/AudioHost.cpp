@@ -48,6 +48,7 @@ bool AudioHost::start(Instrument& inst, int periodMs, bool exclusiveMode)
     cfg.playback.channels = 2;
     cfg.sampleRate = 0;                       // device native rate
     cfg.periodSizeInMilliseconds = (ma_uint32)periodMs;
+    cfg.periods = 2;                          // default is 3: one less period queued = less latency
     cfg.performanceProfile = ma_performance_profile_low_latency;
     cfg.playback.shareMode = exclusiveMode ? ma_share_mode_exclusive : ma_share_mode_shared;
     cfg.dataCallback = dataCallback;
@@ -68,6 +69,11 @@ bool AudioHost::start(Instrument& inst, int periodMs, bool exclusiveMode)
 
     rate = impl->device.sampleRate;
     period = impl->device.playback.internalPeriodSizeInFrames;
+    bufferFrames = period * impl->device.playback.internalPeriods;
+#ifdef MA_HAS_WASAPI
+    if (impl->device.pContext->backend == ma_backend_wasapi && impl->device.wasapi.actualBufferSizeInFramesPlayback > 0)
+        bufferFrames = impl->device.wasapi.actualBufferSizeInFramesPlayback;
+#endif
     name = impl->device.playback.name;
     backend = ma_get_backend_name(impl->device.pContext->backend);
 

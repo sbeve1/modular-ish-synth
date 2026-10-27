@@ -2,6 +2,7 @@
 // the miniaudio callback thread and MIDI in RtMidi's thread. They only meet
 // through SharedState (atomics and SPSC rings).
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -80,7 +81,22 @@ int main(int argc, char** argv)
     if (!window) { glfwTerminate(); return 1; }
     glfwSetWindowSizeLimits(window, 1400, 820, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);   // vsync: the UI never needs more than the display rate
+    // No vsync: the loop sleeps in glfwWaitEventsTimeout until the next frame is
+    // due or an input event arrives, so key presses are handled immediately
+    // instead of waiting for the next screen refresh.
+    glfwSwapInterval(0);
+    int refresh = 60;
+    if (const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor())) refresh = std::max(mode->refreshRate, 30);
+    const double frameTime = 1.0 / refresh;
+
+    // set before ImGui's backend installs its callbacks: it chains to these
+    glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int, int action, int mods) {
+        if (auto* u = (UiState*)glfwGetWindowUserPointer(w))
+            app::onKey(*u, key, action, (mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT)) != 0);
+    });
+    glfwSetWindowFocusCallback(window, [](GLFWwindow* w, int focused) {
+        if (auto* u = (UiState*)glfwGetWindowUserPointer(w); u && !focused) app::releaseKeys(*u);
+    });
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -104,6 +120,7 @@ int main(int argc, char** argv)
     auto audio = std::make_unique<AudioHost>();
 
     UiState ui(*shared, *wavetables, *midi, *audio);
+    glfwSetWindowUserPointer(window, &ui);
     app::init(ui);                       // loads the Init preset (wavetables, params)
 
     audio->start(*instrument, 5);        // prepares the instrument, then starts the device
@@ -121,7 +138,11 @@ int main(int argc, char** argv)
     ui.filterTab = filterTab;
     int frameCount = 0;
 
+    double nextFrame = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
+        double now = glfwGetTime();
+        if (now < nextFrame) { glfwWaitEventsTimeout(nextFrame - now); continue; }   // input callbacks run in here
+        nextFrame = std::max(nextFrame + frameTime, now);
         glfwPollEvents();
         if (glfwGetWindowAttrib(window, GLFW_ICONIFIED)) { glfwWaitEventsTimeout(0.05); continue; }
 

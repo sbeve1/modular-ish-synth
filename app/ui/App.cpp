@@ -89,39 +89,53 @@ static void savePresetAs(UiState& ui, const char* name)
 // ---------------------------------------------------------------------
 // Computer keyboard
 // ---------------------------------------------------------------------
-static const ImGuiKey kNoteKeys[] = {
-    ImGuiKey_A, ImGuiKey_W, ImGuiKey_S, ImGuiKey_E, ImGuiKey_D, ImGuiKey_F, ImGuiKey_T, ImGuiKey_G,
-    ImGuiKey_Y, ImGuiKey_H, ImGuiKey_U, ImGuiKey_J, ImGuiKey_K, ImGuiKey_O, ImGuiKey_L, ImGuiKey_P,
-};
-constexpr int NUM_NOTE_KEYS = sizeof(kNoteKeys) / sizeof(kNoteKeys[0]);
+// Called straight from the GLFW key callback, the moment Windows delivers the
+// key (not once per drawn frame), so a key press reaches the audio thread
+// within about a millisecond.
+static int keyIndex(int glfwKey)
+{
+    static const int keys[] = { 'A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K', 'O', 'L', 'P' };
+    for (int i = 0; i < (int)(sizeof(keys) / sizeof(keys[0])); ++i)
+        if (keys[i] == glfwKey) return i;
+    return -1;
+}
+constexpr int NUM_NOTE_KEYS = 16;
 static int gKeyNote[NUM_NOTE_KEYS] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-static void releaseAllKeys(UiState& ui)
+void releaseKeys(UiState& ui)
 {
     for (int i = 0; i < NUM_NOTE_KEYS; ++i)
         if (gKeyNote[i] >= 0) { ui.s.uiEvents.push({ EventType::NoteOff, (uint8_t)gKeyNote[i], 0 }); gKeyNote[i] = -1; }
 }
 
-static void handleKeyboard(UiState& ui, bool focused)
+void onKey(UiState& ui, int key, int action, int ctrlOrAlt)
 {
-    ImGuiIO& io = ImGui::GetIO();
-    if (!focused || io.WantTextInput || io.KeyCtrl || io.KeyAlt) { if (!focused) releaseAllKeys(ui); return; }
+    constexpr int PRESS = 1, RELEASE = 0, REPEAT = 2;   // GLFW_PRESS / GLFW_RELEASE / GLFW_REPEAT
+    int i = keyIndex(key);
 
-    for (int i = 0; i < NUM_NOTE_KEYS; ++i) {
-        if (ImGui::IsKeyPressed(kNoteKeys[i], false) && gKeyNote[i] < 0) {
+    // releases always go through, so a note never sticks
+    if (action == RELEASE) {
+        if (i >= 0 && gKeyNote[i] >= 0) {
+            ui.s.uiEvents.push({ EventType::NoteOff, (uint8_t)gKeyNote[i], 0 });
+            gKeyNote[i] = -1;
+        }
+        return;
+    }
+    if (ImGui::GetIO().WantTextInput || ctrlOrAlt) return;
+
+    if (i >= 0) {
+        if (action == PRESS && gKeyNote[i] < 0) {
             int note = std::clamp((ui.keyOctave + 1) * 12 + i, 0, 127);
             ui.s.uiEvents.push({ EventType::NoteOn, (uint8_t)note, (uint8_t)ui.keyVelocity });
             gKeyNote[i] = note;
         }
-        if (ImGui::IsKeyReleased(kNoteKeys[i]) && gKeyNote[i] >= 0) {
-            ui.s.uiEvents.push({ EventType::NoteOff, (uint8_t)gKeyNote[i], 0 });
-            gKeyNote[i] = -1;
-        }
+        return;
     }
-    if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) { ui.keyOctave = std::max(ui.keyOctave - 1, 0); ui.setStatus("Keyboard octave C" + std::to_string(ui.keyOctave), ImGui::GetTime()); }
-    if (ImGui::IsKeyPressed(ImGuiKey_X, false)) { ui.keyOctave = std::min(ui.keyOctave + 1, 8); ui.setStatus("Keyboard octave C" + std::to_string(ui.keyOctave), ImGui::GetTime()); }
-    if (ImGui::IsKeyPressed(ImGuiKey_C)) { ui.keyVelocity = std::max(ui.keyVelocity - 10, 10); ui.setStatus("Keyboard velocity " + std::to_string(ui.keyVelocity), ImGui::GetTime()); }
-    if (ImGui::IsKeyPressed(ImGuiKey_V)) { ui.keyVelocity = std::min(ui.keyVelocity + 10, 127); ui.setStatus("Keyboard velocity " + std::to_string(ui.keyVelocity), ImGui::GetTime()); }
+    double now = ImGui::GetTime();
+    if (action == PRESS && key == 'Z') { ui.keyOctave = std::max(ui.keyOctave - 1, 0); ui.setStatus("Keyboard octave C" + std::to_string(ui.keyOctave), now); }
+    if (action == PRESS && key == 'X') { ui.keyOctave = std::min(ui.keyOctave + 1, 8); ui.setStatus("Keyboard octave C" + std::to_string(ui.keyOctave), now); }
+    if ((action == PRESS || action == REPEAT) && key == 'C') { ui.keyVelocity = std::max(ui.keyVelocity - 10, 10); ui.setStatus("Keyboard velocity " + std::to_string(ui.keyVelocity), now); }
+    if ((action == PRESS || action == REPEAT) && key == 'V') { ui.keyVelocity = std::min(ui.keyVelocity + 10, 127); ui.setStatus("Keyboard velocity " + std::to_string(ui.keyVelocity), now); }
 }
 
 // ---------------------------------------------------------------------
@@ -714,8 +728,11 @@ static void globalPage(UiState& ui, ImVec2 avail)
         w::SectionLabel("Audio output");
         if (ui.audio.running()) {
             ImGui::Text("%s", ui.audio.deviceName().c_str());
-            ImGui::TextDisabled("%s, %u Hz, %u-frame buffer (%.1f ms)", ui.audio.backendName().c_str(), ui.audio.sampleRate(),
-                                ui.audio.periodFrames(), 1000.0f * ui.audio.periodFrames() / std::max(1u, ui.audio.sampleRate()));
+            float sr = (float)std::max(1u, ui.audio.sampleRate());
+            ImGui::TextDisabled("%s, %u Hz, period %u frames (%.1f ms)", ui.audio.backendName().c_str(), ui.audio.sampleRate(),
+                                ui.audio.periodFrames(), 1000.0f * ui.audio.periodFrames() / sr);
+            ImGui::TextDisabled("Output buffer %u frames = %.1f ms latency", ui.audio.outputBufferFrames(),
+                                1000.0f * ui.audio.outputBufferFrames() / sr);
         } else {
             ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::hot), "Audio not running: %s", ui.audio.error().c_str());
         }
@@ -866,7 +883,7 @@ void frame(UiState& ui, bool focused)
         ui.setStatus("Program change: " + ui.presetName, ImGui::GetTime());
     }
 
-    handleKeyboard(ui, focused);
+    if (!focused) releaseKeys(ui);
 
     {   // undo / redo
         ImGuiIO& io = ImGui::GetIO();

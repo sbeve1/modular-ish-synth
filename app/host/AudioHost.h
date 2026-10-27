@@ -23,6 +23,7 @@ public:
     bool running() const { return isRunning; }
     unsigned sampleRate() const { return rate; }
     unsigned periodFrames() const { return period; }
+    unsigned outputBufferFrames() const { return bufferFrames; }   // total queued output (drives latency)
     const std::string& deviceName() const { return name; }
     const std::string& backendName() const { return backend; }
     const std::string& error() const { return lastError; }
@@ -35,6 +36,6 @@ private:
     int reqPeriod = 5;
     bool exclusive = false;
     bool isRunning = false;
-    unsigned rate = 0, period = 0;
+    unsigned rate = 0, period = 0, bufferFrames = 0;
     std::string name, backend, lastError;
 };
