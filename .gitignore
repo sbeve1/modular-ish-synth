@@ -20,6 +20,16 @@ Makefile
 # IDE files
 .vscode/
 .idea/
+.vs/
+out/
+
+# Debug files
+*.pdb
+*.ilk
+
+# Rendered audio (the README demo is kept)
+*.wav
+!docs/demo.wav
 
 # OS files
 .DS_Store

@@ -79,9 +79,10 @@ public:
     {
         float dt = 1.0f / sr;
 
-        float a = clampTime(attack  * computeTimeScale());
-        float d = clampTime(decay   * computeTimeScale());
-        float r = clampTime(release * computeTimeScale());
+        const float ts = computeTimeScale();   // once per tick (was once per stage time)
+        float a = clampTime(attack  * ts);
+        float d = clampTime(decay   * ts);
+        float r = clampTime(release * ts);
 
         elapsed += dt;
 
@@ -96,7 +97,7 @@ public:
                     elapsed = 0.0f;
                     state = (hold > 0.0f) ? State::HOLD : State::DECAY;
                 } else {
-                    float shaped = shapeCurve(t, attackCurve);
+                    float shaped = shapeCurve(t, attackCurve, attackExp);
                     value = lerp(startLevel, 1.0f, shaped);
                 }
                 break;
@@ -117,7 +118,7 @@ public:
                     value = sustain;
                     state = State::SUSTAIN;
                 } else {
-                    float shaped = shapeCurve(t, decayCurve);
+                    float shaped = shapeCurve(t, decayCurve, decayExp);
                     value = lerp(1.0f, sustain, shaped);
                 }
                 break;
@@ -135,7 +136,7 @@ public:
                     value = 0.0f;
                     state = State::IDLE;
                 } else {
-                    float shaped = shapeCurve(t, releaseCurve);
+                    float shaped = shapeCurve(t, releaseCurve, releaseExp);
                     value = lerp(releaseStart, 0.0f, shaped);
                 }
                 break;
@@ -151,6 +152,11 @@ public:
 
     bool isActive() const { return state != State::IDLE; }
 
+    // for displays: 0 idle, 1 attack, 2 hold, 3 decay, 4 sustain, 5 release
+    int   stageIndex() const { return (int)state; }
+    float stageTime()  const { return elapsed; }
+    float level()      const { return value; }
+
 private:
     // =============================
     // INTERNAL STATE
@@ -165,7 +171,11 @@ private:
     // =============================
     // CURVE SHAPER (CORE FUNCTION)
     // =============================
-    static inline float shapeCurve(float x, float curve)
+    // Exponent per curve value, cached: only recomputed when the curve changes.
+    struct CurveExp { float curve = 0.0f, exponent = 1.0f; };
+    CurveExp attackExp, decayExp, releaseExp;
+
+    static inline float shapeCurve(float x, float curve, CurveExp& cache)
     {
         x = std::clamp(x, 0.0f, 1.0f);
         curve = std::clamp(curve, -1.0f, 1.0f);
@@ -177,9 +187,12 @@ private:
         // < 1 : log-like
         // = 1 : linear
         // > 1 : exp-like
-        float exponent = std::pow(2.0f, curve * k);
-
-        return std::pow(x, exponent);
+        if (curve != cache.curve) {
+            cache.curve = curve;
+            cache.exponent = std::pow(2.0f, curve * k);
+        }
+        if (cache.exponent == 1.0f) return x;
+        return std::pow(x, cache.exponent);
     }
 
     // =============================
@@ -192,6 +205,7 @@ private:
 
     float computeTimeScale() const
     {
+        if (noteTracking == 0.0f) return timeScale;   // skip the pow in the common case
         float noteFactor = std::pow(2.0f, (noteNumber - 60) / 12.0f);
         return timeScale * (1.0f + noteTracking * (noteFactor - 1.0f));
     }

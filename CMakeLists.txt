@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # --------------------------------------------------
 add_compile_definitions(__WINDOWS_MM__)
 
+# MSVC: keep windows.h from defining min/max macros, and expose M_PI
+add_compile_definitions(NOMINMAX _USE_MATH_DEFINES)
+
 # --------------------------------------------------
 # Collect source files
 # --------------------------------------------------
@@ -46,6 +49,14 @@ file(GLOB_RECURSE AUDIO_SRC
 )
 
 
+file(GLOB INPUT_SRC
+    "src/input/*.cpp"
+)
+
+file(GLOB RENDER_SRC
+    "src/render/*.cpp"
+)
+
 # IMPORTANT: control sources (LFO.cpp lives here)
 file(GLOB CONTROL_SRC
     "src/control/*.cpp"
@@ -64,6 +75,8 @@ add_executable(Synth
     ${MIDI_SRC}
     ${PLATFORM_SRC}
     ${CONTROL_SRC}
+    ${RENDER_SRC}
+    ${INPUT_SRC}
 )
 
 # --------------------------------------------------
@@ -78,4 +91,12 @@ target_include_directories(Synth PRIVATE
 # --------------------------------------------------
 if (WIN32)
     target_link_libraries(Synth winmm)
+endif()
+
+# --------------------------------------------------
+# GUI instrument (app/)
+# --------------------------------------------------
+option(SYNTH_BUILD_APP "Build the GUI synthesizer app" ON)
+if (SYNTH_BUILD_APP)
+    add_subdirectory(app)
 endif()

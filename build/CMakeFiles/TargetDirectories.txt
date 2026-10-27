@@ -1,3 +1,0 @@
-C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/build/CMakeFiles/Synth.dir
-C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/build/CMakeFiles/edit_cache.dir
-C:/Users/tevin/Desktop/Developer/CRAZY PROJECT/build/CMakeFiles/rebuild_cache.dir

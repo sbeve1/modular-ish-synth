@@ -109,13 +109,13 @@ public:
     // =========================
     // Lifecycle
     // =========================
-    explicit ReverbFX(float sampleRate = 44100.0f);
+    explicit ReverbFX(float sampleRate);
 
     Sample processWet(const Sample& in, float sr) override;
     void registerModTargets(ModMatrix& mod) override;
 
 private:
-    float sr = 44100.0f;
+    float sr;
 
     // =========================
     // Plate DSP (ONLY IMPLEMENTED MODE)

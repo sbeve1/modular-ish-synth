@@ -30,6 +30,16 @@ struct Voice {
         // Default enabled sources
         routing.sources[0].enabled = true; // OSC A
         routing.filter[0].enabled  = true; // Filter 0
+
+        // once, not per note, so routing set by a patch persists
+        VoiceInit::setSerumInitDefaults(
+            routing,
+            oscAParams,
+            oscBParams,
+            oscCParams,
+            subParams,
+            noiseParams
+        );
     }
 
 
@@ -154,14 +164,6 @@ struct Voice {
 
         VoiceModulation::registerSources(*this);
         VoiceModulation::registerTargets(*this);
-        VoiceInit::setSerumInitDefaults(
-            routing,
-            oscAParams,
-            oscBParams,
-            oscCParams,
-            subParams,
-            noiseParams
-        );
     }
 
     void stop()
@@ -185,22 +187,6 @@ struct Voice {
 
         // clear all routing buffers
         routing.buffers.clear();
-
-
-        // small helper for debugging invalid / huge samples
-        auto checkSampleVal = [](float v)->bool {
-            if (!std::isfinite(v)) return false;
-            // sanity clamp for debug; adjust threshold as needed
-            return std::fabs(v) <= 1e3f;
-        };
-
-        auto debugCheck = [&](const Sample& s, const char* tag){
-            if (!checkSampleVal(s.left) || !checkSampleVal(s.right)) {
-                printf("[VOICE DEBUG] %s L=%f R=%f\n", tag, s.left, s.right);
-            }
-        };
-
-
 
         // ---- CONTROL ----
         float env = env1.process(sr);

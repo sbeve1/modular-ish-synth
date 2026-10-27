@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Ask vswhere which Visual Studio the runner has, then take the matching
+      # generator name from CMake's own list ("Visual Studio 17 2022",
+      # "Visual Studio 18 2026", ...), so the job keeps working when
+      # windows-latest moves to a new VS version.
+      - name: Configure (Visual Studio, x64)
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $major = (& $vswhere -latest -property installationVersion).Split('.')[0]
+          $gen = (cmake -E capabilities | ConvertFrom-Json).generators.name |
+                 Where-Object { $_ -match "^Visual Studio $major \d{4}$" } | Select-Object -First 1
+          if (-not $gen) { throw "CMake has no generator for Visual Studio $major" }
+          Write-Host "Generator: $gen"
+          cmake -S . -B build -G $gen -A x64
+
+      - name: Build (Release)
+        run: cmake --build build --config Release --parallel
+
+      - name: Self-test
+        run: build/app/Release/modular_synth_cli.exe selftest
+
+      - name: Benchmark (informational)
+        run: build/app/Release/modular_synth_cli.exe bench
+
+      - name: Upload executables
+        uses: actions/upload-artifact@v7
+        with:
+          name: modular_synth-windows
+          path: |
+            build/app/Release/modular_synth.exe
+            build/app/Release/modular_synth_cli.exe
+            build/Release/Synth.exe

@@ -9,18 +9,47 @@
 Synth::Synth()
 {
     basicWavetable = WavetableFactory::makeBasicShapes();
+}
 
-    // ----------------------------
-    // FX CHAINS
-    // ----------------------------
+// (Re)builds the FX chains at the device sample rate.
+// Must run before audio starts, and before rebuildFXModulation(),
+// since it recreates the FX objects whose members get registered.
+void Synth::prepare(float sampleRate)
+{
     bus1FX.clear();
-    bus1FX.add(std::make_unique<ReverbFX>(44100.0f));
+    bus1FX.add(std::make_unique<ReverbFX>(sampleRate));
 
     bus2FX.clear();
-    bus2FX.add(std::make_unique<DelayFX>(44100.0f));
+    bus2FX.add(std::make_unique<DelayFX>(sampleRate));
 
     mainFX.clear();
-    mainFX.add(std::make_unique<ReverbFX>(44100.0f));
+    mainFX.add(std::make_unique<ReverbFX>(sampleRate));
+}
+
+// Oscillator/noise params are copied into a voice at note-on; filter,
+// envelope and routing live on each voice, so set them on all of them.
+// Allocation-free, so it can run on the audio thread.
+void Synth::applyPatch(const Patch& patch)
+{
+    oscAParams  = patch.oscA;
+    oscBParams  = patch.oscB;
+    oscCParams  = patch.oscC;
+    subParams   = patch.sub;
+    noiseParams = patch.noise;
+
+    for (auto& v : voices) {
+        v.filter0Params = patch.filter0;
+
+        v.env1.attack  = patch.attack;
+        v.env1.decay   = patch.decay;
+        v.env1.sustain = patch.sustain;
+        v.env1.release = patch.release;
+
+        for (int i = 0; i < NUM_SOURCES; ++i)
+            v.routing.sources[i] = patch.sources[i];
+        v.routing.filter[0] = patch.filter0Route;
+        v.routing.compile();
+    }
 }
 
 void Synth::noteOn(int note, float velocity)
@@ -47,19 +76,15 @@ void Synth::noteOn(int note, float velocity)
     if (!chosen)
         return;
 
-    chosen->state.noteId = nextNoteId++;
-    chosen->start(note, velocity, &basicWavetable);
-
+    // copy params before start(): it registers mod targets using their base values
     chosen->oscAParams = oscAParams;
     chosen->oscBParams = oscBParams;
     chosen->oscCParams = oscCParams;
     chosen->subParams  = subParams;
     chosen->noiseParams = noiseParams;
 
-    chosen->oscAParams.midiNote = note;
-    chosen->oscBParams.midiNote = note;
-    chosen->oscCParams.midiNote = note;
-    chosen->subParams.midiNote  = note;
+    chosen->state.noteId = nextNoteId++;
+    chosen->start(note, velocity, &basicWavetable);
 }
 
 void Synth::noteOff(int note)
