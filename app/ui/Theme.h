@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-// Nullwave visual language: near-black neutrals, white text, one green
+// modular_synth visual language: near-black neutrals, white text, one green
 // accent for values, white for modulation. Flat and minimal.
 namespace theme {
 

@@ -1,9 +1,9 @@
-// nullwave_cli: headless rendering, benchmark and self-test for the engine.
+// modular_synth_cli: headless rendering, benchmark and self-test for the engine.
 //
-//   nullwave_cli render <preset-number|name> out.wav
-//   nullwave_cli bench
-//   nullwave_cli selftest
-//   nullwave_cli list
+//   modular_synth_cli render <preset-number|name> out.wav
+//   modular_synth_cli bench
+//   modular_synth_cli selftest
+//   modular_synth_cli list
 
 #include <algorithm>
 #include <atomic>
@@ -329,7 +329,7 @@ static int cmdSelftest()
         p.lfoCurve[2] = { { 0.0f, 0.5f, 0.2f }, { 0.4f, -0.8f, -0.3f }, { 1.0f, 0.1f, 0.0f } };
         p.fxOrder = DEFAULT_FX_ORDER;
         std::swap(((uint8_t*)&p.fxOrder)[0], ((uint8_t*)&p.fxOrder)[3]);
-        std::string path = (std::filesystem::temp_directory_path() / "nullwave_selftest.nwp").string();
+        std::string path = (std::filesystem::temp_directory_path() / "modular_synth_selftest.msp").string();
         bool saved = savePresetFile(p, path);
         Preset q;
         bool loaded = loadPresetFile(q, path);
@@ -378,7 +378,7 @@ int main(int argc, char** argv)
     if (cmd == "bench") return cmdBench();
     if (cmd == "selftest") return cmdSelftest();
 
-    std::printf("Usage:\n  nullwave_cli list\n  nullwave_cli render <preset-number|name> out.wav\n"
-                "  nullwave_cli bench\n  nullwave_cli selftest\n");
+    std::printf("Usage:\n  modular_synth_cli list\n  modular_synth_cli render <preset-number|name> out.wav\n"
+                "  modular_synth_cli bench\n  modular_synth_cli selftest\n");
     return 1;
 }

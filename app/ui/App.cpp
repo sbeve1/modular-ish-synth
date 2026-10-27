@@ -73,7 +73,7 @@ static void savePresetAs(UiState& ui, const char* name)
     std::string safe;
     for (const char* c = name; *c; ++c) safe += (std::isalnum((unsigned char)*c) || *c == ' ' || *c == '-' || *c == '_') ? *c : '_';
     if (safe.empty()) safe = "Untitled";
-    std::string path = (fs::path(userPresetDir()) / (safe + ".nwp")).string();
+    std::string path = (fs::path(userPresetDir()) / (safe + ".msp")).string();
     if (savePresetFile(p, path)) {
         ui.userFiles = listUserPresets();
         for (size_t i = 0; i < ui.userFiles.size(); ++i)
@@ -168,7 +168,7 @@ static void drawHeader(UiState& ui, float width)
     // logo
     ImGui::SetCursorScreenPos(ImVec2(o.x + 16, o.y + 9));
     ImGui::PushFont(theme::fontTitle);
-    ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::accent), "NULLWAVE");
+    ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::accent), "MODULAR_SYNTH");
     ImGui::PopFont();
     ImGui::SetCursorScreenPos(ImVec2(o.x + 17, o.y + 35));
     ImGui::PushFont(theme::fontSmall);
@@ -881,7 +881,7 @@ void frame(UiState& ui, bool focused)
     ImGui::SetNextWindowPos(vp->WorkPos);
     ImGui::SetNextWindowSize(vp->WorkSize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin("Nullwave", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+    ImGui::Begin("modular_synth", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
                  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImGui::PopStyleVar();
 

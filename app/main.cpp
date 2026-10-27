@@ -1,4 +1,4 @@
-// Nullwave: desktop app shell. Window + UI on the main thread; audio runs in
+// modular_synth: desktop app shell. Window + UI on the main thread; audio runs in
 // the miniaudio callback thread and MIDI in RtMidi's thread. They only meet
 // through SharedState (atomics and SPSC rings).
 
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-    GLFWwindow* window = glfwCreateWindow(1480, 920, "Nullwave", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1480, 920, "modular_synth", nullptr, nullptr);
     if (!window) { glfwTerminate(); return 1; }
     glfwSetWindowSizeLimits(window, 1400, 820, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwMakeContextCurrent(window);

@@ -34,6 +34,6 @@ void applyPreset(const Preset& p, SharedState& s, ResourceManager& wt);
 bool savePresetFile(const Preset& p, const std::string& path);
 bool loadPresetFile(Preset& p, const std::string& path);
 
-// Folder for user presets (%APPDATA%\Nullwave\Presets), created on demand.
+// Folder for user presets (%APPDATA%\modular_synth\Presets), created on demand.
 std::string userPresetDir();
 std::vector<std::string> listUserPresets();   // full paths, sorted

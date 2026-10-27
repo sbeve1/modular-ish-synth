@@ -18,7 +18,7 @@ not just the feature.
 | `f26da4a` | **Fixed a mod-matrix bug that doubled every modulated parameter** | The matrix wrote `base + modulation` into fields that the resolvers then added to `base` again: osc level ran +6 dB hot and filter cutoff at 2x with zero routes. Also: routing was reset on every note-on, so bus sends could never stick |
 | `f6c4e05` | Computer-keyboard input, patch struct, 4 presets | Second SPSC queue for keyboard events, because the MIDI queue already has the RtMidi thread as its only producer; preset changes applied on the audio thread |
 
-## Phase 2: GUI instrument "Nullwave" (branch `feature/gui-synth`, worktree `CRAZY PROJECT-gui`)
+## Phase 2: GUI instrument "modular_synth" (branch `feature/gui-synth`, worktree `CRAZY PROJECT-gui`)
 
 Goal: turn the engine into a complete, playable synthesizer with a modern
 (Serum-2-inspired, original design) interface. Desktop first; browser build
@@ -29,7 +29,7 @@ Goal: turn the engine into a complete, playable synthesizer with a modern
 - **Desktop app in C++ with Dear ImGui (GLFW + OpenGL 3).** Reuses the engine,
   miniaudio and RtMidi directly; native audio latency; UI rendering on its own
   thread, never in the audio callback.
-- **Engine library (`nullwave_engine`) has no GUI or device code**, so the same
+- **Engine library (`modular_synth_engine`) has no GUI or device code**, so the same
   code can be compiled to WebAssembly later and driven by a headless CLI for
   tests and benchmarks.
 - **Lock-free UI ↔ audio bridge.**
@@ -71,7 +71,7 @@ design, miniaudio, RtMidi, the WAV render approach.
 - 3D wavetable: started as a rotated perspective view (frames looked flat),
   then an oblique projection with hidden-line fills (frames hid each other),
   then transparent line slices with only the playing slice filled.
-- Visual identity: renamed Halcyon -> **Nullwave**; teal/violet palette
+- Visual identity: renamed Halcyon -> **modular_synth**; teal/violet palette
   replaced with neutral near-black, white text, one green accent for values
   and white for modulation.
 

@@ -1,10 +1,10 @@
-# Nullwave
+# modular_synth
 
-A polyphonic wavetable synthesizer for Windows, written in C++. Nullwave has a
+A polyphonic wavetable synthesizer for Windows, written in C++. modular_synth has a
 real-time audio engine, a GUI built with Dear ImGui, MIDI keyboard support,
 and a headless tool for rendering, benchmarking and self-testing.
 
-![Nullwave](docs/screenshot.png)
+![modular_synth](docs/screenshot.png)
 
 ## Features
 
@@ -64,22 +64,22 @@ This produces:
 
 | Executable | Path | Purpose |
 |---|---|---|
-| `Nullwave.exe` | `build/vs/app/Release/` | the synthesizer |
-| `nullwave_cli.exe` | `build/vs/app/Release/` | render, benchmark, self-test |
+| `modular_synth.exe` | `build/vs/app/Release/` | the synthesizer |
+| `modular_synth_cli.exe` | `build/vs/app/Release/` | render, benchmark, self-test |
 | `Synth.exe` | `build/vs/Release/` | the original console engine |
 
 ## Using the CLI
 
 ```bash
-build/vs/app/Release/nullwave_cli.exe selftest
+build/vs/app/Release/modular_synth_cli.exe selftest
 ```
 
 ```bash
-build/vs/app/Release/nullwave_cli.exe render "Aurora Pad" pad.wav
+build/vs/app/Release/modular_synth_cli.exe render "Aurora Pad" pad.wav
 ```
 
 ```bash
-build/vs/app/Release/nullwave_cli.exe bench
+build/vs/app/Release/modular_synth_cli.exe bench
 ```
 
 `selftest` checks the following:
@@ -136,8 +136,8 @@ unison, sub, noise, a 24 dB filter and all effects on.
 app/engine/   instrument, voices, wavetables, filter, LFOs, FX, presets
 app/host/     audio device (miniaudio) and MIDI input (RtMidi)
 app/ui/       theme, widgets, visualizations, pages, wavetable editor
-app/tools/    nullwave_cli
-src/          the original engine (console synth); Nullwave reuses its
+app/tools/    modular_synth_cli
+src/          the original engine (console synth); modular_synth reuses its
               envelope, filter math and SPSC ring design
 docs/         DEVLOG.md (development log)
 ```
