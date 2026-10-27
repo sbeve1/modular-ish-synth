@@ -76,7 +76,7 @@ void apply()
     c[ImGuiCol_ScrollbarGrabActive]  = f(accentDim);
     c[ImGuiCol_CheckMark]            = f(accent);
     c[ImGuiCol_SliderGrab]           = f(accent);
-    c[ImGuiCol_SliderGrabActive]     = f(rgba(120, 255, 150));
+    c[ImGuiCol_SliderGrabActive]     = f(rgba(170, 255, 120));
     c[ImGuiCol_Button]               = f(rgba(33, 33, 34));
     c[ImGuiCol_ButtonHovered]        = f(rgba(45, 45, 46));
     c[ImGuiCol_ButtonActive]         = f(rgba(55, 55, 56));

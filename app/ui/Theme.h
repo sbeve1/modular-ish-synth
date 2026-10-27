@@ -3,7 +3,7 @@
 #include "imgui.h"
 
 // modular_synth visual language: near-black neutrals, white text, one green
-// accent (neon green) for values, white for modulation. Flat and minimal.
+// accent (neon lime) for values, white for modulation. Flat and minimal.
 namespace theme {
 
 inline ImU32 rgba(int r, int g, int b, int a = 255) { return IM_COL32(r, g, b, a); }
@@ -18,9 +18,9 @@ inline const ImU32 knobBodyHi  = rgba(32, 32, 35);
 inline const ImU32 text        = rgba(236, 236, 238);
 inline const ImU32 textDim     = rgba(138, 138, 144);
 inline const ImU32 textFaint   = rgba(78, 78, 84);
-inline const ImU32 accent      = rgba(0, 255, 65);       // neon green: values
-inline const ImU32 accentDim   = rgba(0, 255, 65, 90);
-inline const ImU32 accentFaint = rgba(0, 255, 65, 24);
+inline const ImU32 accent      = rgba(110, 255, 40);     // neon lime: values
+inline const ImU32 accentDim   = rgba(110, 255, 40, 90);
+inline const ImU32 accentFaint = rgba(110, 255, 40, 24);
 inline const ImU32 mod         = rgba(245, 245, 245);    // white: modulation
 inline const ImU32 modDim      = rgba(245, 245, 245, 120);
 inline const ImU32 modFaint    = rgba(245, 245, 245, 28);

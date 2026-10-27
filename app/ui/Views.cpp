@@ -156,6 +156,19 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
             for (int i = 0; i < PTS; ++i) pts[i] = project((float)i / (PTS - 1) * 2.0f - 1.0f, z, data[i]);
         };
 
+        // grey box around the stack: back wall and floor filled, edges outlined
+        const float bx0 = -1.08f, bx1 = 1.2f, by0 = -1.2f, by1 = 1.2f;
+        const ImU32 boxFill = theme::rgba(24, 24, 27), boxEdge = theme::rgba(70, 70, 76);
+        dl->AddQuadFilled(project(bx0, 1.0f, by0), project(bx1, 1.0f, by0), project(bx1, 1.0f, by1), project(bx0, 1.0f, by1), boxFill);
+        dl->AddQuadFilled(project(bx0, 0.0f, by0), project(bx1, 0.0f, by0), project(bx1, 1.0f, by0), project(bx0, 1.0f, by0), theme::rgba(19, 19, 21));
+        auto edge = [&](float x0, float z0, float y0, float x1, float z1, float y1) {
+            dl->AddLine(project(x0, z0, y0), project(x1, z1, y1), boxEdge, 1.0f);
+        };
+        // back edges (drawn under the frames)
+        edge(bx0, 1, by0, bx1, 1, by0); edge(bx0, 1, by1, bx1, 1, by1);
+        edge(bx0, 1, by0, bx0, 1, by1); edge(bx1, 1, by0, bx1, 1, by1);
+        edge(bx0, 0, by0, bx0, 1, by0); edge(bx1, 0, by0, bx1, 1, by0);
+
         // depth rail on the right, with the position marker
         ImVec2 r0 = project(1.12f, 0.0f, 0.0f), r1 = project(1.12f, 1.0f, 0.0f);
         dl->AddLine(r0, r1, theme::withAlpha(green, 0.25f), 1.0f);
@@ -165,19 +178,13 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         }
 
         // frames, back to front, fading with distance from the playing position
-        ImGui::PushFont(theme::fontSmall);
         for (int f = WT_FRAMES - 1; f >= 0; --f) {
             float z = (float)f / (WT_FRAMES - 1);
             float near = std::max(0.0f, 1.0f - std::fabs(z - pos) * 2.5f);
             float alpha = 0.16f + 0.5f * near;
             framePts(c.frames[f], z);
             dl->AddPolyline(pts, PTS, theme::withAlpha(green, alpha), 0, 1.3f);
-            char n[4];
-            std::snprintf(n, sizeof n, "%d", f + 1);
-            ImVec2 lp = project(-1.0f, z, 0.0f);
-            dl->AddText(ImVec2(lp.x - 16, lp.y - 7), theme::withAlpha(green, 0.3f + 0.6f * near), n);
         }
-        ImGui::PopFont();
 
         // playing position: interpolated frame, filled, on top
         float cur[PTS];
@@ -200,6 +207,11 @@ void WavetableView(UiState& ui, int osc, ImVec2 size, const WavetableSet* overri
         dl->AddPolyline(pts, PTS, green, 0, 2.4f);
         ImVec2 m = project(1.12f, pos, 0.0f);
         dl->AddCircleFilled(m, 4.5f, green);
+
+        // front edges of the box (drawn over the frames)
+        edge(bx0, 0, by0, bx1, 0, by0); edge(bx0, 0, by1, bx1, 0, by1);
+        edge(bx0, 0, by0, bx0, 0, by1); edge(bx1, 0, by0, bx1, 0, by1);
+        edge(bx0, 0, by1, bx0, 1, by1); edge(bx1, 0, by1, bx1, 1, by1);
     }
 
     // ---- 2D strip: what the oscillator plays, warp included ----
