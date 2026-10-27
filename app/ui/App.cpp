@@ -736,7 +736,52 @@ static void globalPage(UiState& ui, ImVec2 avail)
         } else {
             ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::hot), "Audio not running: %s", ui.audio.error().c_str());
         }
+        // driver: Windows audio or ASIO
         {
+            bool asio = ui.audio.driver() == AudioHost::Driver::Asio;
+            ImGui::SetNextItemWidth(200);
+            if (ImGui::BeginCombo("##driver", asio ? "ASIO" : "Windows audio (WASAPI)")) {
+                if (ImGui::Selectable("Windows audio (WASAPI)", !asio) && asio)
+                    ui.audio.restart(ui.audio.requestedPeriodMs(), false);
+                if (ImGui::Selectable("ASIO", asio) && !asio) {
+                    int dev = ui.audio.asioDevice() >= 0 ? ui.audio.asioDevice() : ui.audio.preferredAsioDevice();
+                    if (!ui.audio.restartAsio(dev, ui.audio.requestedAsioFrames()))
+                        ui.audio.restart(ui.audio.requestedPeriodMs(), false);   // fall back so there is always sound
+                }
+                ImGui::EndCombo();
+            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("ASIO talks to your interface's own driver for the lowest latency");
+        }
+        if (ui.audio.driver() == AudioHost::Driver::Asio) {
+            const auto& devs = ui.audio.asioDevices();
+            int cur = ui.audio.asioDevice();
+            ImGui::SetNextItemWidth(colW - 20 - 150);
+            if (ImGui::BeginCombo("##asiodev", cur >= 0 && cur < (int)devs.size() ? devs[cur].c_str() : "-")) {
+                for (int i = 0; i < (int)devs.size(); ++i)
+                    if (ImGui::Selectable(devs[i].c_str(), i == cur) && i != cur)
+                        if (!ui.audio.restartAsio(i, ui.audio.requestedAsioFrames()))
+                            ui.audio.restart(ui.audio.requestedPeriodMs(), false);
+                ImGui::EndCombo();
+            }
+            ImGui::SameLine();
+            static const unsigned sizes[] = { 32, 64, 96, 128, 192, 256, 512 };
+            unsigned frames = ui.audio.requestedAsioFrames();
+            char prev[32];
+            std::snprintf(prev, sizeof prev, "%u samples", frames);
+            ImGui::SetNextItemWidth(140);
+            if (ImGui::BeginCombo("##asioframes", prev)) {
+                for (unsigned f : sizes) {
+                    char lab[32];
+                    std::snprintf(lab, sizeof lab, "%u samples", f);
+                    if (ImGui::Selectable(lab, f == frames) && f != frames)
+                        if (!ui.audio.restartAsio(ui.audio.asioDevice(), f))
+                            ui.audio.restart(ui.audio.requestedPeriodMs(), false);
+                }
+                ImGui::EndCombo();
+            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Requested ASIO buffer; the driver may round it to a size it supports");
+            if (!ui.audio.error().empty()) ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(theme::warn), "%s", ui.audio.error().c_str());
+        } else {
             static const int periods[] = { 3, 5, 10, 20 };
             int cur = ui.audio.requestedPeriodMs();
             char prev[32];

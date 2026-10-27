@@ -1,5 +1,8 @@
 include(FetchContent)
 
+# all fetched dependencies build as static libraries
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
 # --------------------------------------------------
 # Dependencies
 # --------------------------------------------------
@@ -18,7 +21,21 @@ FetchContent_Declare(imgui
     GIT_TAG        v1.91.9b
     GIT_SHALLOW    TRUE)
 
-FetchContent_MakeAvailable(glfw imgui)
+# RtAudio (same author as RtMidi), used only for its ASIO host support:
+# the ASIO driver interface files ship with it.
+set(RTAUDIO_API_ASIO           ON  CACHE BOOL "" FORCE)
+set(RTAUDIO_API_WASAPI         OFF CACHE BOOL "" FORCE)
+set(RTAUDIO_API_DS             OFF CACHE BOOL "" FORCE)
+set(RTAUDIO_BUILD_STATIC_LIBS  ON  CACHE BOOL "" FORCE)
+set(RTAUDIO_STATIC_MSVCRT      OFF CACHE BOOL "" FORCE)   # match our /MD runtime
+set(RTAUDIO_BUILD_TESTING      OFF CACHE BOOL "" FORCE)
+set(RTAUDIO_TARGETNAME_UNINSTALL "rtaudio_uninstall" CACHE STRING "" FORCE)
+FetchContent_Declare(rtaudio
+    GIT_REPOSITORY https://github.com/thestk/rtaudio.git
+    GIT_TAG        6.0.1
+    GIT_SHALLOW    TRUE)
+
+FetchContent_MakeAvailable(glfw imgui rtaudio)
 
 add_library(imgui STATIC
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -56,7 +73,7 @@ add_executable(modular_synth WIN32
     ${UI_SRC}
     ${PROJECT_SOURCE_DIR}/src/platform/RtMidi.cpp)
 target_compile_definitions(modular_synth PRIVATE __WINDOWS_MM__)
-target_link_libraries(modular_synth PRIVATE modular_synth_engine imgui winmm)
+target_link_libraries(modular_synth PRIVATE modular_synth_engine imgui rtaudio winmm)
 set_target_properties(modular_synth PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 if (MSVC)

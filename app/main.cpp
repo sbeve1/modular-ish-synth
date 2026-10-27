@@ -52,9 +52,11 @@ int main(int argc, char** argv)
 {
     // dev options: --screenshot out.bmp [--page N] [--preset N] [--demo] [--wtedit]
     //              [--set key=value]... [--fx N] [--lfotab N] [--filtertab N]
+    // user option:  --asio [buffer]   start on the ASIO driver (a Focusrite if present)
     const char* shotPath = nullptr;
     int page = 0, preset = -1, fxSel = -1, lfoTab = 0, filterTab = 0;
-    bool demo = false, wtEditor = false;
+    bool demo = false, wtEditor = false, useAsio = false;
+    unsigned asioFrames = 128;
     std::vector<std::pair<std::string, float>> sets;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--screenshot") && i + 1 < argc) shotPath = argv[++i];
@@ -65,6 +67,10 @@ int main(int argc, char** argv)
         else if (!std::strcmp(argv[i], "--fx") && i + 1 < argc) fxSel = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--lfotab") && i + 1 < argc) lfoTab = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--filtertab") && i + 1 < argc) filterTab = std::atoi(argv[++i]);
+        else if (!std::strcmp(argv[i], "--asio")) {
+            useAsio = true;
+            if (i + 1 < argc && std::atoi(argv[i + 1]) > 0) asioFrames = (unsigned)std::atoi(argv[++i]);
+        }
         else if (!std::strcmp(argv[i], "--set") && i + 1 < argc) {
             std::string kv = argv[++i];
             size_t eq = kv.find('=');
@@ -123,7 +129,9 @@ int main(int argc, char** argv)
     glfwSetWindowUserPointer(window, &ui);
     app::init(ui);                       // loads the Init preset (wavetables, params)
 
-    audio->start(*instrument, 5);        // prepares the instrument, then starts the device
+    // prepares the instrument, then starts the device; ASIO falls back to WASAPI if it can't open
+    if (!useAsio || !audio->startAsio(*instrument, audio->preferredAsioDevice(), asioFrames))
+        audio->start(*instrument, 5);
     midi->open(midi->preferredPort());
 
     ui.page = page;

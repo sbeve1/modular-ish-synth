@@ -4,12 +4,16 @@
 #include "host/AudioHost.h"
 
 #include <algorithm>
+#include <memory>
+
+#include "RtAudio.h"
 
 #include "engine/Instrument.h"
 
 struct AudioHost::Impl {
     ma_device device{};
     bool initialized = false;
+    std::unique_ptr<RtAudio> asio;
     Instrument* inst = nullptr;
     static constexpr int MAX_FRAMES = 4096;
     float l[MAX_FRAMES], r[MAX_FRAMES];
@@ -34,11 +38,98 @@ static void dataCallback(ma_device* dev, void* out, const void*, ma_uint32 frame
 AudioHost::AudioHost() : impl(new Impl) {}
 AudioHost::~AudioHost() { stop(); delete impl; }
 
+// ASIO callback: non-interleaved buffers, so the engine renders straight into them.
+static int asioCallback(void* out, void*, unsigned int frames, double, RtAudioStreamStatus, void* user)
+{
+    auto* impl = (AudioHost::Impl*)user;
+    float* l = (float*)out;
+    impl->inst->process(l, l + frames, (int)frames);
+    return 0;
+}
+
+const std::vector<std::string>& AudioHost::asioDevices(bool rescan)
+{
+    if ((asioProbed && !rescan) || activeDriver == Driver::Asio) return asioNames;
+    asioNames.clear();
+    asioIds.clear();
+    RtAudio probe(RtAudio::WINDOWS_ASIO, [](RtAudioErrorType, const std::string&) {});
+    probe.showWarnings(false);
+    for (unsigned id : probe.getDeviceIds()) {
+        RtAudio::DeviceInfo info = probe.getDeviceInfo(id);
+        if (info.outputChannels < 2) continue;
+        asioIds.push_back(id);
+        asioNames.push_back(info.name);
+    }
+    asioProbed = true;
+    return asioNames;
+}
+
+int AudioHost::preferredAsioDevice()
+{
+    const auto& names = asioDevices();
+    for (size_t i = 0; i < names.size(); ++i)
+        if (names[i].find("Focusrite USB") != std::string::npos) return (int)i;
+    for (size_t i = 0; i < names.size(); ++i)
+        if (names[i].find("Focusrite") != std::string::npos) return (int)i;
+    return names.empty() ? -1 : 0;
+}
+
+bool AudioHost::startAsio(Instrument& inst, int device, unsigned frames)
+{
+    asioDevices();   // probe before anything is opened
+    stop();
+    instrument = &inst;
+    impl->inst = &inst;
+    asioIndex = device;
+    asioFrames = frames;
+    lastError.clear();
+    if (device < 0 || device >= (int)asioIds.size()) { lastError = "No ASIO device selected"; return false; }
+
+    impl->asio = std::make_unique<RtAudio>(RtAudio::WINDOWS_ASIO, [](RtAudioErrorType, const std::string&) {});
+    RtAudio& a = *impl->asio;
+    a.showWarnings(false);
+    RtAudio::DeviceInfo info = a.getDeviceInfo(asioIds[device]);
+    unsigned sr = info.currentSampleRate ? info.currentSampleRate : (info.preferredSampleRate ? info.preferredSampleRate : 48000);
+
+    RtAudio::StreamParameters out;
+    out.deviceId = asioIds[device];
+    out.nChannels = 2;
+    out.firstChannel = 0;
+    RtAudio::StreamOptions opts;
+    opts.flags = RTAUDIO_NONINTERLEAVED;
+    opts.streamName = "modular_synth";
+    unsigned bufferSize = frames;
+    if (a.openStream(&out, nullptr, RTAUDIO_FLOAT32, sr, &bufferSize, &asioCallback, impl, &opts) != RTAUDIO_NO_ERROR) {
+        lastError = "ASIO: " + a.getErrorText();
+        impl->asio.reset();
+        return false;
+    }
+
+    // stream is open but not started: safe to prepare the engine here
+    inst.prepare((float)sr, Impl::MAX_FRAMES);
+    rate = sr;
+    period = bufferSize;
+    long lat = a.getStreamLatency();
+    bufferFrames = lat > 0 ? (unsigned)lat : bufferSize;
+    name = info.name;
+    backend = "ASIO";
+    activeDriver = Driver::Asio;
+
+    if (a.startStream() != RTAUDIO_NO_ERROR) {
+        lastError = "ASIO: " + a.getErrorText();
+        stop();
+        return false;
+    }
+    isRunning = true;
+    return true;
+}
+
 bool AudioHost::start(Instrument& inst, int periodMs, bool exclusiveMode)
 {
     stop();
     impl->inst = &inst;
     instrument = &inst;
+    activeDriver = Driver::Wasapi;
     reqPeriod = periodMs;
     exclusive = exclusiveMode;
     lastError.clear();
@@ -97,6 +188,11 @@ bool AudioHost::restart(int periodMs, bool exclusiveMode)
 
 void AudioHost::stop()
 {
+    if (impl->asio) {
+        if (impl->asio->isStreamRunning()) impl->asio->stopStream();
+        if (impl->asio->isStreamOpen()) impl->asio->closeStream();
+        impl->asio.reset();
+    }
     if (impl->initialized) {
         ma_device_uninit(&impl->device);
         impl->initialized = false;
