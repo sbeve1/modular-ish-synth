@@ -74,6 +74,9 @@ int main()
         return -1;
     }
 
+    // device is stopped until ma_device_start, so this can't race the callback
+    synth.prepare((float)device.sampleRate);
+
     ma_device_start(&device);
     std::cout << "Press ENTER to quit.\n";
 

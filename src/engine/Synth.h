@@ -33,6 +33,7 @@ public:
     FXChain mainFX;
 
     Synth();
+    void prepare(float sampleRate);
 
     void noteOn(int note, float velocity);
     void noteOff(int note);

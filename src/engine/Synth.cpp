@@ -9,18 +9,21 @@
 Synth::Synth()
 {
     basicWavetable = WavetableFactory::makeBasicShapes();
+}
 
-    // ----------------------------
-    // FX CHAINS
-    // ----------------------------
+// (Re)builds the FX chains at the device sample rate.
+// Must run before audio starts, and before rebuildFXModulation(),
+// since it recreates the FX objects whose members get registered.
+void Synth::prepare(float sampleRate)
+{
     bus1FX.clear();
-    bus1FX.add(std::make_unique<ReverbFX>(44100.0f));
+    bus1FX.add(std::make_unique<ReverbFX>(sampleRate));
 
     bus2FX.clear();
-    bus2FX.add(std::make_unique<DelayFX>(44100.0f));
+    bus2FX.add(std::make_unique<DelayFX>(sampleRate));
 
     mainFX.clear();
-    mainFX.add(std::make_unique<ReverbFX>(44100.0f));
+    mainFX.add(std::make_unique<ReverbFX>(sampleRate));
 }
 
 void Synth::noteOn(int note, float velocity)

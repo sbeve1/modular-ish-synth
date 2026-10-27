@@ -2,7 +2,7 @@
 
 struct DelayFX : public FX {
 
-    explicit DelayFX(float sr = 44100.0f)
+    explicit DelayFX(float sr)
         : delaySamples(size_t(0.4f * sr)),
           bufL(delaySamples, 0.0f),
           bufR(delaySamples, 0.0f)
