@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # --------------------------------------------------
 add_compile_definitions(__WINDOWS_MM__)
 
+# MSVC: keep windows.h from defining min/max macros, and expose M_PI
+add_compile_definitions(NOMINMAX _USE_MATH_DEFINES)
+
 # --------------------------------------------------
 # Collect source files
 # --------------------------------------------------
