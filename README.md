@@ -1,12 +1,8 @@
 # modular_synth
 
-A real-time polyphonic software synthesizer written in modern C++, built as a portfolio / university DSP project. It focuses on DSP fundamentals, real-time engine architecture, and audio-thread constraints rather than UI polish or product completeness. The goal is to demonstrate a correctly engineered signal path from MIDI input to audio output, not to build a feature-complete commercial instrument.
+A real-time polyphonic software synthesizer written in modern C++, built as a portfolio / university DSP project. It focuses on DSP fundamentals, real-time engine architecture, and audio-thread constraints rather than UI polish or product completeness. The goal is to demonstrate a correctly engineered signal path from MIDI input to audio output, not to build a feature-complete commercial instrument. It runs on Windows as a wavetable synth with a Dear ImGui interface, MIDI keyboard support, and a headless tool for rendering, benchmarking and self-testing.
 
-Author: [Tevin Nguyen] - [tevinsynguyen@gmail.com]
-
-A polyphonic wavetable synthesizer for Windows, written in C++. modular_synth has a
-real-time audio engine, a GUI built with Dear ImGui, MIDI keyboard support,
-and a headless tool for rendering, benchmarking and self-testing.
+Author: Tevin Nguyen - [tevinsynguyen@gmail.com](mailto:tevinsynguyen@gmail.com)
 
 ![modular_synth](docs/screenshot.png)
 
@@ -68,7 +64,7 @@ The clip is rendered offline by the engine itself
 ## Build (Windows)
 
 Requirements: Visual Studio 2022 with the C++ workload, and CMake 3.15 or newer.
-GLFW and Dear ImGui are downloaded automatically when CMake configures.
+GLFW, Dear ImGui and RtAudio are downloaded automatically when CMake configures.
 
 ```bash
 cmake -S . -B build/vs -G "Visual Studio 17 2022" -A x64
@@ -114,6 +110,7 @@ heaviest one spends its time. `showcase` renders the README demo clip.
 - the mod matrix changes the sound
 - preset files round-trip
 - the arpeggiator, both filter routings and drawn LFO shapes behave as expected
+- the LFO graph matches what the engine plays, for every shape
 - the lock-free event queue works under a two-thread stress test
 
 GitHub Actions builds everything on Windows and runs `selftest` on every push
@@ -123,7 +120,8 @@ each run as a download.
 ## Architecture
 
 ```
- UI thread (Dear ImGui, vsync)       MIDI thread (RtMidi)
+ UI thread (Dear ImGui,              MIDI thread (RtMidi)
+   wakes on input, no vsync)
    knobs ─────► ParamStore ◄──────── MIDI learn (CC -> param)
                 (atomic floats)
    keys/piano ► SPSC ring            notes/CC ────► SPSC ring
@@ -132,7 +130,7 @@ each run as a download.
    FX order   ► one atomic (a nibble per rack slot)
                         │
                         ▼
-              Audio thread (miniaudio callback)
+              Audio thread (WASAPI via miniaudio, or ASIO via RtAudio)
               snapshot params + mod slots (once per block)
               voices: osc A/B + sub + noise ─► filter ─► amp
               mod matrix every 16 samples
@@ -156,23 +154,25 @@ pass that cut CPU use 19-32% with no change to the sound:
 
 | Scenario | Speed (× realtime) | CPU at realtime |
 |---|---|---|
-| Heavy patch (2 osc × 8 unison, sub, noise, 24 dB filter, 4 FX), 1 voice | 105× | ~1% |
+| Heavy patch (2 osc × 8 unison, sub, noise, 24 dB filter, 4 FX), 1 voice | ~95× | ~1% |
 | Same, 16 voices | 16× | ~6% |
-| Max: 16 voices, 2 × 16 unison, bend + sync warp, 2 filters, all 8 FX | 4.4× | ~23% |
-| FX rack only, all 8 effects | 104× | ~1% |
+| Max: 16 voices, 2 × 16 unison, bend + sync warp, 2 filters, all 8 FX | 4.5× | ~22% |
+| FX rack only, all 8 effects | ~90× | ~1% |
+
+Numbers vary a few percent between runs; `modular_synth_cli bench` reproduces them.
 
 ## Project layout
 
 ```
 app/engine/   instrument, voices, wavetables, filter, LFOs, FX, presets
-app/host/     audio device (miniaudio) and MIDI input (RtMidi)
+app/host/     audio output (WASAPI via miniaudio, ASIO via RtAudio) and MIDI input (RtMidi)
 app/ui/       theme, widgets, visualizations, pages, wavetable editor
 app/tools/    modular_synth_cli
 src/          the original engine (console synth); modular_synth reuses its
               envelope, filter math and SPSC ring design
-docs/         DEVLOG.md (development log)
+docs/         DEVLOG.md (development log), demo audio and video, screenshot
 ```
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License. See the [`LICENSE.txt`](LICENSE.txt) file for details.
