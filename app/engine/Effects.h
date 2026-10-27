@@ -84,6 +84,62 @@ struct ReverbFX {
     void process(float* l, float* r, int n, const Params& p);
 };
 
+// RBJ biquad (transposed direct form II), stereo
+struct Biquad {
+    float b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0;
+    float z1[2] = {}, z2[2] = {};
+    void lowShelf(float f, float gainDb, float sr);
+    void highShelf(float f, float gainDb, float sr);
+    void peak(float f, float q, float gainDb, float sr);
+    inline float tick(int ch, float x)
+    {
+        float y = b0 * x + z1[ch];
+        z1[ch] = b1 * x - a1 * y + z2[ch];
+        z2[ch] = b2 * x - a2 * y;
+        return y;
+    }
+    void reset() { z1[0] = z1[1] = z2[0] = z2[1] = 0.0f; }
+    float magnitudeDb(float f, float sr) const;   // for the UI curve
+};
+
+struct EqFX {
+    struct Params { float lowDb, lowHz, midDb, midHz, midQ, highDb, highHz; };
+    float sr = 48000.0f;
+    Biquad band[3];
+    void prepare(float sampleRate) { sr = sampleRate; }
+    void reset() { for (auto& b : band) b.reset(); }
+    void process(float* l, float* r, int n, const Params& p);
+};
+
+// Stereo-linked feed-forward compressor with a soft knee.
+struct CompressorFX {
+    struct Params { float threshDb, ratio, attackMs, releaseMs, makeupDb, mix; };
+    float sr = 48000.0f, envDb = -120.0f, grDb = 0.0f;
+    void prepare(float sampleRate) { sr = sampleRate; envDb = -120.0f; grDb = 0.0f; }
+    void reset() { envDb = -120.0f; grDb = 0.0f; }
+    void process(float* l, float* r, int n, const Params& p);
+};
+
+// 6-stage all-pass phaser, stereo LFOs 90 degrees apart.
+struct PhaserFX {
+    struct Params { float rate, depth, feedback, mix; };
+    static constexpr int STAGES = 6;
+    float sr = 48000.0f, phase = 0.0f;
+    float ap[2][STAGES] = {}, fb[2] = {};
+    void prepare(float sampleRate) { sr = sampleRate; }
+    void reset() { for (auto& c : ap) for (float& s : c) s = 0.0f; fb[0] = fb[1] = 0.0f; }
+    void process(float* l, float* r, int n, const Params& p);
+};
+
+struct FlangerFX {
+    struct Params { float rate, depth, feedback, mix; };
+    float sr = 48000.0f, phase = 0.0f;
+    DelayLine dl[2];
+    void prepare(float sampleRate);
+    void reset() { dl[0].clear(); dl[1].clear(); }
+    void process(float* l, float* r, int n, const Params& p);
+};
+
 struct Limiter {
     float sr = 48000.0f, env = 0.0f, gain = 1.0f;
     void prepare(float sampleRate) { sr = sampleRate; env = 0.0f; gain = 1.0f; }

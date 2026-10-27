@@ -162,6 +162,8 @@ struct Telemetry {
     std::atomic<int>   envStage[3]{};                // 0 idle, 1 A, 2 H, 3 D, 4 S, 5 R
     std::atomic<float> envStageTime[3]{};
     std::atomic<float> oscPos[2]{};                  // modulated WT position
+    std::atomic<float> compGainReduction{ 0 };       // dB, for the compressor meter
+    std::atomic<int>   arpNote{ -1 };                // note the arpeggiator is playing
 
     bool noteHeld(int n) const { return (notes[n >> 5].load(std::memory_order_relaxed) >> (n & 31)) & 1u; }
 };

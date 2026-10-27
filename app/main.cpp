@@ -16,7 +16,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "engine/Instrument.h"
-#include "engine/WavetableManager.h"
+#include "engine/ResourceManager.h"
 #include "host/AudioHost.h"
 #include "host/MidiHost.h"
 #include "ui/App.h"
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     // ---- engine and devices ----
     auto shared = std::make_unique<SharedState>();
     auto instrument = std::make_unique<Instrument>(*shared);
-    auto wavetables = std::make_unique<WavetableManager>(*shared);
+    auto wavetables = std::make_unique<ResourceManager>(*shared);
     auto midi = std::make_unique<MidiHost>(*shared);
     auto audio = std::make_unique<AudioHost>();
 

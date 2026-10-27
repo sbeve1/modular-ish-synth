@@ -5,7 +5,8 @@
 
 #include "engine/Params.h"
 #include "engine/Shared.h"
-#include "engine/WavetableManager.h"
+#include "engine/LfoCurve.h"
+#include "engine/ResourceManager.h"
 
 // A complete sound: every parameter (plain values), the mod matrix, and
 // both oscillators' wavetables (factory name, or custom frames).
@@ -16,6 +17,8 @@ struct Preset {
     std::vector<ModSlotData> mods;
     std::string wavetable[2] = { "Basic Shapes", "Basic Shapes" };
     std::vector<float> customFrames[2];   // WT_FRAMES * WT_SIZE, or empty
+    std::vector<LfoPoint> lfoCurve[4];    // drawn shapes; empty = default
+    uint32_t fxOrder = DEFAULT_FX_ORDER;
 
     Preset();
     void set(P p, float v) { values[(int)p] = v; }
@@ -25,8 +28,8 @@ struct Preset {
 
 std::vector<Preset> factoryPresets();
 
-void capturePreset(Preset& out, const SharedState& s, const WavetableManager& wt);
-void applyPreset(const Preset& p, SharedState& s, WavetableManager& wt);
+void capturePreset(Preset& out, const SharedState& s, const ResourceManager& wt);
+void applyPreset(const Preset& p, SharedState& s, ResourceManager& wt);
 
 bool savePresetFile(const Preset& p, const std::string& path);
 bool loadPresetFile(Preset& p, const std::string& path);

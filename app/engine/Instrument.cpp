@@ -41,6 +41,10 @@ void Instrument::prepare(float sampleRate, int maxBlockSize)
     busR.assign(maxBlock, 0.0f);
 
     dist.prepare(sr);
+    phaser.prepare(sr);
+    flanger.prepare(sr);
+    eq.prepare(sr);
+    comp.prepare(sr);
     chorus.prepare(sr);
     delay.prepare(sr);
     reverb.prepare(sr);
@@ -93,6 +97,8 @@ void Instrument::handleEvent(const Event& e)
 
 void Instrument::allNotesOff()
 {
+    arpReleaseAll();
+    arp.numLatched = 0;
     for (auto& v : voices)
         if (v.active && v.gate) releaseVoice(v);
     std::memset(keyDown, 0, sizeof keyDown);
@@ -125,12 +131,45 @@ int Instrument::pickVoice()
     return best;
 }
 
+// Physical key down: track it, then either feed the arpeggiator or play it.
 void Instrument::noteOn(int note, float vel)
 {
     note = std::clamp(note, 0, 127);
+    const bool firstKey = heldCount == 0;
     if (!keyDown[note] && heldCount < 128) heldStack[heldCount++] = (uint8_t)note;
     keyDown[note] = true;
+    noteVel[note] = vel;
 
+    if (arpOn()) {
+        if (value[(int)P::ARP_HOLD] > 0.5f) {
+            if (firstKey) arp.numLatched = 0;   // a new chord replaces the latched one
+            bool present = false;
+            for (int i = 0; i < arp.numLatched; ++i) present |= arp.latched[i] == note;
+            if (!present && arp.numLatched < 128) arp.latched[arp.numLatched++] = (uint8_t)note;
+        }
+        if (arp.numSounding == 0 && firstKey) { arp.untilNext = 0.0; arp.step = 0; }   // start on the beat
+        return;
+    }
+    voiceOn(note, vel);
+}
+
+void Instrument::noteOff(int note)
+{
+    note = std::clamp(note, 0, 127);
+    keyDown[note] = false;
+    for (int i = 0; i < heldCount; ++i)
+        if (heldStack[i] == note) {
+            std::memmove(&heldStack[i], &heldStack[i + 1], heldCount - i - 1);
+            --heldCount;
+            break;
+        }
+
+    if (arpOn()) return;   // the arpeggiator notices the shorter key list on its next step
+    voiceOff(note, false);
+}
+
+void Instrument::voiceOn(int note, float vel)
+{
     const int mode = (int)value[(int)P::VOICE_MODE];   // 0 poly, 1 mono, 2 legato
     const bool glide = value[(int)P::GLIDE] > 1e-4f;
 
@@ -151,25 +190,16 @@ void Instrument::noteOn(int note, float vel)
     lastPitch = (float)note;
 }
 
-void Instrument::noteOff(int note)
+void Instrument::voiceOff(int note, bool arpNote)
 {
-    note = std::clamp(note, 0, 127);
-    keyDown[note] = false;
-    for (int i = 0; i < heldCount; ++i)
-        if (heldStack[i] == note) {
-            std::memmove(&heldStack[i], &heldStack[i + 1], heldCount - i - 1);
-            --heldCount;
-            break;
-        }
-
     const int mode = (int)value[(int)P::VOICE_MODE];
     if (mode != 0) {
         Voice& v = voices[0];
         if (!v.active || v.note != note) return;
-        if (heldCount > 0) {                    // fall back to the last held key
+        if (!arpNote && heldCount > 0) {          // fall back to the last held key
             v.glideTo(heldStack[heldCount - 1]);
             lastPitch = (float)heldStack[heldCount - 1];
-        } else if (sustainPedal) {
+        } else if (!arpNote && sustainPedal) {
             v.sustained = true;
         } else {
             releaseVoice(v);
@@ -179,10 +209,97 @@ void Instrument::noteOff(int note)
 
     for (auto& v : voices) {
         if (v.active && v.gate && !v.sustained && v.note == note) {
-            if (sustainPedal) v.sustained = true;
-            else              releaseVoice(v);
+            if (sustainPedal && !arpNote) v.sustained = true;
+            else                          releaseVoice(v);
         }
     }
+}
+
+// ---------------------------------------------------------------------
+// Arpeggiator
+// ---------------------------------------------------------------------
+void Instrument::arpReleaseAll()
+{
+    for (int i = 0; i < arp.numSounding; ++i) voiceOff(arp.sounding[i], true);
+    arp.numSounding = 0;
+}
+
+void Instrument::arpTick(int n)
+{
+    if (!arpOn()) {
+        if (arp.wasOn) { arpReleaseAll(); arp.numLatched = 0; arp.wasOn = false; }
+        return;
+    }
+    if (!arp.wasOn) {
+        // switching on while keys are held: take them over from the voices
+        for (int i = 0; i < heldCount; ++i) voiceOff(heldStack[i], true);
+        arp.wasOn = true;
+        arp.untilNext = 0.0;
+        arp.step = 0;
+    }
+
+    // source notes: latched chord, or the keys held right now (press order)
+    const bool hold = value[(int)P::ARP_HOLD] > 0.5f;
+    const uint8_t* src = hold ? arp.latched : heldStack;
+    int count = hold ? arp.numLatched : heldCount;
+    if (count == 0) {
+        arpReleaseAll();
+        arp.step = 0;
+        arp.untilNext = 0.0;
+        return;
+    }
+
+    arp.gateLeft -= n;
+    if (arp.numSounding > 0 && arp.gateLeft <= 0.0) arpReleaseAll();
+
+    arp.untilNext -= n;
+    if (arp.untilNext > 0.0) return;
+
+    const int mode = (int)value[(int)P::ARP_MODE];   // Up, Down, Up/Down, Random, As Played, Chord
+    const int octaves = std::clamp((int)value[(int)P::ARP_OCT], 1, 4);
+    const double stepLen = (60.0 / ctx.tempo) * kSyncDivBeats[std::clamp((int)value[(int)P::ARP_DIV], 0, 14)] * sr;
+    const float swing = value[(int)P::ARP_SWING];
+
+    uint8_t base[128];
+    std::memcpy(base, src, count);
+    if (mode != 4) std::sort(base, base + count);   // As Played keeps press order
+
+    arpReleaseAll();
+    if (mode == 5) {   // chord: everything at once, octave rising per step
+        int shift = 12 * (arp.step % octaves);
+        for (int i = 0; i < count && arp.numSounding < 16; ++i) {
+            int note = base[i] + shift;
+            if (note > 127) continue;
+            voiceOn(note, noteVel[base[i]]);
+            arp.sounding[arp.numSounding++] = note;
+        }
+    } else {
+        int total = count * octaves, idx;
+        int k = arp.step % total;
+        switch (mode) {
+            case 1:  idx = total - 1 - k; break;
+            case 2: {
+                int period = total > 1 ? 2 * total - 2 : 1;
+                int q = arp.step % period;
+                idx = q < total ? q : period - q;
+                break;
+            }
+            case 3:  idx = (int)(arp.rng.uni() * total) % total; break;
+            default: idx = k; break;
+        }
+        int srcNote = base[idx % count];
+        int note = std::min(srcNote + 12 * (idx / count), 127);
+        voiceOn(note, noteVel[srcNote]);
+        arp.sounding[0] = note;
+        arp.numSounding = 1;
+    }
+
+    // swing lengthens even steps and shortens odd ones
+    double len = stepLen * ((arp.step % 2 == 0) ? (1.0 + swing) : (1.0 - swing));
+    arp.gateLeft = len * value[(int)P::ARP_GATE];
+    arp.untilNext += len;
+    if (arp.untilNext < 0.0) arp.untilNext = 0.0;
+    ++arp.step;
 }
 
 // ---------------------------------------------------------------------
@@ -215,6 +332,8 @@ void Instrument::snapshot()
     ctx.freeLfo = freeLfo;
     for (int o = 0; o < 2; ++o)
         ctx.wavetable[o] = s.wavetables[o].load(std::memory_order_acquire);
+    for (int l = 0; l < 4; ++l)
+        ctx.lfoCurve[l] = s.lfoCurves[l].load(std::memory_order_acquire);
 
     ctx.globalSrc[(int)ModSrc::ModWheel]   = modWheel;
     ctx.globalSrc[(int)ModSrc::Aftertouch] = aftertouch;
@@ -285,6 +404,7 @@ void Instrument::process(float* outL, float* outR, int frames)
 
         for (int pos = 0; pos < chunk; pos += CONTROL_RATE) {
             int n = std::min(CONTROL_RATE, chunk - pos);
+            arpTick(n);
             for (auto& v : voices)
                 if (v.active) v.render(ctx, L + pos, R + pos, n);
             advanceFreeLfos(n);
@@ -307,23 +427,58 @@ void Instrument::renderFx(float* l, float* r, int n)
     // voice bus headroom
     for (int i = 0; i < n; ++i) { l[i] *= 0.5f; r[i] *= 0.5f; }
 
-    const bool on[4] = { gv(P::DIST_ON) > 0.5f, gv(P::CHO_ON) > 0.5f, gv(P::DLY_ON) > 0.5f, gv(P::REV_ON) > 0.5f };
-    if (on[0] && !fxWasOn[0]) dist.reset();
-    if (on[1] && !fxWasOn[1]) chorus.reset();
-    if (on[2] && !fxWasOn[2]) delay.reset();
-    if (on[3] && !fxWasOn[3]) reverb.reset();
-    std::copy(on, on + 4, fxWasOn);
+    const uint32_t order = s.fxOrder.load(std::memory_order_relaxed);
+    for (int slot = 0; slot < NUM_FX; ++slot) {
+        FxId id = fxAt(order, slot);
+        if ((int)id >= NUM_FX) continue;
+        bool on = gv(fxPowerParam(id)) > 0.5f;
+        bool was = fxWasOn[(int)id];
+        fxWasOn[(int)id] = on;
+        if (!on) continue;
 
-    if (on[0]) dist.process(l, r, n, { (int)gv(P::DIST_MODE), gv(P::DIST_DRIVE), gv(P::DIST_TONE), gv(P::DIST_MIX) });
-    if (on[1]) chorus.process(l, r, n, { gv(P::CHO_RATE), gv(P::CHO_DEPTH), gv(P::CHO_FB), gv(P::CHO_MIX) });
-    if (on[2]) {
-        float t = gv(P::DLY_SYNC) > 0.5f
-            ? (60.0f / ctx.tempo) * kSyncDivBeats[std::clamp((int)gv(P::DLY_DIV), 0, 14)]
-            : gv(P::DLY_TIME) * 0.001f;
-        delay.process(l, r, n, { t, gv(P::DLY_FB), gv(P::DLY_TONE), gv(P::DLY_MIX), gv(P::DLY_PING) > 0.5f });
+        switch (id) {
+            case FxId::Distortion:
+                if (!was) dist.reset();
+                dist.process(l, r, n, { (int)gv(P::DIST_MODE), gv(P::DIST_DRIVE), gv(P::DIST_TONE), gv(P::DIST_MIX) });
+                break;
+            case FxId::Phaser:
+                if (!was) phaser.reset();
+                phaser.process(l, r, n, { gv(P::PHA_RATE), gv(P::PHA_DEPTH), gv(P::PHA_FB), gv(P::PHA_MIX) });
+                break;
+            case FxId::Flanger:
+                if (!was) flanger.reset();
+                flanger.process(l, r, n, { gv(P::FLG_RATE), gv(P::FLG_DEPTH), gv(P::FLG_FB), gv(P::FLG_MIX) });
+                break;
+            case FxId::Chorus:
+                if (!was) chorus.reset();
+                chorus.process(l, r, n, { gv(P::CHO_RATE), gv(P::CHO_DEPTH), gv(P::CHO_FB), gv(P::CHO_MIX) });
+                break;
+            case FxId::Delay: {
+                if (!was) delay.reset();
+                float t = gv(P::DLY_SYNC) > 0.5f
+                    ? (60.0f / ctx.tempo) * kSyncDivBeats[std::clamp((int)gv(P::DLY_DIV), 0, 14)]
+                    : gv(P::DLY_TIME) * 0.001f;
+                delay.process(l, r, n, { t, gv(P::DLY_FB), gv(P::DLY_TONE), gv(P::DLY_MIX), gv(P::DLY_PING) > 0.5f });
+                break;
+            }
+            case FxId::Reverb:
+                if (!was) reverb.reset();
+                reverb.process(l, r, n, { gv(P::REV_SIZE), gv(P::REV_DECAY), gv(P::REV_DAMP),
+                                          gv(P::REV_PREDLY), gv(P::REV_WIDTH), gv(P::REV_MIX) });
+                break;
+            case FxId::Eq:
+                if (!was) eq.reset();
+                eq.process(l, r, n, { gv(P::EQ_LOW), gv(P::EQ_LOWFREQ), gv(P::EQ_MID), gv(P::EQ_MIDFREQ),
+                                      gv(P::EQ_MIDQ), gv(P::EQ_HIGH), gv(P::EQ_HIGHFREQ) });
+                break;
+            case FxId::Compressor:
+                if (!was) comp.reset();
+                comp.process(l, r, n, { gv(P::COMP_THRESH), gv(P::COMP_RATIO), gv(P::COMP_ATK),
+                                        gv(P::COMP_REL), gv(P::COMP_MAKEUP), gv(P::COMP_MIX) });
+                break;
+            default: break;
+        }
     }
-    if (on[3]) reverb.process(l, r, n, { gv(P::REV_SIZE), gv(P::REV_DECAY), gv(P::REV_DAMP),
-                                         gv(P::REV_PREDLY), gv(P::REV_WIDTH), gv(P::REV_MIX) });
 
     float target = dsp::dbToGain(gv(P::MASTER_VOL));
     for (int i = 0; i < n; ++i) {
@@ -394,6 +549,8 @@ void Instrument::publish(const float* l, const float* r, int n, double busySecon
         t.envStage[e].store(has ? voices[displayVoice].env(e).stageIndex() : 0, std::memory_order_relaxed);
         t.envStageTime[e].store(has ? voices[displayVoice].env(e).stageTime() : 0.0f, std::memory_order_relaxed);
     }
+    t.compGainReduction.store(fxWasOn[(int)FxId::Compressor] ? comp.grDb : 0.0f, std::memory_order_relaxed);
+    t.arpNote.store(arp.numSounding > 0 ? arp.sounding[0] : -1, std::memory_order_relaxed);
     for (int o = 0; o < 2; ++o)
         t.oscPos[o].store(has ? voices[displayVoice].wtPos(o) : value[(int)oscParam(o, P::OSCA_POS)], std::memory_order_relaxed);
 

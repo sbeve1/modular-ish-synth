@@ -229,7 +229,7 @@ std::vector<Preset> factoryPresets()
 // ---------------------------------------------------------------------
 // Capture / apply
 // ---------------------------------------------------------------------
-void capturePreset(Preset& out, const SharedState& s, const WavetableManager& wt)
+void capturePreset(Preset& out, const SharedState& s, const ResourceManager& wt)
 {
     for (int i = 0; i < NUM_PARAMS; ++i) out.values[i] = s.params.value((P)i);
     out.mods.clear();
@@ -237,6 +237,8 @@ void capturePreset(Preset& out, const SharedState& s, const WavetableManager& wt
         ModSlotData d = s.mods.get(i);
         if (d.active()) out.mods.push_back(d);
     }
+    out.fxOrder = s.fxOrder.load(std::memory_order_relaxed);
+    for (int l = 0; l < 4; ++l) out.lfoCurve[l] = wt.lfoCurve(l);
     for (int o = 0; o < 2; ++o) {
         const auto& w = wt.get(o);
         out.wavetable[o] = w ? w->name : "Basic Shapes";
@@ -245,11 +247,13 @@ void capturePreset(Preset& out, const SharedState& s, const WavetableManager& wt
     }
 }
 
-void applyPreset(const Preset& p, SharedState& s, WavetableManager& wt)
+void applyPreset(const Preset& p, SharedState& s, ResourceManager& wt)
 {
     for (int i = 0; i < NUM_PARAMS; ++i) s.params.setValue((P)i, p.values[i]);
     s.mods.clearAll();
     for (size_t i = 0; i < p.mods.size() && i < (size_t)NUM_MOD_SLOTS; ++i) s.mods.set((int)i, p.mods[i]);
+    s.fxOrder.store(p.fxOrder, std::memory_order_relaxed);
+    for (int l = 0; l < 4; ++l) wt.setLfoCurve(l, p.lfoCurve[l].size() >= 2 ? p.lfoCurve[l] : defaultLfoCurve());
 
     for (int o = 0; o < 2; ++o) {
         if (p.customFrames[o].size() == (size_t)WT_FRAMES * WT_SIZE) {
@@ -292,6 +296,17 @@ bool savePresetFile(const Preset& p, const std::string& path)
     f << "category " << p.category << "\n";
     for (int i = 0; i < NUM_PARAMS; ++i)
         f << "param " << paramInfo(i).key << " " << p.values[i] << "\n";
+    {
+        char hex[16];
+        std::snprintf(hex, sizeof hex, "%08x", p.fxOrder);
+        f << "fxorder " << hex << "\n";
+    }
+    for (int l = 0; l < 4; ++l) {
+        if (p.lfoCurve[l].size() < 2) continue;
+        f << "lfocurve " << l << " " << p.lfoCurve[l].size();
+        for (const auto& pt : p.lfoCurve[l]) f << " " << pt.x << " " << pt.y << " " << pt.curve;
+        f << "\n";
+    }
     for (const auto& m : p.mods)
         f << "mod " << modSrcShortName(m.src) << " " << modSrcShortName(m.aux) << " "
           << paramInfo(m.target).key << " " << m.amount << " " << (int)m.mode << " " << (int)m.curve << "\n";
@@ -344,6 +359,28 @@ bool loadPresetFile(Preset& p, const std::string& path)
                 int t = findParam(target.c_str());
                 if (t >= 0) p.mod(srcFromShort(src), (P)t, amt, srcFromShort(aux),
                                   (ModMode)std::clamp(mode, 0, 1), (ModCurve)std::clamp(curve, 0, 3));
+            }
+        } else if (cmd == "fxorder") {
+            std::string hex;
+            if (ss >> hex) {
+                uint32_t v = (uint32_t)std::strtoul(hex.c_str(), nullptr, 16);
+                bool valid = true, seen[NUM_FX] = {};
+                for (int i = 0; i < NUM_FX; ++i) {
+                    int id = (int)fxAt(v, i);
+                    if (id >= NUM_FX || seen[id]) valid = false; else seen[id] = true;
+                }
+                if (valid) p.fxOrder = v;
+            }
+        } else if (cmd == "lfocurve") {
+            int l = -1, n = 0;
+            if (ss >> l >> n && l >= 0 && l < 4 && n >= 2 && n <= 32) {
+                std::vector<LfoPoint> pts;
+                for (int i = 0; i < n; ++i) {
+                    LfoPoint pt{};
+                    if (!(ss >> pt.x >> pt.y >> pt.curve)) break;
+                    pts.push_back(pt);
+                }
+                if ((int)pts.size() == n) p.lfoCurve[l] = pts;
             }
         } else if (cmd == "wavetable") {
             int o; std::string name;

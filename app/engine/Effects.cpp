@@ -210,6 +210,139 @@ void ReverbFX::process(float* l, float* r, int n, const Params& p)
 }
 
 // ---------------------------------------------------------------------
+// Biquad / EQ
+// ---------------------------------------------------------------------
+static void setCoefs(Biquad& q, float b0, float b1, float b2, float a0, float a1, float a2)
+{
+    q.b0 = b0 / a0; q.b1 = b1 / a0; q.b2 = b2 / a0; q.a1 = a1 / a0; q.a2 = a2 / a0;
+}
+
+void Biquad::lowShelf(float f, float gainDb, float sr)
+{
+    float A = std::pow(10.0f, gainDb / 40.0f), w = TWO_PI * std::min(f, sr * 0.45f) / sr;
+    float c = std::cos(w), s = std::sin(w), sa = 2.0f * std::sqrt(A) * (s / 2.0f * std::sqrt(2.0f));
+    setCoefs(*this, A * ((A + 1) - (A - 1) * c + sa), 2 * A * ((A - 1) - (A + 1) * c), A * ((A + 1) - (A - 1) * c - sa),
+             (A + 1) + (A - 1) * c + sa, -2 * ((A - 1) + (A + 1) * c), (A + 1) + (A - 1) * c - sa);
+}
+
+void Biquad::highShelf(float f, float gainDb, float sr)
+{
+    float A = std::pow(10.0f, gainDb / 40.0f), w = TWO_PI * std::min(f, sr * 0.45f) / sr;
+    float c = std::cos(w), s = std::sin(w), sa = 2.0f * std::sqrt(A) * (s / 2.0f * std::sqrt(2.0f));
+    setCoefs(*this, A * ((A + 1) + (A - 1) * c + sa), -2 * A * ((A - 1) + (A + 1) * c), A * ((A + 1) + (A - 1) * c - sa),
+             (A + 1) - (A - 1) * c + sa, 2 * ((A - 1) - (A + 1) * c), (A + 1) - (A - 1) * c - sa);
+}
+
+void Biquad::peak(float f, float q, float gainDb, float sr)
+{
+    float A = std::pow(10.0f, gainDb / 40.0f), w = TWO_PI * std::min(f, sr * 0.45f) / sr;
+    float c = std::cos(w), alpha = std::sin(w) / (2.0f * std::max(q, 0.05f));
+    setCoefs(*this, 1 + alpha * A, -2 * c, 1 - alpha * A, 1 + alpha / A, -2 * c, 1 - alpha / A);
+}
+
+float Biquad::magnitudeDb(float f, float sr) const
+{
+    float w = TWO_PI * f / sr;
+    float c1 = std::cos(w), s1 = std::sin(w), c2 = std::cos(2 * w), s2 = std::sin(2 * w);
+    float nr = b0 + b1 * c1 + b2 * c2, ni = -(b1 * s1 + b2 * s2);
+    float dr = 1 + a1 * c1 + a2 * c2, di = -(a1 * s1 + a2 * s2);
+    float mag = std::sqrt((nr * nr + ni * ni) / std::max(dr * dr + di * di, 1e-12f));
+    return 20.0f * std::log10(std::max(mag, 1e-6f));
+}
+
+void EqFX::process(float* l, float* r, int n, const Params& p)
+{
+    band[0].lowShelf(p.lowHz, p.lowDb, sr);
+    band[1].peak(p.midHz, p.midQ, p.midDb, sr);
+    band[2].highShelf(p.highHz, p.highDb, sr);
+    for (int i = 0; i < n; ++i)
+        for (auto& b : band) { l[i] = b.tick(0, l[i]); r[i] = b.tick(1, r[i]); }
+}
+
+// ---------------------------------------------------------------------
+// Compressor
+// ---------------------------------------------------------------------
+void CompressorFX::process(float* l, float* r, int n, const Params& p)
+{
+    const float atk = std::exp(-1.0f / (std::max(p.attackMs, 0.05f) * 0.001f * sr));
+    const float rel = std::exp(-1.0f / (std::max(p.releaseMs, 1.0f) * 0.001f * sr));
+    const float knee = 6.0f, slope = 1.0f - 1.0f / std::max(p.ratio, 1.0f);
+    const float makeup = dbToGain(p.makeupDb);
+    float maxGr = 0.0f;
+    for (int i = 0; i < n; ++i) {
+        float peak = std::max(std::fabs(l[i]), std::fabs(r[i]));
+        float inDb = 20.0f * std::log10(std::max(peak, 1e-6f));
+        envDb = inDb > envDb ? inDb + atk * (envDb - inDb) : inDb + rel * (envDb - inDb);
+
+        float over = envDb - p.threshDb, gr;
+        if (over <= -knee * 0.5f)     gr = 0.0f;
+        else if (over >= knee * 0.5f) gr = over * slope;
+        else { float x = over + knee * 0.5f; gr = slope * x * x / (2.0f * knee); }
+        maxGr = std::max(maxGr, gr);
+
+        float g = dbToGain(-gr) * makeup;
+        l[i] = lerp(l[i], l[i] * g, p.mix);
+        r[i] = lerp(r[i], r[i] * g, p.mix);
+    }
+    grDb = maxGr;
+}
+
+// ---------------------------------------------------------------------
+// Phaser: sweeping first-order all-passes; notches appear where the
+// phase-shifted signal cancels the dry one.
+// ---------------------------------------------------------------------
+void PhaserFX::process(float* l, float* r, int n, const Params& p)
+{
+    const float inc = p.rate / sr;
+    for (int i = 0; i < n; ++i) {
+        phase += inc;
+        if (phase >= 1.0f) phase -= 1.0f;
+        float in[2] = { l[i], r[i] };
+        for (int ch = 0; ch < 2; ++ch) {
+            float lfo = 0.5f + 0.5f * std::sin(TWO_PI * (phase + ch * 0.25f));
+            float fc = 200.0f * std::pow(25.0f, lfo * p.depth);   // 200 Hz .. 5 kHz
+            float t = std::tan(PI * std::min(fc, sr * 0.45f) / sr);
+            float a = (t - 1.0f) / (t + 1.0f);
+            float x = in[ch] + fb[ch] * p.feedback;
+            for (int s = 0; s < STAGES; ++s) {
+                float y = a * x + ap[ch][s];
+                ap[ch][s] = killDenormal(x - a * y);
+                x = y;
+            }
+            fb[ch] = killDenormal(x);
+            (ch == 0 ? l[i] : r[i]) = lerp(in[ch], (in[ch] + x) * 0.6f, p.mix);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------
+// Flanger: short modulated delay mixed with the dry signal
+// ---------------------------------------------------------------------
+void FlangerFX::prepare(float sampleRate)
+{
+    sr = sampleRate;
+    dl[0].allocate((int)(0.02f * sr));
+    dl[1].allocate((int)(0.02f * sr));
+}
+
+void FlangerFX::process(float* l, float* r, int n, const Params& p)
+{
+    const float inc = p.rate / sr;
+    const float base = 0.0006f * sr, depth = (0.0004f + p.depth * 0.0065f) * sr;
+    for (int i = 0; i < n; ++i) {
+        phase += inc;
+        if (phase >= 1.0f) phase -= 1.0f;
+        float in[2] = { l[i], r[i] };
+        for (int ch = 0; ch < 2; ++ch) {
+            float m = 0.5f + 0.5f * std::sin(TWO_PI * (phase + ch * 0.25f));
+            float d = killDenormal(dl[ch].tap(base + depth * m));
+            dl[ch].push(in[ch] + d * p.feedback);
+            (ch == 0 ? l[i] : r[i]) = lerp(in[ch], (in[ch] + d) * 0.7f, p.mix);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------
 // Limiter: peak follower, instant attack, ~120 ms release, plus a soft clip
 // ---------------------------------------------------------------------
 void Limiter::process(float* l, float* r, int n, float ceiling)

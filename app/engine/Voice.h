@@ -29,6 +29,7 @@ struct VoiceContext {
     const LfoState* freeLfo = nullptr;  // [4] shared free-running LFOs
 
     const WavetableSet* wavetable[2] = {};
+    const LfoCurveTable* lfoCurve[4] = {};
 };
 
 class Voice {
@@ -77,11 +78,12 @@ private:
     float brown = 0.0f;
     dsp::Rng rng;
 
-    dsp::Svf svf[2];
-    int lastFilterType = -1;
+    dsp::Svf svf[2][2];          // [filter][stage]
+    int lastFilterType[2] = { -1, -1 };
 
     float eff(const VoiceContext& ctx, P p) const;
     void  updateModulation(const VoiceContext& ctx);
     void  updateSources(const VoiceContext& ctx, int n);
     void  renderOsc(const VoiceContext& ctx, int osc, float freqBase, float* l, float* r, float* fl, float* fr, int n);
+    void  runFilter(const VoiceContext& ctx, int f, float* l, float* r, int n);
 };

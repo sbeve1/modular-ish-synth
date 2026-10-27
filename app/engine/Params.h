@@ -15,7 +15,7 @@
 // =====================================================================
 
 enum class Map  : uint8_t { Lin, Log, Pow, Int, Choice, Bool };
-enum class Unit : uint8_t { None, Pct, Hz, Sec, Ms, Db, Semi, Cent, Oct, Bpm, Pan, Voices };
+enum class Unit : uint8_t { None, Pct, Hz, Sec, Ms, Db, Semi, Cent, Oct, Bpm, Pan, Voices, Ratio };
 enum class Scope: uint8_t { Voice, Global };   // Voice params are modulated per voice
 
 // Choice lists
@@ -29,6 +29,8 @@ extern const char* const kSyncDivs[];
 extern const float       kSyncDivBeats[];
 extern const char* const kDistModes[];
 extern const char* const kVoiceModes[];
+extern const char* const kFilterRouting[];
+extern const char* const kArpModes[];
 
 // X(ID, key, label, min, max, default, map, unit, scope, choices, skew)
 #define HC_OSC_PARAMS(P, K, L, ON)                                                        \
@@ -60,7 +62,7 @@ extern const char* const kVoiceModes[];
     X(P##_RCRV,   K "_rcrv",   "R Curve",-1, 1, -0.4f,   Map::Lin, Unit::None,Scope::Voice, nullptr, 1)
 
 #define HC_LFO_PARAMS(P, K)                                                               \
-    X(P##_SHAPE,  K "_shape",  "Shape",   0, 6, 0,    Map::Choice, Unit::None, Scope::Voice, kLfoShapes, 1) \
+    X(P##_SHAPE,  K "_shape",  "Shape",   0, 7, 0,    Map::Choice, Unit::None, Scope::Voice, kLfoShapes, 1) \
     X(P##_RATE,   K "_rate",   "Rate", 0.02f, 40, 2,  Map::Log,    Unit::Hz,   Scope::Voice, nullptr, 1) \
     X(P##_SYNC,   K "_sync",   "Sync",    0, 1, 0,    Map::Bool,   Unit::None, Scope::Voice, nullptr, 1) \
     X(P##_DIV,    K "_div",    "Division",0, 14, 6,   Map::Choice, Unit::None, Scope::Voice, kSyncDivs, 1) \
@@ -68,6 +70,15 @@ extern const char* const kVoiceModes[];
     X(P##_PHASE,  K "_phase",  "Phase",   0, 1, 0,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
     X(P##_RISE,   K "_rise",   "Rise",    0, 5, 0,    Map::Pow,    Unit::Sec,  Scope::Voice, nullptr, 3) \
     X(P##_SMOOTH, K "_smooth", "Smooth",  0, 1, 0,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1)
+
+#define HC_FILTER_PARAMS(P, K, L, ON, TYPE, CUT)                                          \
+    X(P##_ON,     K "_on",     L " On",   0, 1, ON,   Map::Bool,   Unit::None, Scope::Voice, nullptr, 1) \
+    X(P##_TYPE,   K "_type",   "Type",    0, 7, TYPE, Map::Choice, Unit::None, Scope::Voice, kFilterTypes, 1) \
+    X(P##_CUTOFF, K "_cutoff", "Cutoff", 20, 20000, CUT, Map::Log, Unit::Hz,   Scope::Voice, nullptr, 1) \
+    X(P##_RES,    K "_res",    "Res",     0, 1, 0.1f, Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
+    X(P##_DRIVE,  K "_drive",  "Drive",   0, 1, 0,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
+    X(P##_KEYTRK, K "_keytrk", "Key Trk", 0, 1, 0,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
+    X(P##_MIX,    K "_mix",    "Mix",     0, 1, 1,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1)
 
 #define HC_PARAM_LIST                                                                     \
     /* ---- oscillators ---- */                                                           \
@@ -85,13 +96,9 @@ extern const char* const kVoiceModes[];
     X(NOISE_PAN,  "noise_pan",  "Pan",     -1, 1, 0, Map::Lin,    Unit::Pan,  Scope::Voice, nullptr, 1) \
     X(NOISE_FILTER,"noise_filter","To Filter",0,1,1, Map::Bool,   Unit::None, Scope::Voice, nullptr, 1) \
     /* ---- filter ---- */                                                                \
-    X(FLT_ON,     "flt_on",     "Filter On",0, 1, 1, Map::Bool,   Unit::None, Scope::Voice, nullptr, 1) \
-    X(FLT_TYPE,   "flt_type",   "Type",     0, 7, 1, Map::Choice, Unit::None, Scope::Voice, kFilterTypes, 1) \
-    X(FLT_CUTOFF, "flt_cutoff", "Cutoff",  20, 20000, 9000, Map::Log, Unit::Hz, Scope::Voice, nullptr, 1) \
-    X(FLT_RES,    "flt_res",    "Res",      0, 1, 0.1f, Map::Lin, Unit::Pct,  Scope::Voice, nullptr, 1) \
-    X(FLT_DRIVE,  "flt_drive",  "Drive",    0, 1, 0,    Map::Lin, Unit::Pct,  Scope::Voice, nullptr, 1) \
-    X(FLT_KEYTRK, "flt_keytrk", "Key Trk",  0, 1, 0,    Map::Lin, Unit::Pct,  Scope::Voice, nullptr, 1) \
-    X(FLT_MIX,    "flt_mix",    "Mix",      0, 1, 1,    Map::Lin, Unit::Pct,  Scope::Voice, nullptr, 1) \
+    HC_FILTER_PARAMS(FLT,  "flt",  "Filter 1", 1, 1, 9000)                              \
+    HC_FILTER_PARAMS(FLT2, "flt2", "Filter 2", 0, 4, 120)                               \
+    X(FLT_ROUTING,"flt_routing","Routing",  0, 1, 0,    Map::Choice, Unit::None, Scope::Voice, kFilterRouting, 1) \
     /* ---- envelopes & LFOs ---- */                                                      \
     HC_ENV_PARAMS(ENV1, "env1")                                                           \
     HC_ENV_PARAMS(ENV2, "env2")                                                           \
@@ -137,6 +144,38 @@ extern const char* const kVoiceModes[];
     X(REV_PREDLY, "rev_predly", "Pre-Delay",0, 200, 12, Map::Lin, Unit::Ms,   Scope::Global, nullptr, 1) \
     X(REV_WIDTH,  "rev_width",  "Width",    0, 1, 1,    Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
     X(REV_MIX,    "rev_mix",    "Mix",      0, 1, 0.25f,Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(ARP_ON,     "arp_on",     "Arpeggiator",0, 1, 0,  Map::Bool, Unit::None, Scope::Global, nullptr, 1) \
+    X(ARP_MODE,   "arp_mode",   "Mode",     0, 5, 0,    Map::Choice, Unit::None, Scope::Global, kArpModes, 1) \
+    X(ARP_DIV,    "arp_div",    "Rate",     0, 14, 12,  Map::Choice, Unit::None, Scope::Global, kSyncDivs, 1) \
+    X(ARP_OCT,    "arp_oct",    "Octaves",  1, 4, 1,    Map::Int, Unit::Voices, Scope::Global, nullptr, 1) \
+    X(ARP_GATE,   "arp_gate",   "Gate",  0.05f, 1, 0.6f,Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(ARP_SWING,  "arp_swing",  "Swing",    0, 0.6f, 0, Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(ARP_HOLD,   "arp_hold",   "Hold",     0, 1, 0,    Map::Bool, Unit::None, Scope::Global, nullptr, 1) \
+    X(EQ_ON,      "eq_on",      "EQ",       0, 1, 0,    Map::Bool, Unit::None, Scope::Global, nullptr, 1) \
+    X(EQ_LOW,     "eq_low",     "Low",    -18, 18, 0,   Map::Lin, Unit::Db,   Scope::Global, nullptr, 1) \
+    X(EQ_LOWFREQ, "eq_lowfreq", "Low Freq",30, 1000, 120,Map::Log, Unit::Hz,  Scope::Global, nullptr, 1) \
+    X(EQ_MID,     "eq_mid",     "Mid",    -18, 18, 0,   Map::Lin, Unit::Db,   Scope::Global, nullptr, 1) \
+    X(EQ_MIDFREQ, "eq_midfreq", "Mid Freq",150, 8000, 1000,Map::Log, Unit::Hz, Scope::Global, nullptr, 1) \
+    X(EQ_MIDQ,    "eq_midq",    "Mid Q", 0.3f, 8, 1,    Map::Log, Unit::None, Scope::Global, nullptr, 1) \
+    X(EQ_HIGH,    "eq_high",    "High",   -18, 18, 0,   Map::Lin, Unit::Db,   Scope::Global, nullptr, 1) \
+    X(EQ_HIGHFREQ,"eq_highfreq","High Freq",1000, 16000, 6000,Map::Log, Unit::Hz, Scope::Global, nullptr, 1) \
+    X(PHA_ON,     "pha_on",     "Phaser",   0, 1, 0,    Map::Bool, Unit::None, Scope::Global, nullptr, 1) \
+    X(PHA_RATE,   "pha_rate",   "Rate",  0.02f, 10, 0.4f,Map::Log, Unit::Hz,  Scope::Global, nullptr, 1) \
+    X(PHA_DEPTH,  "pha_depth",  "Depth",    0, 1, 0.7f, Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(PHA_FB,     "pha_fb",     "Feedback", 0, 0.9f, 0.5f,Map::Lin,Unit::Pct, Scope::Global, nullptr, 1) \
+    X(PHA_MIX,    "pha_mix",    "Mix",      0, 1, 0.5f, Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(FLG_ON,     "flg_on",     "Flanger",  0, 1, 0,    Map::Bool, Unit::None, Scope::Global, nullptr, 1) \
+    X(FLG_RATE,   "flg_rate",   "Rate",  0.02f, 10, 0.25f,Map::Log, Unit::Hz, Scope::Global, nullptr, 1) \
+    X(FLG_DEPTH,  "flg_depth",  "Depth",    0, 1, 0.6f, Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(FLG_FB,     "flg_fb",     "Feedback",-0.95f, 0.95f, 0.5f,Map::Lin, Unit::Pct, Scope::Global, nullptr, 1) \
+    X(FLG_MIX,    "flg_mix",    "Mix",      0, 1, 0.5f, Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
+    X(COMP_ON,    "comp_on",    "Compressor",0, 1, 0,   Map::Bool, Unit::None, Scope::Global, nullptr, 1) \
+    X(COMP_THRESH,"comp_thresh","Threshold",-48, 0, -18,Map::Lin, Unit::Db,   Scope::Global, nullptr, 1) \
+    X(COMP_RATIO, "comp_ratio", "Ratio",    1, 20, 4,   Map::Log, Unit::Ratio,Scope::Global, nullptr, 1) \
+    X(COMP_ATK,   "comp_atk",   "Attack", 0.1f, 100, 10,Map::Log, Unit::Ms,   Scope::Global, nullptr, 1) \
+    X(COMP_REL,   "comp_rel",   "Release", 10, 1000, 120,Map::Log, Unit::Ms,  Scope::Global, nullptr, 1) \
+    X(COMP_MAKEUP,"comp_makeup","Makeup",   0, 24, 0,   Map::Lin, Unit::Db,   Scope::Global, nullptr, 1) \
+    X(COMP_MIX,   "comp_mix",   "Mix",      0, 1, 1,    Map::Lin, Unit::Pct,  Scope::Global, nullptr, 1) \
     X(MASTER_VOL, "master",     "Master", -48, 6, -6,   Map::Lin, Unit::Db,   Scope::Global, nullptr, 1)
 
 enum class P : int {
@@ -173,6 +212,18 @@ int findParam(const char* key);   // -1 if unknown
 constexpr int OSC_STRIDE = (int)P::OSCB_ON - (int)P::OSCA_ON;
 constexpr int ENV_STRIDE = (int)P::ENV2_ATK - (int)P::ENV1_ATK;
 constexpr int LFO_STRIDE = (int)P::LFO2_SHAPE - (int)P::LFO1_SHAPE;
+constexpr int FLT_STRIDE = (int)P::FLT2_ON - (int)P::FLT_ON;
+inline P fltParam(int f, P f1) { return (P)((int)f1 + f * FLT_STRIDE); }
+
+// Effects, in the order they can be arranged on the rack.
+enum class FxId : int { Distortion, Phaser, Flanger, Chorus, Delay, Reverb, Eq, Compressor, COUNT };
+constexpr int NUM_FX = (int)FxId::COUNT;
+const char* fxName(FxId id);
+P fxPowerParam(FxId id);
+// order packed as one nibble per slot (slot 0 in the low bits)
+constexpr uint32_t DEFAULT_FX_ORDER =
+    (0u) | (6u << 4) | (1u << 8) | (2u << 12) | (3u << 16) | (4u << 20) | (5u << 24) | (7u << 28);
+inline FxId fxAt(uint32_t order, int slot) { return (FxId)((order >> (slot * 4)) & 0xF); }
 inline P oscParam(int osc, P a)  { return (P)((int)a + osc * OSC_STRIDE); }
 inline P envParam(int env, P e1) { return (P)((int)e1 + env * ENV_STRIDE); }
 inline P lfoParam(int lfo, P l1) { return (P)((int)l1 + lfo * LFO_STRIDE); }

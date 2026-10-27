@@ -3,8 +3,9 @@
 #include <cmath>
 
 #include "engine/Dsp.h"
+#include "engine/LfoCurve.h"
 
-enum class LfoShape { Sine, Triangle, SawUp, SawDown, Square, SampleHold, Drift };
+enum class LfoShape { Sine, Triangle, SawUp, SawDown, Square, SampleHold, Drift, Custom };
 enum class LfoMode  { Free, Retrig, Envelope };
 
 // One LFO's running state. Free-mode LFOs share a global state so all voices
@@ -39,8 +40,8 @@ struct LfoState {
     }
 };
 
-// Bipolar (-1..1) shape value at phase p.
-inline float lfoShapeValue(LfoShape shape, float p, const LfoState& st)
+// Bipolar (-1..1) shape value at phase p. curve: table for the Custom shape.
+inline float lfoShapeValue(LfoShape shape, float p, const LfoState& st, const LfoCurveTable* curve = nullptr)
 {
     switch (shape) {
         case LfoShape::Sine:       return std::sin(dsp::TWO_PI * p);
@@ -53,6 +54,8 @@ inline float lfoShapeValue(LfoShape shape, float p, const LfoState& st)
             float t = p * p * (3.0f - 2.0f * p);
             return dsp::lerp(st.prev, st.next, t);
         }
+        case LfoShape::Custom:
+            return curve ? lookupLfoCurve(*curve, p) : 0.0f;
     }
     return 0.0f;
 }

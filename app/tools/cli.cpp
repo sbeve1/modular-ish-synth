@@ -21,7 +21,7 @@
 
 #include "engine/Instrument.h"
 #include "engine/Presets.h"
-#include "engine/WavetableManager.h"
+#include "engine/ResourceManager.h"
 #include "platform/miniaudio.h"
 
 // ---- allocation counter (for the zero-allocation test) ----
@@ -59,13 +59,13 @@ static std::vector<NoteEv> demoSequence()
 struct Engine {
     std::unique_ptr<SharedState> shared = std::make_unique<SharedState>();
     std::unique_ptr<Instrument>  inst;
-    std::unique_ptr<WavetableManager> wt;
+    std::unique_ptr<ResourceManager> wt;
     float sr;
 
     explicit Engine(float sampleRate = 48000.0f) : sr(sampleRate)
     {
         inst = std::make_unique<Instrument>(*shared);
-        wt = std::make_unique<WavetableManager>(*shared);
+        wt = std::make_unique<ResourceManager>(*shared);
         inst->prepare(sr, 1024);
     }
 
@@ -220,7 +220,12 @@ static int cmdSelftest()
     {
         Engine e;
         Preset p = all[4];   // supersaw: unison, FX
-        p.set(P::DIST_ON, 1); p.set(P::CHO_ON, 1); p.set(P::DLY_ON, 1); p.set(P::REV_ON, 1);
+        for (int i = 0; i < NUM_FX; ++i) p.set(fxPowerParam((FxId)i), 1);
+        p.set(P::FLT2_ON, 1); p.set(P::FLT_ROUTING, 1);
+        p.set(P::ARP_ON, 1); p.set(P::ARP_MODE, 3);
+        p.set(P::LFO1_SHAPE, 7);
+        p.fxOrder = 0;
+        for (int i = 0; i < NUM_FX; ++i) p.fxOrder |= (uint32_t)(NUM_FX - 1 - i) << (i * 4);   // reversed
         e.load(p);
         std::vector<float> L(512), R(512);
         e.inst->process(L.data(), R.data(), 512);   // warm-up
@@ -233,7 +238,7 @@ static int cmdSelftest()
             e.inst->process(L.data(), R.data(), 512);
         }
         gCountAllocs = false;
-        CHECK(gAllocs.load() == 0, "no heap allocations in 400 audio blocks with notes, FX and param changes (%ld)", gAllocs.load());
+        CHECK(gAllocs.load() == 0, "no heap allocations in 400 audio blocks: notes, arp, both filters, all 8 FX reordered (%ld)", gAllocs.load());
     }
 
     std::printf("Modulation\n");
@@ -259,12 +264,71 @@ static int cmdSelftest()
         CHECK(rd > rc * 1.5, "Env 2 -> cutoff opens the filter (%.4f -> %.4f)", rc, rd);
     }
 
+    std::printf("Arpeggiator\n");
+    {
+        Engine e;
+        Preset p;
+        p.set(P::ARP_ON, 1); p.set(P::ARP_MODE, 0); p.set(P::ARP_DIV, 12); p.set(P::TEMPO, 120);
+        e.load(p);
+        std::vector<float> L(64), R(64);
+        e.inst->process(L.data(), R.data(), 64);
+        for (int n : { 67, 60, 64 }) e.shared->uiEvents.push({ EventType::NoteOn, (uint8_t)n, 100 });
+        std::vector<int> seq;
+        int last = -1;
+        size_t samples = 0;
+        while (samples < (size_t)(e.sr * 1.0)) {           // 1 s = 8 sixteenths at 120 BPM
+            e.inst->process(L.data(), R.data(), 64);
+            samples += 64;
+            int n = e.shared->telemetry.arpNote.load();
+            if (n >= 0 && n != last) seq.push_back(n);
+            last = n;
+        }
+        bool order = seq.size() >= 6;
+        const int want[6] = { 60, 64, 67, 60, 64, 67 };
+        for (int i = 0; i < 6 && order; ++i) order = seq[i] == want[i];
+        CHECK(order && seq.size() >= 7 && seq.size() <= 9, "Up mode at 1/16, 120 BPM: %zu steps in 1 s, order 60 64 67 60 64 67", seq.size());
+    }
+
+    std::printf("Filter 2\n");
+    {
+        auto rms = [](const std::vector<float>& a) { double s = 0; for (float v : a) s += v * v; return std::sqrt(s / a.size()); };
+        std::vector<NoteEv> one = { { 0.0, 48, 100 }, { 0.5, 48, 0 } };
+        Preset p;
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 400.0f);          // LP 24 at 400 Hz
+        p.set(P::FLT2_TYPE, 5); p.set(P::FLT2_CUTOFF, 4000.0f);       // HP 24 at 4 kHz
+        Engine a; a.load(p);
+        p.set(P::FLT2_ON, 1);
+        Engine serial; serial.load(p);
+        p.set(P::FLT_ROUTING, 1);
+        Engine parallel; parallel.load(p);
+        double ra = rms(a.render(one, 0.1)), rs = rms(serial.render(one, 0.1)), rp = rms(parallel.render(one, 0.1));
+        CHECK(rs < ra * 0.1 && rp > ra * 0.5, "LP 400 Hz -> HP 4 kHz in series cuts (%.4f -> %.4f), in parallel passes (%.4f)", ra, rs, rp);
+    }
+
+    std::printf("Custom LFO\n");
+    {
+        auto rms = [](const std::vector<float>& a) { double s = 0; for (float v : a) s += v * v; return std::sqrt(s / a.size()); };
+        std::vector<NoteEv> one = { { 0.0, 60, 100 }, { 0.5, 60, 0 } };
+        Preset p;
+        p.set(P::LFO1_SHAPE, 7);
+        p.mod(ModSrc::Lfo1, P::OSCA_LEVEL, 1.0f);
+        p.lfoCurve[0] = { { 0.0f, -1.0f, 0.0f }, { 1.0f, -1.0f, 0.0f } };   // flat at -1: level -> 0
+        Engine down; down.load(p);
+        p.lfoCurve[0] = { { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } };     // flat at 0: unchanged
+        Engine flat; flat.load(p);
+        double rd = rms(down.render(one, 0.1)), rf = rms(flat.render(one, 0.1));
+        CHECK(rf > 0.01 && rd < rf * 0.01, "drawn curve drives modulation (flat 0: %.4f, flat -1: %.6f)", rf, rd);
+    }
+
     std::printf("Preset files\n");
     {
         Preset p = all[5];
         p.customFrames[0].assign((size_t)WT_FRAMES * WT_SIZE, 0.0f);
         for (size_t i = 0; i < p.customFrames[0].size(); ++i) p.customFrames[0][i] = std::sin(i * 0.01f);
         p.wavetable[0] = "My Table";
+        p.lfoCurve[2] = { { 0.0f, 0.5f, 0.2f }, { 0.4f, -0.8f, -0.3f }, { 1.0f, 0.1f, 0.0f } };
+        p.fxOrder = DEFAULT_FX_ORDER;
+        std::swap(((uint8_t*)&p.fxOrder)[0], ((uint8_t*)&p.fxOrder)[3]);
         std::string path = (std::filesystem::temp_directory_path() / "nullwave_selftest.nwp").string();
         bool saved = savePresetFile(p, path);
         Preset q;
@@ -273,8 +337,9 @@ static int cmdSelftest()
         for (int i = 0; i < NUM_PARAMS; ++i) maxDiff = std::max(maxDiff, std::fabs(p.values[i] - q.values[i]));
         for (size_t i = 0; i < q.customFrames[0].size(); ++i) maxWt = std::max(maxWt, std::fabs(p.customFrames[0][i] - q.customFrames[0][i]));
         CHECK(saved && loaded && q.name == p.name && q.mods.size() == p.mods.size() && maxDiff < 1e-4f &&
-              q.customFrames[0].size() == p.customFrames[0].size() && maxWt < 1e-4f && q.wavetable[0] == "My Table",
-              "save/load round-trip: params, %zu mod slots, custom wavetable", p.mods.size());
+              q.customFrames[0].size() == p.customFrames[0].size() && maxWt < 1e-4f && q.wavetable[0] == "My Table" &&
+              q.fxOrder == p.fxOrder && q.lfoCurve[2].size() == 3 && std::fabs(q.lfoCurve[2][1].y + 0.8f) < 1e-4f,
+              "save/load round-trip: params, %zu mod slots, custom wavetable, LFO curve, FX order", p.mods.size());
         std::filesystem::remove(path);
     }
 

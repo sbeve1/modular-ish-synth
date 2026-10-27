@@ -5,7 +5,7 @@
 
 #include "engine/Instrument.h"
 #include "engine/Presets.h"
-#include "engine/WavetableManager.h"
+#include "engine/ResourceManager.h"
 
 class MidiHost;
 class AudioHost;
@@ -13,11 +13,11 @@ class AudioHost;
 // State shared by all UI code (UI thread only).
 struct UiState {
     SharedState&      s;
-    WavetableManager& wt;
+    ResourceManager& wt;
     MidiHost&         midi;
     AudioHost&        audio;
 
-    UiState(SharedState& s_, WavetableManager& wt_, MidiHost& m, AudioHost& a)
+    UiState(SharedState& s_, ResourceManager& wt_, MidiHost& m, AudioHost& a)
         : s(s_), wt(wt_), midi(m), audio(a) {}
 
     // pages

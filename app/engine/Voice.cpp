@@ -54,8 +54,7 @@ void Voice::start(int n, float vel, float startPitch, uint64_t order, const Voic
 
     if (!wasActive) {
         ampCur = 0.0f;
-        svf[0].reset();
-        svf[1].reset();
+        for (auto& f : svf) { f[0].reset(); f[1].reset(); }
         for (float& p : pink) p = 0.0f;
         brown = 0.0f;
     }
@@ -143,10 +142,10 @@ void Voice::updateSources(const VoiceContext& ctx, int n)
         float v;
         if (mode == LfoMode::Free) {
             const LfoState& g = ctx.freeLfo[l];
-            v = lfoShapeValue(shape, frac01(g.phase + off), g);
+            v = lfoShapeValue(shape, frac01(g.phase + off), g, ctx.lfoCurve[l]);
         } else {
             lfo[l].advance(rate * dt, mode);
-            v = lfoShapeValue(shape, frac01(std::min(lfo[l].phase, 0.99999f) + off), lfo[l]);
+            v = lfoShapeValue(shape, frac01(std::min(lfo[l].phase, 0.99999f) + off), lfo[l], ctx.lfoCurve[l]);
         }
 
         if (smooth > 0.0f) {
@@ -266,6 +265,63 @@ void Voice::renderOsc(const VoiceContext& ctx, int osc, float basePitch,
 }
 
 // ---------------------------------------------------------------------
+// Filter (in place). Stage 2 adds the resonant half of a 24 dB cascade.
+// ---------------------------------------------------------------------
+void Voice::runFilter(const VoiceContext& ctx, int f, float* L, float* R, int n)
+{
+    const float sr = ctx.sampleRate;
+    auto fp = [&](P p) { return eff(ctx, fltParam(f, p)); };
+
+    int type = (int)fp(P::FLT_TYPE);
+    dsp::Svf* st = svf[f];
+    if (type != lastFilterType[f]) { st[0].reset(); st[1].reset(); lastFilterType[f] = type; }
+
+    float keytrk = fp(P::FLT_KEYTRK);
+    float cutoff = fp(P::FLT_CUTOFF) * std::exp2((pitch - 60.0f) / 12.0f * keytrk);
+    float res    = fp(P::FLT_RES);
+    float drive  = fp(P::FLT_DRIVE);
+    float mix    = fp(P::FLT_MIX);
+
+    bool steep = type == 1 || type == 3 || type == 5;
+    int  mode  = type < 2 ? 0 : type < 4 ? 1 : type < 6 ? 2 : type == 6 ? 3 : 4;
+    if (steep) {
+        st[0].set(cutoff, 1.8478f, sr);
+        st[1].set(cutoff, dsp::lerp(0.7654f, 0.05f, res), sr);
+    } else {
+        st[0].set(cutoff, dsp::lerp(2.0f, 0.05f, res), sr);
+    }
+
+    float g = 1.0f + drive * 12.0f;
+    float gNorm = 1.0f / std::sqrt(g);
+
+    auto pick = [mode](float lp, float bp, float hp, float k) {
+        switch (mode) {
+            case 0:  return lp;
+            case 1:  return bp * k;      // unity-gain band-pass
+            case 2:  return hp;
+            case 3:  return lp + hp;
+            default: return lp - hp;
+        }
+    };
+
+    for (int s = 0; s < n; ++s) {
+        float in[2] = { L[s], R[s] };
+        for (int ch = 0; ch < 2; ++ch) {
+            float x = in[ch];
+            if (drive > 0.0f) x = fastTanh(x * g) * gNorm * 1.5f;
+            float lp, bp, hp;
+            st[0].tick(ch, x, lp, bp, hp);
+            float y = pick(lp, bp, hp, st[0].k);
+            if (steep) {
+                st[1].tick(ch, y, lp, bp, hp);
+                y = pick(lp, bp, hp, st[1].k);
+            }
+            (ch == 0 ? L[s] : R[s]) = in[ch] + (y - in[ch]) * mix;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------
 // Render
 // ---------------------------------------------------------------------
 void Voice::render(const VoiceContext& ctx, float* outL, float* outR, int n)
@@ -350,54 +406,20 @@ void Voice::render(const VoiceContext& ctx, float* outL, float* outR, int n)
         }
     }
 
-    // ---- filter ----
-    if (eff(ctx, P::FLT_ON) > 0.5f) {
-        int type = (int)eff(ctx, P::FLT_TYPE);
-        if (type != lastFilterType) { svf[0].reset(); svf[1].reset(); lastFilterType = type; }
-
-        float keytrk = eff(ctx, P::FLT_KEYTRK);
-        float cutoff = eff(ctx, P::FLT_CUTOFF) * std::exp2((pitch - 60.0f) / 12.0f * keytrk);
-        float res    = eff(ctx, P::FLT_RES);
-        float drive  = eff(ctx, P::FLT_DRIVE);
-        float mix    = eff(ctx, P::FLT_MIX);
-
-        bool steep = type == 1 || type == 3 || type == 5;
-        int  mode  = type < 2 ? 0 : type < 4 ? 1 : type < 6 ? 2 : type == 6 ? 3 : 4;
-        if (steep) {
-            svf[0].set(cutoff, 1.8478f, sr);
-            svf[1].set(cutoff, dsp::lerp(0.7654f, 0.05f, res), sr);
+    // ---- filters: 1 and 2, serial or parallel ----
+    {
+        bool on1 = eff(ctx, P::FLT_ON) > 0.5f, on2 = eff(ctx, P::FLT2_ON) > 0.5f;
+        bool parallel = eff(ctx, P::FLT_ROUTING) > 0.5f;
+        if (on1 && on2 && parallel) {
+            float l2[CONTROL_RATE], r2[CONTROL_RATE];
+            std::copy(fl, fl + n, l2);
+            std::copy(fr, fr + n, r2);
+            runFilter(ctx, 0, fl, fr, n);
+            runFilter(ctx, 1, l2, r2, n);
+            for (int s = 0; s < n; ++s) { fl[s] = (fl[s] + l2[s]) * 0.7071f; fr[s] = (fr[s] + r2[s]) * 0.7071f; }
         } else {
-            svf[0].set(cutoff, dsp::lerp(2.0f, 0.05f, res), sr);
-        }
-
-        float g = 1.0f + drive * 12.0f;
-        float gNorm = 1.0f / std::sqrt(g);
-
-        auto pick = [mode](float lp, float bp, float hp, float k) {
-            switch (mode) {
-                case 0:  return lp;
-                case 1:  return bp * k;      // unity-gain band-pass
-                case 2:  return hp;
-                case 3:  return lp + hp;
-                default: return lp - hp;
-            }
-        };
-
-        for (int s = 0; s < n; ++s) {
-            float in[2] = { fl[s], fr[s] };
-            for (int ch = 0; ch < 2; ++ch) {
-                float x = in[ch];
-                if (drive > 0.0f) x = fastTanh(x * g) * gNorm * 1.5f;
-                float lp, bp, hp;
-                svf[0].tick(ch, x, lp, bp, hp);
-                float y = pick(lp, bp, hp, svf[0].k);
-                if (steep) {
-                    svf[1].tick(ch, y, lp, bp, hp);
-                    y = pick(lp, bp, hp, svf[1].k);
-                }
-                float out = in[ch] + (y - in[ch]) * mix;
-                (ch == 0 ? fl[s] : fr[s]) = out;
-            }
+            if (on1) runFilter(ctx, 0, fl, fr, n);
+            if (on2) runFilter(ctx, 1, fl, fr, n);
         }
     }
 
