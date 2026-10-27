@@ -50,19 +50,15 @@ void Synth::noteOn(int note, float velocity)
     if (!chosen)
         return;
 
-    chosen->state.noteId = nextNoteId++;
-    chosen->start(note, velocity, &basicWavetable);
-
+    // copy params before start(): it registers mod targets using their base values
     chosen->oscAParams = oscAParams;
     chosen->oscBParams = oscBParams;
     chosen->oscCParams = oscCParams;
     chosen->subParams  = subParams;
     chosen->noiseParams = noiseParams;
 
-    chosen->oscAParams.midiNote = note;
-    chosen->oscBParams.midiNote = note;
-    chosen->oscCParams.midiNote = note;
-    chosen->subParams.midiNote  = note;
+    chosen->state.noteId = nextNoteId++;
+    chosen->start(note, velocity, &basicWavetable);
 }
 
 void Synth::noteOff(int note)

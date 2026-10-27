@@ -30,6 +30,16 @@ struct Voice {
         // Default enabled sources
         routing.sources[0].enabled = true; // OSC A
         routing.filter[0].enabled  = true; // Filter 0
+
+        // once, not per note, so routing set by a patch persists
+        VoiceInit::setSerumInitDefaults(
+            routing,
+            oscAParams,
+            oscBParams,
+            oscCParams,
+            subParams,
+            noiseParams
+        );
     }
 
 
@@ -154,14 +164,6 @@ struct Voice {
 
         VoiceModulation::registerSources(*this);
         VoiceModulation::registerTargets(*this);
-        VoiceInit::setSerumInitDefaults(
-            routing,
-            oscAParams,
-            oscBParams,
-            oscCParams,
-            subParams,
-            noiseParams
-        );
     }
 
     void stop()

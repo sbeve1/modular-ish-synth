@@ -152,7 +152,9 @@ public:
             out *= slot.curveAcc;
 
             out = std::clamp(out, slot.minVal, slot.maxVal);
-            *slot.modPtr = out;
+
+            // modPtr holds an offset: consumers compute base + mod
+            *slot.modPtr = out - slot.base;
         }
     }
 };
