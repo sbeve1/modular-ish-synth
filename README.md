@@ -55,7 +55,8 @@ The clip is rendered offline by the engine itself
 - 3D wavetable view (drag to rotate) that follows the playing position
 - Knobs show modulation rings and the live modulated value. Drag a mod source
   onto any knob to route it; Alt+drag sets the depth
-- Envelope editor with draggable points and curves; LFO view with a live phase
+- Envelope editor with draggable points and curves on a real time axis, with a
+  lock that follows the release end or a free zoom; LFO view with a live phase
   marker, editable as a drawn shape; draggable filter and EQ response curves;
   compressor transfer curve with a gain-reduction meter
 - Undo/redo for everything (Ctrl+Z, Ctrl+Y)
@@ -100,7 +101,7 @@ build/vs/app/Release/modular_synth_cli.exe bench
 build/vs/app/Release/modular_synth_cli.exe showcase demo.wav
 ```
 
-`lfotest` checks that every LFO shape at 2, 10 and 40 Hz fully modulates its target. `bench` reports CPU cost for several scenarios plus a breakdown of where the
+`lfotest` checks that every LFO shape at 2, 10 and 40 Hz fully modulates its target. `filtertest` measures how resonance changes the passband and peak, and how drive changes level and distortion (THD). `bench` reports CPU cost for several scenarios plus a breakdown of where the
 heaviest one spends its time. `showcase` renders the README demo clip.
 
 `selftest` checks the following:
@@ -111,6 +112,7 @@ heaviest one spends its time. `showcase` renders the README demo clip.
 - preset files round-trip
 - the arpeggiator, both filter routings and drawn LFO shapes behave as expected
 - the LFO graph matches what the engine plays, for every shape
+- filter resonance lowers the passband, and filter drive raises the level and adds distortion
 - the lock-free event queue works under a two-thread stress test
 
 GitHub Actions builds everything on Windows and runs `selftest` on every push

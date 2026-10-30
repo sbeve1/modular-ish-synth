@@ -405,11 +405,12 @@ static void envPanel(UiState& ui, ImVec2 size)
         int e = ui.envTab;
         views::EnvelopeEditor(ui, e, ImVec2(cw, size.y - 36 - 78));
         ImGui::Dummy(ImVec2(0, 2));
-        knobRow(ui, { envParam(e, P::ENV1_ATK), envParam(e, P::ENV1_HOLD), envParam(e, P::ENV1_DEC),
-                      envParam(e, P::ENV1_SUS), envParam(e, P::ENV1_REL) }, 17.0f);
-        if (e == 0) {
-            ImGui::SameLine(0, 10);
-            w::Knob(ui, P::VEL_SENS, "Velocity", 17.0f);
+        // just the envelope's own stages (velocity sensitivity lives on the Global page)
+        const P stages[] = { P::ENV1_ATK, P::ENV1_HOLD, P::ENV1_DEC, P::ENV1_SUS, P::ENV1_REL };
+        const char* labels[] = { "ATK", "HOLD", "DEC", "SUS", "REL" };
+        for (int k = 0; k < 5; ++k) {
+            if (k) ImGui::SameLine(0, 4);
+            w::Knob(ui, envParam(e, stages[k]), labels[k], 17.0f);
         }
     }
     w::PanelEnd();

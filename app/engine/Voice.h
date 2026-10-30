@@ -93,6 +93,10 @@ private:
 
     dsp::Svf svf[2][2];          // [filter][stage]
     int lastFilterType[2] = { -1, -1 };
+    // last block's drive gain and passband gain per filter, ramped from so
+    // moving resonance/drive doesn't step the level every block (zipper noise);
+    // negative = no previous block yet (start at the target)
+    float fltDriveGain[2] = { -1.0f, -1.0f }, fltComp[2] = { -1.0f, -1.0f };
 
     float eff(const VoiceContext& ctx, P p) const;
     void  updateModulation(const VoiceContext& ctx);

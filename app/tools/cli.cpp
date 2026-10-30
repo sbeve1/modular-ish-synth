@@ -399,6 +399,63 @@ static int cmdLfoTest()
     return 0;
 }
 
+// ---- filter check: resonance vs passband, drive vs distortion ----
+// Level of one frequency in the left channel over [t0, t1) seconds (Goertzel), in dB.
+static float toneDb(const std::vector<float>& inter, float sr, float freq, double t0, double t1)
+{
+    size_t a = (size_t)(t0 * sr), b = std::min((size_t)(t1 * sr), inter.size() / 2);
+    double w = 2.0 * 3.14159265358979 * freq / sr, c = 2.0 * std::cos(w), s1 = 0.0, s2 = 0.0;
+    for (size_t i = a; i < b; ++i) { double s0 = inter[2 * i] + c * s1 - s2; s2 = s1; s1 = s0; }
+    double power = s1 * s1 + s2 * s2 - c * s1 * s2;
+    double amp = 2.0 * std::sqrt(std::max(power, 0.0)) / (double)(b - a);
+    return (float)(20.0 * std::log10(std::max(amp, 1e-9)));
+}
+
+static std::vector<float> renderHeldNote(const Preset& p, int note, double len)
+{
+    Engine e;
+    e.load(p);
+    return e.render({ { 0.0, note, 100 }, { len, note, 0 } }, 0.05);
+}
+
+static int cmdFilterTest()
+{
+    const float sr = 48000.0f;
+    std::printf("Resonance: saw at 65.4 Hz into the filter, cutoff 1.5 kHz\n");
+    std::printf("%-6s %5s %16s %16s\n", "type", "res", "passband (dB)", "at cutoff (dB)");
+    for (int type : { 0, 1 }) {
+        for (float res : { 0.0f, 0.5f, 1.0f }) {
+            Preset p;
+            p.set(P::OSCA_POS, 3.0f / 7.0f);   // Basic Shapes frame 3: plain saw
+            p.set(P::OSCA_LEVEL, 0.25f);
+            p.set(P::ENV1_SUS, 1.0f);
+            p.set(P::FLT_ON, 1); p.set(P::FLT_TYPE, (float)type);
+            p.set(P::FLT_CUTOFF, 1500.0f); p.set(P::FLT_RES, res); p.set(P::FLT_DRIVE, 0.0f);
+            auto a = renderHeldNote(p, 36, 1.0);
+            std::printf("%-6s %5.2f %16.1f %16.1f\n", type ? "LP 24" : "LP 12", res,
+                        toneDb(a, sr, 65.406f, 0.5, 1.0), toneDb(a, sr, 65.406f * 23, 0.5, 1.0));
+        }
+    }
+
+    std::printf("\nDrive: sine at 220 Hz through LP 12 (cutoff 20 kHz, res 0)\n");
+    std::printf("%5s %12s %10s\n", "drive", "level (dB)", "THD (%)");
+    for (float drive : { 0.0f, 0.25f, 0.5f, 1.0f }) {
+        Preset p;
+        p.set(P::OSCA_POS, 0.0f);   // sine
+        p.set(P::OSCA_LEVEL, 0.25f);
+        p.set(P::ENV1_SUS, 1.0f);
+        p.set(P::FLT_ON, 1); p.set(P::FLT_TYPE, 0.0f);
+        p.set(P::FLT_CUTOFF, 20000.0f); p.set(P::FLT_RES, 0.0f); p.set(P::FLT_DRIVE, drive);
+        auto a = renderHeldNote(p, 57, 1.0);
+        float f0 = toneDb(a, sr, 220.0f, 0.5, 1.0);
+        double harm = 0.0;
+        for (int h = 2; h <= 10; ++h) harm += std::pow(10.0, toneDb(a, sr, 220.0f * h, 0.5, 1.0) / 10.0);
+        double thd = 100.0 * std::sqrt(harm) / std::pow(10.0, f0 / 20.0);
+        std::printf("%5.2f %12.1f %10.2f\n", drive, f0, thd);
+    }
+    return 0;
+}
+
 // ---- self-test ----
 static int gFails = 0;
 #define CHECK(cond, ...) do { if (cond) { std::printf("  pass  "); } else { std::printf("  FAIL  "); ++gFails; } std::printf(__VA_ARGS__); std::printf("\n"); } while (0)
@@ -528,6 +585,36 @@ static int cmdSelftest()
         CHECK(rs < ra * 0.1 && rp > ra * 0.5, "LP 400 Hz -> HP 4 kHz in series cuts (%.4f -> %.4f), in parallel passes (%.4f)", ra, rs, rp);
     }
 
+    std::printf("Filter resonance and drive\n");
+    {
+        auto passband = [&](float res) {
+            Preset p;
+            p.set(P::OSCA_POS, 3.0f / 7.0f); p.set(P::OSCA_LEVEL, 0.25f); p.set(P::ENV1_SUS, 1.0f);
+            p.set(P::FLT_ON, 1); p.set(P::FLT_TYPE, 0.0f); p.set(P::FLT_CUTOFF, 1500.0f); p.set(P::FLT_RES, res);
+            return toneDb(renderHeldNote(p, 36, 1.0), 48000.0f, 65.406f, 0.5, 1.0);
+        };
+        float p0 = passband(0.0f), p1 = passband(1.0f);
+        CHECK(p1 < p0 - 6.0f, "LP 12 passband sinks as resonance rises (%.1f dB at res 0 -> %.1f dB at res 1)", p0, p1);
+
+        auto drive = [&](float d, float& thd) {
+            Preset p;
+            p.set(P::OSCA_POS, 0.0f); p.set(P::OSCA_LEVEL, 0.25f); p.set(P::ENV1_SUS, 1.0f);
+            p.set(P::FLT_ON, 1); p.set(P::FLT_TYPE, 0.0f); p.set(P::FLT_CUTOFF, 20000.0f); p.set(P::FLT_DRIVE, d);
+            auto a = renderHeldNote(p, 57, 1.0);
+            float f0 = toneDb(a, 48000.0f, 220.0f, 0.5, 1.0);
+            double harm = 0.0;
+            for (int h = 2; h <= 10; ++h) harm += std::pow(10.0, toneDb(a, 48000.0f, 220.0f * h, 0.5, 1.0) / 10.0);
+            thd = (float)(100.0 * std::sqrt(harm) / std::pow(10.0, f0 / 20.0));
+            return f0;
+        };
+        float t0, t5, t1;
+        float l0 = drive(0.0f, t0), l1 = drive(1.0f, t1);
+        drive(0.5f, t5);
+        CHECK(t0 < 1.0f && t5 > t0 * 2.0f && t1 > t5 * 3.0f && l1 > l0 + 10.0f,
+              "drive raises the level into the ceiling and saturates (THD %.1f%% -> %.1f%% -> %.1f%%, level %+.1f dB)",
+              t0, t5, t1, l1 - l0);
+    }
+
     std::printf("Custom LFO\n");
     {
         auto rms = [](const std::vector<float>& a) { double s = 0; for (float v : a) s += v * v; return std::sqrt(s / a.size()); };
@@ -642,6 +729,7 @@ int main(int argc, char** argv)
     if (cmd == "bench") return cmdBench();
     if (cmd == "fingerprint") return cmdFingerprint();
     if (cmd == "lfotest") return cmdLfoTest();
+    if (cmd == "filtertest") return cmdFilterTest();
     if (cmd == "showcase" && argc > 2) return cmdShowcase(argv[2]);
     if (cmd == "selftest") return cmdSelftest();
 

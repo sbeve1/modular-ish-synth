@@ -286,9 +286,14 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImGuiIO& io = ImGui::GetIO();
     ImGui::PushID(env + 32000);
-    ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x, a.y + size.y);
-    ImGui::InvisibleButton("##env", size);
-    bool hovered = ImGui::IsItemHovered(), active = ImGui::IsItemActive();
+
+    // Graph on the left, a narrow control column (lock + zoom) on the right.
+    constexpr float colW = 22.0f;
+    const ImVec2 a = ImGui::GetCursorScreenPos(), b(a.x + size.x - colW - 4.0f, a.y + size.y);
+    const ImVec2 ca(b.x + 4.0f, a.y), cb(a.x + size.x, a.y + size.y);
+    ImGui::InvisibleButton("##env", ImVec2(b.x - a.x, size.y));
+    const bool hovered = ImGui::IsItemHovered(), active = ImGui::IsItemActive();
+    const bool activated = ImGui::IsItemActivated();
     frameBg(dl, a, b);
 
     auto ep = [&](P p) { return envParam(env, p); };
@@ -297,37 +302,61 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
     float ac = val(P::ENV1_ACRV), dc = val(P::ENV1_DCRV), rc = val(P::ENV1_RCRV);
 
     const float pad = 10.0f;
-    const float left = a.x + pad, right = b.x - pad, top = a.y + pad + 4, bottom = b.y - pad - 10;
-    float sustainSeg = std::max(0.25f * (A + Hd + D + R), 0.15f);
-    float total = std::max(A + Hd + D + sustainSeg + R, 0.3f);
+    const float left = a.x + pad, right = b.x - pad, top = a.y + pad + 4, bottom = b.y - pad - 14;
 
+    // Time axis (like Serum): fixed, starting at 0 s; sustain is a level, not a
+    // stretch of time, so the release starts where the decay ends. The view
+    // length is either locked to the release end (and follows it live, even
+    // mid-drag) or set by the user (zoom slider / mouse wheel).
+    constexpr float kViewMin = 0.02f, kViewMax = 16.0f;
+    float& viewRef = ui.envViewSec[env];
+    bool& locked = ui.envViewLocked[env];
     ImGuiStorage* st = ImGui::GetStateStorage();
-    ImGuiID idH = ImGui::GetID("handle"), idPps = ImGui::GetID("pps");
-    float pps = (right - left) / total;
-    if (active) pps = st->GetFloat(idPps, pps);   // frozen scale while dragging
-
-    float xA = left + A * pps, xH = xA + Hd * pps, xD = xH + D * pps, xS = xD + sustainSeg * pps, xR = xS + R * pps;
+    ImGuiID idH = ImGui::GetID("handle"), idRaw = ImGui::GetID("rawtime");
+    if (locked) viewRef = std::clamp(A + Hd + D + R, kViewMin, 40.0f);
+    if (hovered && !active && io.MouseWheel != 0.0f) {   // wheel zooms (and unlocks)
+        locked = false;
+        viewRef = std::clamp(viewRef * std::pow(0.85f, io.MouseWheel), kViewMin, kViewMax);
+    }
+    const float viewSec = viewRef;
+    const float pps = (right - left) / viewSec;
+    const float xA = left + A * pps, xH = xA + Hd * pps, xD = xH + D * pps, xR = xD + R * pps;
     auto yOf = [&](float lv) { return bottom - lv * (bottom - top); };
 
-    // grid
+    dl->PushClipRect(a, b, true);   // dots past the view stay inside the frame
+
+    // grid: level quarters, and time lines at a step that gives ~4-10 lines
     for (int g = 1; g < 4; ++g) dl->AddLine(ImVec2(left, top + (bottom - top) * g / 4), ImVec2(right, top + (bottom - top) * g / 4), theme::rgba(26, 26, 27));
     dl->AddLine(ImVec2(left, bottom), ImVec2(right, bottom), theme::rgba(40, 40, 41));
+    float step = 0.001f;
+    for (float s : { 0.001f, 0.002f, 0.005f, 0.01f, 0.02f, 0.05f, 0.1f, 0.2f, 0.5f, 1.0f, 2.0f, 5.0f })
+        if (viewSec / s <= 10.0f) { step = s; break; }
+    ImGui::PushFont(theme::fontSmall);
+    for (int i = 1; i * step <= viewSec * 1.001f; ++i) {
+        float t = i * step, x = left + t * pps;
+        dl->AddLine(ImVec2(x, top), ImVec2(x, bottom), theme::rgba(24, 24, 26));
+        char lb[16];
+        if (step >= 1.0f) std::snprintf(lb, sizeof lb, "%gs", t); else std::snprintf(lb, sizeof lb, "%gms", t * 1000.0f);
+        dl->AddText(ImVec2(x - ImGui::CalcTextSize(lb).x - 2.0f, a.y + 2.0f), theme::textFaint, lb);   // top edge (readout is at the bottom)
+    }
+    ImGui::PopFont();
 
     // curve points (reused buffer: no allocation per frame)
     static std::vector<ImVec2> pts;
     pts.clear();
     auto seg = [&](float x0, float x1, float l0, float l1, float curve) {
-        int n = std::max(2, (int)((x1 - x0) / 3.0f));
-        for (int i = 0; i <= n; ++i) {
+        int n = std::clamp((int)((x1 - x0) / 1.5f), 8, 600);
+        // skip the start point when the previous segment already ends there:
+        // a repeated point makes a zero-length piece, which draws stray spikes
+        for (int i = pts.empty() ? 0 : 1; i <= n; ++i) {
             float t = (float)i / n;
             pts.push_back(ImVec2(x0 + (x1 - x0) * t, yOf(l0 + (l1 - l0) * envShape(t, curve))));
         }
     };
     seg(left, xA, 0.0f, 1.0f, ac);
-    pts.push_back(ImVec2(xH, yOf(1.0f)));
+    if (xH > xA) pts.push_back(ImVec2(xH, yOf(1.0f)));
     seg(xH, xD, 1.0f, S, dc);
-    pts.push_back(ImVec2(xS, yOf(S)));
-    seg(xS, xR, S, 0.0f, rc);
+    seg(xD, xR, S, 0.0f, rc);
 
     { NoAAFill noaa(dl);
     for (size_t i = 1; i < pts.size(); ++i)
@@ -340,38 +369,73 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
         { ImVec2(xA, yOf(1.0f)), 0 }, { ImVec2(xH, yOf(1.0f)), 1 }, { ImVec2(xD, yOf(S)), 2 }, { ImVec2(xR, yOf(0.0f)), 3 },
         { ImVec2((left + xA) * 0.5f, yOf(envShape(0.5f, ac))), 4 },
         { ImVec2((xH + xD) * 0.5f, yOf(1.0f + (S - 1.0f) * envShape(0.5f, dc))), 5 },
-        { ImVec2((xS + xR) * 0.5f, yOf(S * (1.0f - envShape(0.5f, rc)))), 6 },
+        { ImVec2((xD + xR) * 0.5f, yOf(S * (1.0f - envShape(0.5f, rc)))), 6 },
     };
 
-    if (ImGui::IsItemActivated()) {
-        int best = -1;
-        float bestD = 14.0f * 14.0f;
+    // Grab: nearest handle within 14 px. Handles that overlap (a 4 ms attack
+    // and a 0 s hold sit on one spot) resolve to the later stage, and time
+    // dots win over curve handles. The grab offset keeps the handle's exact
+    // position relative to the cursor (no jump when grabbed off-centre).
+    ImGuiID idOy = ImGui::GetID("grabdy");
+    if (activated) {
+        int best = -1, bestRank = -1;
+        float bestBucket = 1e9f;
+        ImVec2 bestP;
         for (auto& h : handles) {
-            float dx = io.MousePos.x - h.p.x, dy = io.MousePos.y - h.p.y, d = dx * dx + dy * dy;
-            if (d < bestD) { bestD = d; best = h.kind; }
+            float dx = io.MousePos.x - h.p.x, dy = io.MousePos.y - h.p.y, d = std::sqrt(dx * dx + dy * dy);
+            if (d >= 14.0f) continue;
+            float bucket = std::floor(d / 4.0f);          // within ~4 px counts as overlapping
+            int rank = (h.kind < 4 ? 10 : 0) + h.kind;
+            if (bucket < bestBucket || (bucket == bestBucket && rank > bestRank)) { bestBucket = bucket; bestRank = rank; best = h.kind; bestP = h.p; }
         }
         st->SetInt(idH, best);
-        st->SetFloat(idPps, pps);
+        st->SetFloat(idOy, best >= 0 ? io.MousePos.y - bestP.y : 0.0f);
+        const P timeOf[4] = { P::ENV1_ATK, P::ENV1_HOLD, P::ENV1_DEC, P::ENV1_REL };
+        if (best >= 0 && best < 4) st->SetFloat(idRaw, val(timeOf[best]));   // running (unclamped) time
     }
     int hot = active ? st->GetInt(idH, -1) : -1;
     if (hot >= 0 && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
-        float mx = io.MousePos.x;
-        auto setT = [&](P p, float sec) { ui.s.params.setValue(ep(p), std::clamp(sec, 0.0f, paramInfo(ep(p)).max)); };
+        // Time: moved by the mouse's horizontal movement at the current zoom,
+        // so the dot stays under the cursor at a fixed zoom and the view can
+        // follow the release live when locked. The running value is kept
+        // unclamped: after dragging past a limit, moving back does nothing
+        // until the mouse returns to where the limit was hit.
+        // Levels (sustain, curves) come from the mouse height directly.
+        const float my = io.MousePos.y - st->GetFloat(idOy);
+        auto setT = [&](P p) {
+            float raw = st->GetFloat(idRaw) + io.MouseDelta.x / pps;
+            st->SetFloat(idRaw, raw);
+            ui.s.params.setValue(ep(p), std::clamp(raw, 0.0f, paramInfo(ep(p)).max));
+        };
+        // Curve handles sit at the segment's midpoint: pick the curve whose
+        // midpoint passes through the mouse, so the handle stays under the
+        // cursor however tall the segment is.
+        auto setCurve = [&](P p, float l0, float l1) {
+            if (std::fabs(l1 - l0) < 0.02f) return;   // flat segment: no visible curve to bend
+            float lv = (bottom - my) / (bottom - top);
+            float s = std::clamp((lv - l0) / (l1 - l0), 0.003f, 0.997f);
+            float exponent = std::log(s) / std::log(0.5f);           // envShape(0.5) == s
+            ui.s.params.setValue(ep(p), std::clamp(std::log2(exponent) / 4.0f, -1.0f, 1.0f));
+        };
         switch (hot) {
-            case 0: setT(P::ENV1_ATK, (mx - left) / pps); break;
-            case 1: setT(P::ENV1_HOLD, (mx - xA) / pps); break;
-            case 2: setT(P::ENV1_DEC, (mx - xH) / pps);
-                    ui.s.params.setValue(ep(P::ENV1_SUS), std::clamp((bottom - io.MousePos.y) / (bottom - top), 0.0f, 1.0f)); break;
-            case 3: setT(P::ENV1_REL, (mx - xS) / pps); break;
-            case 4: ui.s.params.setValue(ep(P::ENV1_ACRV), std::clamp(ac + io.MouseDelta.y * 0.012f, -1.0f, 1.0f)); break;
-            case 5: ui.s.params.setValue(ep(P::ENV1_DCRV), std::clamp(dc - io.MouseDelta.y * 0.012f * (S < 1 ? 1 : -1), -1.0f, 1.0f)); break;
-            case 6: ui.s.params.setValue(ep(P::ENV1_RCRV), std::clamp(rc - io.MouseDelta.y * 0.012f, -1.0f, 1.0f)); break;
+            case 0: setT(P::ENV1_ATK); break;
+            case 1: setT(P::ENV1_HOLD); break;
+            case 2: setT(P::ENV1_DEC);
+                    ui.s.params.setValue(ep(P::ENV1_SUS), std::clamp((bottom - my) / (bottom - top), 0.0f, 1.0f)); break;
+            case 3: setT(P::ENV1_REL); break;
+            case 4: setCurve(P::ENV1_ACRV, 0.0f, 1.0f); break;
+            case 5: setCurve(P::ENV1_DCRV, 1.0f, S); break;
+            case 6: setCurve(P::ENV1_RCRV, S, 0.0f); break;
         }
         ui.presetDirty = true;
     }
+    // double-click a curve handle to reset just that curve
     if (hovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-        for (P p : { P::ENV1_ACRV, P::ENV1_DCRV, P::ENV1_RCRV })
-            ui.s.params.setValue(ep(p), paramInfo(ep(p)).def);
+        const P curves[3] = { P::ENV1_ACRV, P::ENV1_DCRV, P::ENV1_RCRV };
+        for (int c = 0; c < 3; ++c) {
+            float dx = io.MousePos.x - handles[4 + c].p.x, dy = io.MousePos.y - handles[4 + c].p.y;
+            if (dx * dx + dy * dy < 10.0f * 10.0f) ui.s.params.setValue(ep(curves[c]), paramInfo(ep(curves[c])).def);
+        }
     }
 
     for (auto& h : handles) {
@@ -396,8 +460,8 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
             case 1: x = left + std::min(t, A) * pps; break;
             case 2: x = xA + std::min(t, Hd) * pps; break;
             case 3: x = xH + std::min(t, D) * pps; break;
-            case 4: x = xD + frac01((float)ImGui::GetTime() * 0.5f) * (xS - xD); break;
-            case 5: x = xS + std::min(t, R) * pps; break;
+            case 4: x = xD; break;
+            case 5: x = xD + std::min(t, R) * pps; break;
         }
         if (x >= 0.0f) {
             ImVec2 p(x, yOf(level));
@@ -406,15 +470,55 @@ void EnvelopeEditor(UiState& ui, int env, ImVec2 size)
             dl->AddCircleFilled(p, 3.5f, IM_COL32_WHITE);
         }
     }
+    dl->PopClipRect();
+
+    // ---- control column: lock (follow the release end) and zoom ----
+    ImGui::SetCursorScreenPos(ca);
+    ImGui::InvisibleButton("##lock", ImVec2(colW, colW));
+    if (ImGui::IsItemClicked()) locked = !locked;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip(locked ? "Locked: the view ends where the release ends" : "Unlocked: zoom with the slider or mouse wheel");
+    {
+        // padlock: body plus shackle (open when unlocked)
+        ImU32 col = locked ? theme::accent : theme::textDim;
+        ImVec2 c(ca.x + colW * 0.5f, ca.y + colW * 0.5f + 2.0f);
+        dl->AddRectFilled(ImVec2(c.x - 5, c.y - 1), ImVec2(c.x + 5, c.y + 6), col, 1.5f);
+        float sx = locked ? 0.0f : 3.0f;
+        dl->PathArcTo(ImVec2(c.x + sx, c.y - 2), 3.5f, IM_PI, 2.0f * IM_PI, 10);
+        dl->PathStroke(col, 0, 1.6f);
+        dl->AddLine(ImVec2(c.x - 3.5f + sx, c.y - 2), ImVec2(c.x - 3.5f + sx, c.y - 1), col, 1.6f);
+        dl->AddLine(ImVec2(c.x + 3.5f + sx, c.y - 2), ImVec2(c.x + 3.5f + sx, c.y - 1), col, 1.6f);
+    }
+
+    // zoom slider: drag up to zoom in (shorter view), down to zoom out
+    const ImVec2 za(ca.x, ca.y + colW + 6.0f), zb(cb.x, cb.y - 18.0f);
+    ImGui::SetCursorScreenPos(za);
+    ImGui::InvisibleButton("##zoom", ImVec2(zb.x - za.x, std::max(zb.y - za.y, 10.0f)));
+    const bool zHover = ImGui::IsItemHovered(), zActive = ImGui::IsItemActive();
+    auto viewToY = [&](float v) { float t = std::log(v / kViewMin) / std::log(kViewMax / kViewMin); return za.y + std::clamp(t, 0.0f, 1.0f) * (zb.y - za.y); };
+    if (zActive) {
+        locked = false;
+        float t = std::clamp((io.MousePos.y - za.y) / (zb.y - za.y), 0.0f, 1.0f);
+        viewRef = kViewMin * std::pow(kViewMax / kViewMin, t);
+    }
+    if (zHover) ImGui::SetTooltip("Zoom: %.2f s shown", viewRef);
+    const float tx = (za.x + zb.x) * 0.5f;
+    dl->AddLine(ImVec2(tx, za.y), ImVec2(tx, zb.y), theme::track, 3.0f);
+    const float ty = viewToY(std::min(viewRef, kViewMax));
+    dl->AddRectFilled(ImVec2(za.x + 3, ty - 3), ImVec2(zb.x - 3, ty + 3), (zHover || zActive) ? theme::text : theme::textDim, 2.0f);
 
     // readout
     ImGui::PushFont(theme::fontSmall);
     char buf[96];
-    auto fmt = [](float s) { static char b[4][16]; static int k = 0; k = (k + 1) & 3;
-        if (s < 1.0f) std::snprintf(b[k], 16, "%.0fms", s * 1000.0f); else std::snprintf(b[k], 16, "%.2fs", s); return b[k]; };
+    auto fmt = [](float s) { static char bb[4][16]; static int k = 0; k = (k + 1) & 3;
+        if (s < 1.0f) std::snprintf(bb[k], 16, "%.0fms", s * 1000.0f); else std::snprintf(bb[k], 16, "%.2fs", s); return bb[k]; };
     std::snprintf(buf, sizeof buf, "A %s   H %s   D %s   S %.0f%%   R %s", fmt(A), fmt(Hd), fmt(D), S * 100.0f, fmt(R));
-    dl->AddText(ImVec2(left, b.y - 16), theme::textDim, buf);
+    dl->AddText(ImVec2(left, b.y - 15), theme::textDim, buf);
+    std::snprintf(buf, sizeof buf, "%s", fmt(viewSec));
+    dl->AddText(ImVec2(cb.x - ImGui::CalcTextSize(buf).x, cb.y - 15), theme::textFaint, buf);
     ImGui::PopFont();
+
+    ImGui::SetCursorScreenPos(ImVec2(a.x, a.y + size.y));
+    ImGui::Dummy(ImVec2(size.x, 0.0f));
     ImGui::PopID();
 }
 
@@ -577,20 +681,22 @@ void LfoGraph(UiState& ui, int lfo, ImVec2 size)
 // ---------------------------------------------------------------------
 // Filter response
 // ---------------------------------------------------------------------
-static float filterMagDb(int type, float f, float cutoff, float res)
+static float filterMagDb(int type, float f, float cutoff, float res, float drive)
 {
     bool steep = type == 1 || type == 3 || type == 5;
     int mode = type < 2 ? 0 : type < 4 ? 1 : type < 6 ? 2 : type == 6 ? 3 : 4;
     float m;
     if (steep) {
-        float k2 = 0.7654f + (0.05f - 0.7654f) * res;
+        float k2 = dsp::filterResK(true, res);
         m = dsp::svfMagnitude(mode, f, cutoff, 1.8478f) * dsp::svfMagnitude(mode, f, cutoff, k2);
         if (mode == 1) m *= 1.8478f * k2;
     } else {
-        float k = 2.0f + (0.05f - 2.0f) * res;
+        float k = dsp::filterResK(false, res);
         m = dsp::svfMagnitude(mode, f, cutoff, k);
         if (mode == 1) m *= k;
     }
+    if (mode == 0 || mode == 2) m *= dsp::filterResonanceComp(steep, res);   // same as the engine
+    m = dsp::filterDisplayCeiling(m * dsp::filterDriveGain(drive));         // drive lifts it, the ceiling caps it
     return 20.0f * std::log10(std::max(m, 1e-6f));
 }
 
@@ -625,11 +731,12 @@ void FilterResponse(UiState& ui, int filter, ImVec2 size)
     auto draw = [&](int f, float cutoff, float res, ImU32 col, float thick, bool fill) {
         int type = (int)ui.s.params.value(fltParam(f, P::FLT_TYPE));
         bool on = ui.s.params.value(fltParam(f, P::FLT_ON)) > 0.5f;
+        float drive = ui.s.params.value(fltParam(f, P::FLT_DRIVE));
         const int N = 140;
         ImVec2 pts[N];
         for (int i = 0; i < N; ++i) {
             float fr = fMin * std::pow(fMax / fMin, (float)i / (N - 1));
-            pts[i] = ImVec2(xOf(fr), yOf(on ? filterMagDb(type, fr, cutoff, res) : 0.0f));
+            pts[i] = ImVec2(xOf(fr), yOf(on ? filterMagDb(type, fr, cutoff, res, drive) : 0.0f));
         }
         if (fill) {
             NoAAFill noaa(dl);
@@ -656,7 +763,7 @@ void FilterResponse(UiState& ui, int filter, ImVec2 size)
         draw(filter, lc, lr, theme::mod, 1.6f, false);
 
     int type = (int)ui.s.params.value(fp(P::FLT_TYPE));
-    ImVec2 handle(xOf(cutoff), yOf(on ? filterMagDb(type, cutoff, cutoff, res) : 0.0f));
+    ImVec2 handle(xOf(cutoff), yOf(on ? filterMagDb(type, cutoff, cutoff, res, ui.s.params.value(fp(P::FLT_DRIVE))) : 0.0f));
     dl->AddCircleFilled(handle, 5.0f, theme::rgba(11, 11, 12));
     dl->AddCircle(handle, 5.0f, theme::accent, 16, 2.0f);
 
