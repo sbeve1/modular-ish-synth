@@ -75,7 +75,7 @@ extern const char* const kArpModes[];
     X(P##_ON,     K "_on",     L " On",   0, 1, ON,   Map::Bool,   Unit::None, Scope::Voice, nullptr, 1) \
     X(P##_TYPE,   K "_type",   "Type",    0, 7, TYPE, Map::Choice, Unit::None, Scope::Voice, kFilterTypes, 1) \
     X(P##_CUTOFF, K "_cutoff", "Cutoff", 20, 20000, CUT, Map::Log, Unit::Hz,   Scope::Voice, nullptr, 1) \
-    X(P##_RES,    K "_res",    "Res",     0, 1, 0.1f, Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
+    X(P##_RES,    K "_res",    "Res",     0, 1, 0.035f, Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
     X(P##_DRIVE,  K "_drive",  "Drive",   0, 1, 0,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
     X(P##_KEYTRK, K "_keytrk", "Key Trk", 0, 1, 0,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1) \
     X(P##_MIX,    K "_mix",    "Mix",     0, 1, 1,    Map::Lin,    Unit::Pct,  Scope::Voice, nullptr, 1)

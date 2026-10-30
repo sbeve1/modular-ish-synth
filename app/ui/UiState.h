@@ -25,6 +25,10 @@ struct UiState {
     enum Page { PageSynth, PageMatrix, PageFx, PageGlobal };
     int page = PageSynth;
     int envTab = 0, lfoTab = 0, filterTab = 0;
+    // envelope graph view per envelope: seconds shown from 0, and whether the
+    // view is locked to the release end (unlocked: the zoom stays where you set it)
+    float envViewSec[3] = { 2.0f, 2.0f, 2.0f };
+    bool envViewLocked[3] = { true, true, true };
     int fxSelected = 0;           // FxId shown in the FX editor
 
     UndoHistory undo;

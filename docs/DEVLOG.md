@@ -228,6 +228,44 @@ Bugs found by the audit and fixed:
   with sound in the browser, but was dropped to keep this a standalone
   desktop instrument.
 
+### Round 8: filter and envelope feedback from playing
+- **Filter resonance taper.** Resonance mapped linearly to the SVF damping
+  `k`, but the peak height is about `1/k`, so the knob did almost nothing
+  until its last quarter and then jumped from +5 to +26 dB. Now `k` follows an
+  exponential taper, so each quarter adds about the same number of dB. Every
+  factory preset's resonance value (and the default) was converted to the new
+  taper so the presets sound the same: all within 1% RMS.
+- **Resonance sinks the passband**, like Serum's and analog filters: the
+  low-pass/high-pass output is scaled by `(k/k0)^0.35`, about -11 dB (12 dB
+  slope) at full resonance. Engine and graph share one function.
+- **Filter drive rebuilt (Serum-style).** Measured first with a new
+  `filtertest` command (Goertzel tone levels and THD): the old drive jumped
+  +8 dB the moment it left 0 and then barely changed. Drive is now up to
+  +15 dB of gain into the filter, followed by a soft ceiling
+  (`C * tanh(y / C)`) that limits the resonance peak and saturates loud or
+  driven signals. The graph shows the drive lift and the capped peak.
+  Resonance and drive gains now ramp per sample within each block, which
+  removed zipper noise when they are swept or modulated.
+- A first attempt kept loudness level while driving, which silently changed
+  the presets built around the old drive (one got 4 dB quieter): caught by
+  comparing per-preset RMS fingerprints against the last commit.
+- **Envelope editor, Serum-style.** A real time axis from 0 s with markers;
+  sustain is a level, so the release starts where the decay ends; a lock
+  keeps the view ending at the release end (live, even mid-drag), and when
+  unlocked a zoom slider or the mouse wheel sets the view.
+- **Envelope dragging bugs:** the curve handles moved by a fixed rate per
+  pixel, so the decay curve (which only spans 1 -> sustain) lagged far behind
+  the mouse; they now solve for the curve passing through the cursor. A
+  frozen-view value left over from the previous drag made the view jump on
+  click and left no dot under the mouse. Overlapping dots (a 4 ms attack and
+  a 0 s hold share a pixel) resolve to the later stage. Double-click resets
+  only the curve under the mouse (it used to reset all three).
+- **Drag overshoot** for knobs, steppers and envelope times: the running
+  value is kept unclamped during a drag, so after pulling past a limit the
+  control waits until the mouse returns instead of moving immediately.
+- Envelope knobs are just ATK / HOLD / DEC / SUS / REL (velocity sensitivity
+  stays on the Global page).
+
 ### Progress
 - [x] Worktree + feature branch (original project untouched)
 - [x] Engine: params, wavetables, voices, mod matrix, FX

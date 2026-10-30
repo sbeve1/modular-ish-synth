@@ -62,6 +62,8 @@ void Voice::start(int n, float vel, float startPitch, uint64_t order, const Voic
         return;   // legato: keep envelopes and phases running
 
     timeOn = 0.0f;
+    if (!wasActive)
+        for (int f = 0; f < 2; ++f) fltDriveGain[f] = fltComp[f] = -1.0f;   // new note: no ramp from a stale value
     rng = dsp::Rng((uint32_t)(order * 2654435761u + 12345u));
     randomValue = rng.uni();
 
@@ -344,21 +346,28 @@ static inline float pickOut(float lp, float bp, float hp, float k)
     else return lp - hp;
 }
 
-template <int MODE, bool STEEP, bool DRIVE>
-static void filterLoop(dsp::Svf* st, float* L, float* R, int n, float g, float gNorm, float mix)
+// drive: gain into the filter (g0 -> g1 over the block); comp: passband gain
+// (c0 -> c1); the output then goes through a soft ceiling, which caps the
+// resonance peak and is where a driven signal saturates (like Serum's filters).
+template <int MODE, bool STEEP>
+static void filterLoop(dsp::Svf* st, float* L, float* R, int n,
+                       float g0, float g1, float c0, float c1, float mix)
 {
+    const float dg = (g1 - g0) / n, dc = (c1 - c0) / n;
+    constexpr float C = dsp::kFilterCeiling, invC = 1.0f / dsp::kFilterCeiling;
     for (int s = 0; s < n; ++s) {
+        const float g = g0 + dg * (s + 1), c = c0 + dc * (s + 1);
         float in[2] = { L[s], R[s] };
         for (int ch = 0; ch < 2; ++ch) {
-            float x = in[ch];
-            if constexpr (DRIVE) x = fastTanh(x * g) * gNorm * 1.5f;
             float lp, bp, hp;
-            st[0].tick(ch, x, lp, bp, hp);
+            st[0].tick(ch, in[ch] * g, lp, bp, hp);
             float y = pickOut<MODE>(lp, bp, hp, st[0].k);
             if constexpr (STEEP) {
                 st[1].tick(ch, y, lp, bp, hp);
                 y = pickOut<MODE>(lp, bp, hp, st[1].k);
             }
+            if constexpr (MODE == 0 || MODE == 2) y *= c;   // passband sinks as resonance rises
+            y = C * fastTanh(y * invC);
             (ch == 0 ? L[s] : R[s]) = in[ch] + (y - in[ch]) * mix;
         }
     }
@@ -382,27 +391,25 @@ void Voice::runFilter(const VoiceContext& ctx, int f, float* L, float* R, int n)
     int  mode  = type < 2 ? 0 : type < 4 ? 1 : type < 6 ? 2 : type == 6 ? 3 : 4;
     if (steep) {
         st[0].set(cutoff, 1.8478f, sr);
-        st[1].set(cutoff, dsp::lerp(0.7654f, 0.05f, res), sr);
+        st[1].set(cutoff, dsp::filterResK(true, res), sr);
     } else {
-        st[0].set(cutoff, dsp::lerp(2.0f, 0.05f, res), sr);
+        st[0].set(cutoff, dsp::filterResK(false, res), sr);
     }
+    // ramp from last block's values (first block of a note starts at the target)
+    const float comp = dsp::filterResonanceComp(steep, res);
+    const float gain = dsp::filterDriveGain(drive);
+    const float c0 = fltComp[f] < 0.0f ? comp : fltComp[f];
+    const float g0 = fltDriveGain[f] < 0.0f ? gain : fltDriveGain[f];
+    fltComp[f] = comp;
+    fltDriveGain[f] = gain;
 
-    float g = 1.0f + drive * 12.0f;
-    float gNorm = 1.0f / std::sqrt(g);
-
-#define NW_FLT(M, S, D) filterLoop<M, S, D>(st, L, R, n, g, gNorm, mix)
-    const bool drv = drive > 0.0f;
-    switch (mode * 4 + (steep ? 2 : 0) + (drv ? 1 : 0)) {
-        case 0:  NW_FLT(0, false, false); break;  case 1:  NW_FLT(0, false, true); break;
-        case 2:  NW_FLT(0, true, false);  break;  case 3:  NW_FLT(0, true, true);  break;
-        case 4:  NW_FLT(1, false, false); break;  case 5:  NW_FLT(1, false, true); break;
-        case 6:  NW_FLT(1, true, false);  break;  case 7:  NW_FLT(1, true, true);  break;
-        case 8:  NW_FLT(2, false, false); break;  case 9:  NW_FLT(2, false, true); break;
-        case 10: NW_FLT(2, true, false);  break;  case 11: NW_FLT(2, true, true);  break;
-        case 12: NW_FLT(3, false, false); break;  case 13: NW_FLT(3, false, true); break;
-        case 14: NW_FLT(3, true, false);  break;  case 15: NW_FLT(3, true, true);  break;
-        case 16: NW_FLT(4, false, false); break;  case 17: NW_FLT(4, false, true); break;
-        case 18: NW_FLT(4, true, false);  break;  default: NW_FLT(4, true, true);  break;
+#define NW_FLT(M, S) filterLoop<M, S>(st, L, R, n, g0, gain, c0, comp, mix)
+    switch (mode * 2 + (steep ? 1 : 0)) {
+        case 0: NW_FLT(0, false); break;  case 1: NW_FLT(0, true); break;
+        case 2: NW_FLT(1, false); break;  case 3: NW_FLT(1, true); break;
+        case 4: NW_FLT(2, false); break;  case 5: NW_FLT(2, true); break;
+        case 6: NW_FLT(3, false); break;  case 7: NW_FLT(3, true); break;
+        case 8: NW_FLT(4, false); break;  default: NW_FLT(4, true); break;
     }
 #undef NW_FLT
 }

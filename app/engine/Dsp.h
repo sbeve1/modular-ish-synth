@@ -147,6 +147,44 @@ struct Svf {
     void reset() { ic1[0] = ic1[1] = ic2[0] = ic2[1] = 0.0f; }
 };
 
+// Low/high-pass passband gain for a resonance setting: the passband sinks as
+// resonance rises (like analog and Serum's filters) instead of staying at unity
+// under a growing peak. About -2 dB at res 0.5; -11 dB (12 dB) / -8 dB (24 dB) at res 1.
+// Shared by the engine and the UI curve.
+// Damping of the resonant SVF stage for a resonance setting. Exponential taper:
+// the peak height is about 1/k, so each step of the knob adds roughly the same
+// number of dB (0 -> +26 dB evenly) instead of nearly all of it in the last quarter.
+inline float filterResK(bool steep, float res)
+{
+    const float k0 = steep ? 0.7654f : 2.0f;               // Butterworth damping at res 0
+    return k0 * std::pow(0.05f / k0, res);                 // 0.05 at res 1
+}
+
+inline float filterResonanceComp(bool steep, float res)
+{
+    const float k0 = steep ? 0.7654f : 2.0f;
+    return std::pow(filterResK(steep, res) / k0, 0.35f);
+}
+
+// Filter drive and output ceiling (Serum-style): drive is up to +15 dB of gain
+// into the filter, so at full resonance the passband goes from about -11 dB
+// (drive 0) to about +4 dB (full drive): it can sink further than it rises.
+// After the filter, a soft ceiling (C * tanh(y / C)) limits the resonance
+// peak and saturates loud or driven signals. Shared by engine and UI.
+constexpr float kFilterCeiling = 2.0f;        // output amplitude the soft ceiling approaches
+constexpr float kFilterDisplayRef = 0.25f;    // signal level the graph draws (a typical voice, about -12 dBFS)
+inline float filterDriveGain(float drive) { return std::pow(10.0f, drive * 15.0f / 20.0f); }
+
+// The graph's view of the ceiling: a linear magnitude m (drive gain included)
+// for a signal at the display reference level, after the soft ceiling.
+// Caps the drawn curve at 20*log10(kFilterCeiling / kFilterDisplayRef) = +18 dB,
+// so the resonance spike stays clearly above the passband even at full drive.
+inline float filterDisplayCeiling(float m)
+{
+    const float r = kFilterCeiling / kFilterDisplayRef;
+    return r * std::tanh(m / r);
+}
+
 // Magnitude response of one SVF stage at frequency f (for the UI curve)
 inline float svfMagnitude(int mode /*0 lp,1 bp,2 hp,3 notch,4 peak*/, float f, float cutoff, float k)
 {

@@ -47,7 +47,7 @@ std::vector<Preset> factoryPresets()
     { Preset& p = add("Sub Pressure", "Bass");
         p.set(P::OSCA_POS, frame(3)); p.set(P::OSCA_OCT, -1); p.set(P::OSCA_LEVEL, 0.6f);
         p.set(P::SUB_ON, 1); p.set(P::SUB_OCT, -2); p.set(P::SUB_LEVEL, 0.7f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 380); p.set(P::FLT_RES, 0.25f); p.set(P::FLT_DRIVE, 0.2f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 380); p.set(P::FLT_RES, 0.10f); p.set(P::FLT_DRIVE, 0.2f);
         p.set(P::ENV1_ATK, 0.002f); p.set(P::ENV1_DEC, 0.4f); p.set(P::ENV1_SUS, 0.85f); p.set(P::ENV1_REL, 0.12f);
         p.set(P::ENV2_ATK, 0.0f); p.set(P::ENV2_DEC, 0.28f); p.set(P::ENV2_SUS, 0.0f); p.set(P::ENV2_REL, 0.1f);
         p.mod(ModSrc::Env2, P::FLT_CUTOFF, 0.38f);
@@ -60,7 +60,7 @@ std::vector<Preset> factoryPresets()
         p.set(P::OSCA_POS, frame(3)); p.set(P::OSCA_OCT, -1); p.set(P::OSCA_UNISON, 4); p.set(P::OSCA_DETUNE, 0.35f);
         p.set(P::OSCB_ON, 1); p.set(P::OSCB_POS, frame(3)); p.set(P::OSCB_OCT, -1); p.set(P::OSCB_FINE, 14);
         p.set(P::OSCB_UNISON, 3); p.set(P::OSCB_DETUNE, 0.3f); p.set(P::OSCB_LEVEL, 0.6f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 900); p.set(P::FLT_RES, 0.3f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 900); p.set(P::FLT_RES, 0.12f);
         p.set(P::LFO1_RATE, 0.25f); p.set(P::LFO1_SHAPE, 0);
         p.mod(ModSrc::Lfo1, P::FLT_CUTOFF, 0.12f);
         p.mod(ModSrc::ModWheel, P::FLT_CUTOFF, 0.35f);
@@ -73,7 +73,7 @@ std::vector<Preset> factoryPresets()
         p.wavetable[0] = "Analog Sweep";
         p.set(P::OSCA_POS, 0.4f); p.set(P::OSCA_OCT, -1); p.set(P::OSCA_UNISON, 2); p.set(P::OSCA_DETUNE, 0.15f);
         p.set(P::SUB_ON, 1); p.set(P::SUB_OCT, -2); p.set(P::SUB_LEVEL, 0.55f); p.set(P::SUB_FILTER, 0);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 500); p.set(P::FLT_RES, 0.5f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 500); p.set(P::FLT_RES, 0.23f);
         p.set(P::LFO1_SYNC, 1); p.set(P::LFO1_DIV, 9); p.set(P::LFO1_SHAPE, 1); p.set(P::LFO1_MODE, 1);
         p.mod(ModSrc::Lfo1, P::FLT_CUTOFF, 0.32f);
         p.mod(ModSrc::Lfo1, P::OSCA_POS, 0.35f);
@@ -85,7 +85,7 @@ std::vector<Preset> factoryPresets()
         p.set(P::OSCA_POS, frame(3)); p.set(P::OSCA_UNISON, 7); p.set(P::OSCA_DETUNE, 0.45f); p.set(P::OSCA_WIDTH, 1.0f);
         p.set(P::OSCB_ON, 1); p.set(P::OSCB_POS, frame(3)); p.set(P::OSCB_OCT, 1); p.set(P::OSCB_UNISON, 5);
         p.set(P::OSCB_DETUNE, 0.35f); p.set(P::OSCB_LEVEL, 0.35f);
-        p.set(P::FLT_TYPE, 0); p.set(P::FLT_CUTOFF, 6500); p.set(P::FLT_RES, 0.15f);
+        p.set(P::FLT_TYPE, 0); p.set(P::FLT_CUTOFF, 6500); p.set(P::FLT_RES, 0.045f);
         p.set(P::ENV1_ATK, 0.006f); p.set(P::ENV1_SUS, 0.9f); p.set(P::ENV1_REL, 0.35f);
         p.set(P::LFO1_RATE, 5.5f); p.set(P::LFO1_RISE, 0.4f); p.set(P::LFO1_MODE, 1);
         p.mod(ModSrc::Lfo1, P::OSCA_FINE, 0.06f, ModSrc::ModWheel);
@@ -112,7 +112,7 @@ std::vector<Preset> factoryPresets()
     { Preset& p = add("Velocity Brass", "Lead");
         p.set(P::OSCA_POS, frame(3)); p.set(P::OSCA_UNISON, 3); p.set(P::OSCA_DETUNE, 0.2f);
         p.set(P::OSCB_ON, 1); p.set(P::OSCB_POS, frame(4)); p.set(P::OSCB_FINE, -8); p.set(P::OSCB_LEVEL, 0.45f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 700); p.set(P::FLT_RES, 0.15f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 700); p.set(P::FLT_RES, 0.055f);
         p.set(P::ENV2_ATK, 0.06f); p.set(P::ENV2_DEC, 0.5f); p.set(P::ENV2_SUS, 0.45f); p.set(P::ENV2_REL, 0.3f);
         p.mod(ModSrc::Env2, P::FLT_CUTOFF, 0.45f, ModSrc::Velocity);
         p.set(P::ENV1_ATK, 0.03f); p.set(P::ENV1_SUS, 0.85f); p.set(P::ENV1_REL, 0.25f);
@@ -127,7 +127,7 @@ std::vector<Preset> factoryPresets()
         p.set(P::LFO1_RATE, 0.08f); p.set(P::LFO2_RATE, 0.13f); p.set(P::LFO2_SHAPE, 6);
         p.mod(ModSrc::Lfo1, P::OSCA_POS, 0.35f);
         p.mod(ModSrc::Lfo2, P::OSCB_POS, 0.4f);
-        p.set(P::FLT_TYPE, 0); p.set(P::FLT_CUTOFF, 3200); p.set(P::FLT_RES, 0.1f);
+        p.set(P::FLT_TYPE, 0); p.set(P::FLT_CUTOFF, 3200); p.set(P::FLT_RES, 0.03f);
         p.set(P::ENV1_ATK, 1.2f); p.set(P::ENV1_DEC, 2.0f); p.set(P::ENV1_SUS, 0.85f); p.set(P::ENV1_REL, 2.8f);
         p.mod(ModSrc::ModWheel, P::FLT_CUTOFF, 0.25f);
         p.set(P::CHO_ON, 1); p.set(P::CHO_MIX, 0.35f);
@@ -148,7 +148,7 @@ std::vector<Preset> factoryPresets()
 
     { Preset& p = add("Warm Strings", "Pad");
         p.set(P::OSCA_POS, frame(3)); p.set(P::OSCA_UNISON, 5); p.set(P::OSCA_DETUNE, 0.25f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 1800); p.set(P::FLT_RES, 0.05f); p.set(P::FLT_KEYTRK, 0.5f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 1800); p.set(P::FLT_RES, 0.02f); p.set(P::FLT_KEYTRK, 0.5f);
         p.set(P::ENV2_ATK, 0.5f); p.set(P::ENV2_SUS, 0.6f);
         p.mod(ModSrc::Env2, P::FLT_CUTOFF, 0.18f);
         p.set(P::ENV1_ATK, 0.55f); p.set(P::ENV1_SUS, 0.9f); p.set(P::ENV1_REL, 1.2f);
@@ -159,7 +159,7 @@ std::vector<Preset> factoryPresets()
     { Preset& p = add("Crystal Pluck", "Pluck");
         p.set(P::OSCA_POS, frame(4)); p.set(P::OSCA_UNISON, 2); p.set(P::OSCA_DETUNE, 0.12f);
         p.set(P::OSCB_ON, 1); p.set(P::OSCB_POS, frame(0)); p.set(P::OSCB_OCT, 1); p.set(P::OSCB_LEVEL, 0.4f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 450); p.set(P::FLT_RES, 0.3f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 450); p.set(P::FLT_RES, 0.12f);
         p.set(P::ENV2_ATK, 0.0f); p.set(P::ENV2_DEC, 0.3f); p.set(P::ENV2_SUS, 0.0f);
         p.mod(ModSrc::Env2, P::FLT_CUTOFF, 0.55f);
         p.set(P::ENV1_ATK, 0.001f); p.set(P::ENV1_DEC, 0.6f); p.set(P::ENV1_SUS, 0.0f); p.set(P::ENV1_REL, 0.45f);
@@ -184,7 +184,7 @@ std::vector<Preset> factoryPresets()
         p.set(P::OSCA_POS, 0.3f);
         p.set(P::LFO1_SHAPE, 1); p.set(P::LFO1_RATE, 0.35f);
         p.mod(ModSrc::Lfo1, P::OSCA_POS, 0.4f);
-        p.set(P::FLT_TYPE, 0); p.set(P::FLT_CUTOFF, 1500); p.set(P::FLT_RES, 0.35f);
+        p.set(P::FLT_TYPE, 0); p.set(P::FLT_CUTOFF, 1500); p.set(P::FLT_RES, 0.11f);
         p.set(P::ENV2_DEC, 0.2f); p.set(P::ENV2_SUS, 0.0f);
         p.mod(ModSrc::Env2, P::FLT_CUTOFF, 0.4f);
         p.set(P::ENV1_ATK, 0.001f); p.set(P::ENV1_DEC, 0.25f); p.set(P::ENV1_SUS, 0.0f); p.set(P::ENV1_REL, 0.2f);
@@ -194,7 +194,7 @@ std::vector<Preset> factoryPresets()
     { Preset& p = add("Noise Riser", "FX");
         p.set(P::OSCA_ON, 0);
         p.set(P::NOISE_ON, 1); p.set(P::NOISE_LEVEL, 0.7f);
-        p.set(P::FLT_TYPE, 2); p.set(P::FLT_CUTOFF, 300); p.set(P::FLT_RES, 0.6f);
+        p.set(P::FLT_TYPE, 2); p.set(P::FLT_CUTOFF, 300); p.set(P::FLT_RES, 0.24f);
         p.set(P::LFO1_MODE, 2); p.set(P::LFO1_SHAPE, 2); p.set(P::LFO1_RATE, 0.125f);
         p.mod(ModSrc::Lfo1, P::FLT_CUTOFF, 0.35f);
         p.mod(ModSrc::Lfo1, P::REV_MIX, 0.25f);
@@ -209,14 +209,14 @@ std::vector<Preset> factoryPresets()
         p.mod(ModSrc::Macro1, P::OSCA_POS, 0.8f);
         p.set(P::LFO1_SHAPE, 6); p.set(P::LFO1_RATE, 0.2f);
         p.mod(ModSrc::Lfo1, P::OSCA_POS, 0.12f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 2500); p.set(P::FLT_RES, 0.2f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 2500); p.set(P::FLT_RES, 0.075f);
         p.set(P::ENV1_ATK, 1.5f); p.set(P::ENV1_REL, 3.0f);
         p.set(P::REV_ON, 1); p.set(P::REV_DECAY, 9.0f); p.set(P::REV_MIX, 0.4f);
     }
 
     { Preset& p = add("Wah Wheel", "FX");
         p.set(P::OSCA_POS, frame(3)); p.set(P::OSCA_UNISON, 2); p.set(P::OSCA_DETUNE, 0.1f);
-        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 350); p.set(P::FLT_RES, 0.65f);
+        p.set(P::FLT_TYPE, 1); p.set(P::FLT_CUTOFF, 350); p.set(P::FLT_RES, 0.34f);
         p.mod(ModSrc::ModWheel, P::FLT_CUTOFF, 0.6f);
         p.mod(ModSrc::Aftertouch, P::FLT_CUTOFF, 0.25f);
         p.set(P::DIST_ON, 1); p.set(P::DIST_MODE, 2); p.set(P::DIST_DRIVE, 0.45f);

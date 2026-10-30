@@ -79,23 +79,28 @@ bool Knob(UiState& ui, P p, const char* label, float radius)
     }
 
     ImGuiStorage* st = ImGui::GetStateStorage();
-    ImGuiID idDrag = ImGui::GetID("drag"), idMod = ImGui::GetID("modedit");
+    ImGuiID idDrag = ImGui::GetID("drag"), idMod = ImGui::GetID("modedit"), idAmt = ImGui::GetID("modamt");
     float n = ui.s.params.norm(p);
 
+    // The drag keeps an unclamped running value and applies it clamped: after
+    // pulling past either end, moving back does nothing until the mouse
+    // returns to where the limit was hit (the knob tracks the mouse).
     if (ImGui::IsItemActivated()) {
         st->SetFloat(idDrag, n);
         st->SetInt(idMod, (io.KeyAlt && editSlot >= 0) ? 1 : 0);
+        if (editSlot >= 0) st->SetFloat(idAmt, ui.s.mods.get(editSlot).amount);
     }
     if (active && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
         float delta = -io.MouseDelta.y * (io.KeyShift ? 0.0008f : 0.0055f);
         if (st->GetInt(idMod) && editSlot >= 0) {
-            ModSlotData d = ui.s.mods.get(editSlot);
-            ui.s.mods.setAmount(editSlot, std::clamp(d.amount + delta * 1.5f, -1.0f, 1.0f));
+            float raw = st->GetFloat(idAmt) + delta * 1.5f;
+            st->SetFloat(idAmt, raw);
+            ui.s.mods.setAmount(editSlot, std::clamp(raw, -1.0f, 1.0f));
             ui.lastTouchedSlot = editSlot;
         } else if (delta != 0.0f) {
-            float dn = std::clamp(st->GetFloat(idDrag, n) + delta, 0.0f, 1.0f);
-            st->SetFloat(idDrag, dn);
-            ui.s.params.setNorm(p, dn);
+            float raw = st->GetFloat(idDrag, n) + delta;
+            st->SetFloat(idDrag, raw);
+            ui.s.params.setNorm(p, std::clamp(raw, 0.0f, 1.0f));
             changed = true;
         }
     }
@@ -346,9 +351,10 @@ bool Stepper(UiState& ui, P p, float width, const char* label)
 
     if (ImGui::IsItemActivated()) st->SetFloat(id, n);
     if (active && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
-        float acc = std::clamp(st->GetFloat(id, n) + (io.MouseDelta.x - io.MouseDelta.y) * (0.6f / (steps * 6.0f)), 0.0f, 1.0f);
+        // unclamped running value, applied clamped (same overshoot rule as knobs)
+        float acc = st->GetFloat(id, n) + (io.MouseDelta.x - io.MouseDelta.y) * (0.6f / (steps * 6.0f));
         st->SetFloat(id, acc);
-        ui.s.params.setNorm(p, acc);
+        ui.s.params.setNorm(p, std::clamp(acc, 0.0f, 1.0f));
         changed = true;
     }
     if (hovered && io.MouseWheel != 0.0f) { ui.s.params.setNorm(p, n + io.MouseWheel / steps); changed = true; }
